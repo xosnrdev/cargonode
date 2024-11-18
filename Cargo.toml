@@ -2,9 +2,21 @@
 name = "cargo-node"
 version = "0.1.0"
 edition = "2021"
-authors = ["Success Kingsley <hello@xosnrdev.com>"]
-categories = ["command-line-utilities", "development-tools", "development-tools::build-utils"]
-keywords = ["cli", "nodejs", "typescript", "bundling", "linting", "tsup", "biomejs", "rust", "developer-tools"]
+authors = ["Success Kingsley <hello@xosnrdev.tech>"]
+categories = [
+    "command-line-utilities",
+    "development-tools",
+    "development-tools::build-utils",
+]
+keywords = [
+    "cli",
+    "nodejs",
+    "bundling",
+    "linting",
+    "developer-tools",
+    "cross-platform",
+]
+description = "A cross-platform CLI tool designed to streamline your Node.js development workflow."
 license = "MIT"
 repository = "https://github.com/xosnrdev/cargo-node"
 
