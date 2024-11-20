@@ -1,0 +1,24 @@
+{
+    "name": "cn-ts",
+    "version": "0.1.0",
+    "main": "dist/main.js",
+    "type": "module",
+    "scripts": {
+        "fmt": "biome format --write .",
+        "check": "biome check --write .",
+        "fix": "biome check --fix .",
+        "test": "vitest",
+        "build": "tsup",
+        "release": "release-it"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "1.9.4",
+        "release-it": "17.10.0",
+        "tsup": "8.3.5",
+        "typescript": "5.6.3",
+        "vitest": "2.1.5"
+    },
+    "engines": {
+        "node": ">=20.11.0"
+    }
+}
