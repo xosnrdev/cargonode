@@ -58,6 +58,7 @@ impl Package {
     }
 
     pub fn create(&self) -> Result<(), Error> {
+        println!("Creating package: `{}`", self.config.package_name);
         validate_package_name(&self.config.package_name)?;
         let temp_dir = tempfile::tempdir().map_err(Error::TempDir)?;
         let template_dir = self.prepare_template(&temp_dir)?;

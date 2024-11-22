@@ -36,7 +36,9 @@ fn main() {
             };
             let package = Package::new(config);
             match package.create() {
-                Ok(_) => println!("Package created successfully"),
+                Ok(_) => println!(
+                    "note: visit https://github.com/xosnrdev/cargo-node for more information"
+                ),
                 Err(e) => eprintln!("Error: {}", e),
             }
         }
