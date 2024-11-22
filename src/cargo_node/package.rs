@@ -223,11 +223,15 @@ fn replace_placeholder_in_dir(
 }
 
 fn copy_to_dest(package_name: &str, template_dir: &PathBuf, dest: &PathBuf) -> Result<(), Error> {
-    let tmp_project_path = template_dir.with_file_name(package_name);
-    fs::rename(&template_dir, &tmp_project_path).map_err(Error::RenameTemplateDir)?;
+    let tmp_package_path = template_dir.with_file_name(package_name);
+    fs::rename(&template_dir, &tmp_package_path).map_err(Error::RenameTemplateDir)?;
 
-    fs_extra::dir::copy(tmp_project_path, dest, &fs_extra::dir::CopyOptions::new())
-        .map_err(Error::CopyToDestination)?;
+    fs_extra::dir::copy(
+        tmp_package_path,
+        dest,
+        &fs_extra::dir::CopyOptions::new().content_only(true),
+    )
+    .map_err(Error::CopyToDestination)?;
 
     Ok(())
 }
