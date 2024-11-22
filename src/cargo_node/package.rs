@@ -57,7 +57,7 @@ impl Package {
         let template_dir = temp_dir_path.join(&template_info.path);
 
         let bytes = download_file(&template_info)?;
-        extract_zip(bytes, temp_dir_path)?;
+        extract_zip(bytes, &temp_dir_path)?;
         replace_placeholders(&self.config.package_name, &template_info, &template_dir)?;
 
         Ok(template_dir)
@@ -72,18 +72,18 @@ pub struct TemplateInfo {
 }
 
 pub enum Template {
-    CNTS,
+    NodeTypeScript,
     Custom(TemplateInfo),
 }
 
 impl Template {
     pub fn info(&self) -> TemplateInfo {
         match self {
-            Template::CNTS => TemplateInfo {
+            Template::NodeTypeScript => TemplateInfo {
                 url: "https://github.com/xosnrdev/cargo-node/archive/refs/heads/master.zip"
                     .to_string(),
                 path: "templates".to_string(),
-                placeholder: "cn-ts".to_string(),
+                placeholder: "node_typescript".to_string(),
             },
             Template::Custom(info) => info.clone(),
         }
