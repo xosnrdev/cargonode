@@ -72,14 +72,14 @@ pub struct TemplateInfo {
 }
 
 pub enum Template {
-    Typescript,
+    CNTS,
     Custom(TemplateInfo),
 }
 
 impl Template {
     pub fn info(&self) -> TemplateInfo {
         match self {
-            Template::Typescript => TemplateInfo {
+            Template::CNTS => TemplateInfo {
                 url: "https://github.com/xosnrdev/cargo-node/archive/refs/heads/master.zip"
                     .to_string(),
                 path: "templates".to_string(),
