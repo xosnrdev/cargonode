@@ -37,7 +37,7 @@ fn main() {
             let package = Package::new(config);
             match package.create() {
                 Ok(_) => println!("Package created successfully"),
-                Err(e) => eprintln!("Error: {:?}", e),
+                Err(e) => eprintln!("Error: {}", e),
             }
         }
     }

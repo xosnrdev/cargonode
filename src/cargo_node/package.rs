@@ -1,6 +1,6 @@
 use std::{
     convert::identity,
-    fs,
+    fmt, fs,
     io::{self, Cursor},
     path::{Path, PathBuf},
 };
@@ -31,6 +31,25 @@ pub enum Error {
     CopyToDestination(fs_extra::error::Error),
     RenameTemplateDir(io::Error),
     TempDir(io::Error),
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Error::InvalidPathName => write!(f, "Invalid package name"),
+            Error::GetUrl(err) => write!(f, "Failed to get URL: {}", err),
+            Error::ReadResponse(err) => write!(f, "Failed to read response: {}", err),
+            Error::ZipExtract(err) => write!(f, "Failed to extract zip: {}", err),
+            Error::ReadFile(err) => write!(f, "Failed to read file: {}", err),
+            Error::WriteFile(err) => write!(f, "Failed to write file: {}", err),
+            Error::RenameDir(err) => write!(f, "Failed to rename directory: {}", err),
+            Error::CopyToDestination(err) => write!(f, "Failed to copy to destination: {}", err),
+            Error::RenameTemplateDir(err) => {
+                write!(f, "Failed to rename template directory: {}", err)
+            }
+            Error::TempDir(err) => write!(f, "Failed to create temporary directory: {}", err),
+        }
+    }
 }
 
 impl Package {
