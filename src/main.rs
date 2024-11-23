@@ -21,6 +21,8 @@ enum Commands {
         /// The name of the package to create
         package_name: String,
     },
+    /// Create a new package in an existing directory
+    Init,
 }
 
 fn main() {
@@ -36,9 +38,25 @@ fn main() {
             };
             let package = Package::new(config);
             match package.create() {
-                Ok(_) => println!(
-                    "note: visit https://github.com/xosnrdev/cargo-node for more information"
-                ),
+                Ok(_) => println!("note: run `npm install` to install dependencies"),
+                Err(e) => eprintln!("Error: {}", e),
+            }
+        }
+        Commands::Init => {
+            let current_dir = get_current_dir();
+            let config = package::Config {
+                package_name: current_dir
+                    .file_name()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_string(),
+                current_dir,
+                template: package::Template::NodeTypeScript,
+            };
+            let package = Package::new(config);
+            match package.create_as_init() {
+                Ok(_) => println!("note: run `npm install` to install dependencies"),
                 Err(e) => eprintln!("Error: {}", e),
             }
         }

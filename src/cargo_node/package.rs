@@ -9,6 +9,12 @@ use walkdir::WalkDir;
 
 use super::file_util;
 
+#[allow(dead_code)]
+enum Commands {
+    New,
+    Init,
+}
+
 pub struct Config {
     pub package_name: String,
     pub current_dir: PathBuf,
@@ -61,7 +67,7 @@ impl Package {
         println!("Creating package: `{}`", self.config.package_name);
         validate_package_name(&self.config.package_name)?;
         let temp_dir = tempfile::tempdir().map_err(Error::TempDir)?;
-        let template_dir = self.prepare_template(&temp_dir)?;
+        let template_dir = self.prepare_template(&temp_dir, Commands::New)?;
         copy_to_dest(
             &self.config.package_name,
             &template_dir,
@@ -71,14 +77,52 @@ impl Package {
         Ok(())
     }
 
-    fn prepare_template(&self, temp_dir: &tempfile::TempDir) -> Result<PathBuf, Error> {
+    pub fn create_as_init(&self) -> Result<(), Error> {
+        println!("Creating package: {}", self.get_current_dir_name());
+        validate_package_name(self.get_current_dir_name())?;
+        if self.has_existing_node_package() {
+            eprintln!("Error: `purr init` cannot be run on existing node packages");
+            return Ok(());
+        }
+
+        // init logic goes here
+
+        Ok(())
+    }
+
+    fn has_existing_node_package(&self) -> bool {
+        self.config.current_dir.join("package.json").exists()
+    }
+
+    fn get_current_dir_name(&self) -> &str {
+        self.config
+            .current_dir
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or("")
+    }
+
+    fn prepare_template(
+        &self,
+        temp_dir: &tempfile::TempDir,
+        command: Commands,
+    ) -> Result<PathBuf, Error> {
         let template_info = self.config.template.info();
         let temp_dir_path = temp_dir.path();
         let template_dir = temp_dir_path.join(&template_info.path);
 
         let bytes = download_file(&template_info)?;
         extract_zip(bytes, &temp_dir_path)?;
-        replace_placeholders(&self.config.package_name, &template_info, &template_dir)?;
+        match command {
+            Commands::New => {
+                replace_placeholders(&self.config.package_name, &template_info, &template_dir)
+            }
+            Commands::Init => replace_placeholders_as_init(
+                &self.get_current_dir_name(),
+                &template_info,
+                &template_dir,
+            ),
+        }?;
 
         Ok(template_dir)
     }
@@ -148,6 +192,22 @@ fn replace_placeholders(
         .dirs
         .iter()
         .map(|path| replace_placeholder_in_dir(package_name, template_info, path))
+        .collect::<Result<(), Error>>()?;
+
+    Ok(())
+}
+
+fn replace_placeholders_as_init(
+    package_name: &str,
+    template_info: &TemplateInfo,
+    template_dir: &PathBuf,
+) -> Result<(), Error> {
+    let paths = collect_dir_entries(template_dir);
+
+    paths
+        .files
+        .iter()
+        .map(|path| replace_placeholder_in_file(package_name, template_info, path))
         .collect::<Result<(), Error>>()?;
 
     Ok(())
