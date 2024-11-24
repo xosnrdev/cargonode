@@ -180,9 +180,9 @@ fn download_file(template_info: &TemplateInfo) -> Result<Vec<u8>, Error> {
     Ok(buffer)
 }
 
-fn extract_zip(bytes: Vec<u8>, _path: &Path) -> Result<(), Error> {
+fn extract_zip(bytes: Vec<u8>, path: &Path) -> Result<(), Error> {
     let mut cursor = Cursor::new(bytes);
-    zip_extract::extract(&mut cursor, _path, true).map_err(Error::ZipExtract)?;
+    zip_extract::extract(&mut cursor, path, true).map_err(Error::ZipExtract)?;
     Ok(())
 }
 
