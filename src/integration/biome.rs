@@ -3,38 +3,29 @@ use std::{fmt, path::PathBuf};
 use crate::cargo_node::exec;
 
 pub enum Error {
-    FormatError(exec::Error),
-    CheckError(exec::Error),
-    FixError(exec::Error),
+    BiomeError(exec::Error, String),
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Error::FormatError(err) => write!(f, "Failed to format: {}", err),
-            Error::CheckError(err) => write!(f, "Failed to check: {}", err),
-            Error::FixError(err) => write!(f, "Failed to fix: {}", err),
+            Error::BiomeError(err, operation) => write!(f, "Failed to {}: {}", operation, err),
         }
     }
 }
 
 type Result<T> = std::result::Result<T, Error>;
 
-pub fn format(work_dir: PathBuf, biome_args: Vec<String>) -> Result<String> {
-    let mut args = vec!["biome".to_string(), "format".to_string()];
-    args.extend(biome_args);
-    let config = exec::Config {
-        work_dir,
-        cmd: "npx".to_string(),
-        args,
-    };
-    exec::run(&config).map_err(Error::FormatError)
+fn run_biome_command(work_dir: PathBuf, command: &str, extra_args: Vec<String>) -> Result<String> {
+    let mut args = vec!["biome".to_string(), command.to_string()];
+    args.extend(extra_args);
+    exec::npx(work_dir, args).map_err(|err| Error::BiomeError(err, command.to_string()))
 }
 
-pub fn check() -> Result<()> {
-    unimplemented!()
+pub fn format(work_dir: PathBuf, extra_args: Vec<String>) -> Result<String> {
+    run_biome_command(work_dir, "format", extra_args)
 }
 
-pub fn fix() -> Result<()> {
-    unimplemented!()
+pub fn check(work_dir: PathBuf, extra_args: Vec<String>) -> Result<String> {
+    run_biome_command(work_dir, "check", extra_args)
 }

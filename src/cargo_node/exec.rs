@@ -1,15 +1,15 @@
 use std::{
-    fmt, io,
+    fmt::{self, Display, Formatter},
+    io,
     path::PathBuf,
-    process::{self, Command},
-    string,
+    process::Command,
+    string::FromUtf8Error,
 };
 
 #[derive(Debug)]
 pub enum Error {
     FailedToExecute(io::Error),
-    FailedToReadStdout(string::FromUtf8Error),
-    FailedToReadStderr(string::FromUtf8Error),
+    FailedToReadOutput(FromUtf8Error),
     ExitFailure {
         stdout: String,
         stderr: String,
@@ -17,34 +17,31 @@ pub enum Error {
     },
 }
 
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            Error::FailedToExecute(err) => write!(f, "Failed to execute command: {}", err),
-            Error::FailedToReadStdout(err) => write!(f, "Failed to read stdout: {}", err),
-            Error::FailedToReadStderr(err) => write!(f, "Failed to read stderr: {}", err),
-            Error::ExitFailure {
+            Self::FailedToExecute(err) => write!(f, "Failed to execute command: {err}"),
+            Self::FailedToReadOutput(err) => write!(f, "Failed to read command output: {err}"),
+            Self::ExitFailure {
                 stdout,
                 stderr,
                 exit_status,
             } => {
-                let mut output = String::new();
-
-                if let Some(exit_status) = exit_status {
-                    output.push_str(&format!("Command failed with status: {}\n", exit_status));
-                } else {
-                    output.push_str(&format!("Command failed\n"));
-                }
+                writeln!(
+                    f,
+                    "Command failed{}",
+                    exit_status
+                        .map(|code| format!(" with status: {code}"))
+                        .unwrap_or_default()
+                )?;
 
                 if !stdout.is_empty() {
-                    output.push_str(&format!("\n[stdout]\n{}\n", stdout));
+                    write!(f, "\n[stdout]\n{stdout}\n")?;
                 }
-
                 if !stderr.is_empty() {
-                    output.push_str(&format!("\n[stderr]\n{}\n", stderr));
+                    write!(f, "\n[stderr]\n{stderr}\n")?;
                 }
-
-                write!(f, "{}", output)
+                Ok(())
             }
         }
     }
@@ -59,41 +56,40 @@ pub struct Config {
 pub fn run(config: &Config) -> Result<String, Error> {
     log(config);
 
-    Command::new(&config.cmd)
+    let output = Command::new(&config.cmd)
         .current_dir(&config.work_dir)
         .args(&config.args)
         .output()
-        .map(|output| Output(output))
-        .map_err(Error::FailedToExecute)
-        .and_then(|output| output.read_stdout())
+        .map_err(Error::FailedToExecute)?;
+
+    if output.status.success() {
+        String::from_utf8(output.stdout).map_err(Error::FailedToReadOutput)
+    } else {
+        let stdout = String::from_utf8(output.stdout).map_err(Error::FailedToReadOutput)?;
+        let stderr = String::from_utf8(output.stderr).map_err(Error::FailedToReadOutput)?;
+
+        Err(Error::ExitFailure {
+            stdout,
+            stderr,
+            exit_status: output.status.code(),
+        })
+    }
 }
 
 fn log(config: &Config) {
-    if config.args.len() > 0 {
-        let args = config.args.join(" ");
-        println!("Executing: {} {}", config.cmd, args);
-    } else {
+    if config.args.is_empty() {
         println!("Executing: {}", config.cmd);
+    } else {
+        let cmd_string = format!("{} {}", config.cmd, config.args.join(" "));
+        println!("Executing: {}", cmd_string);
     }
 }
 
-#[derive(Debug)]
-pub struct Output(process::Output);
-
-impl Output {
-    pub fn read_stdout(self) -> Result<String, Error> {
-        if self.0.status.success() {
-            String::from_utf8(self.0.stdout).map_err(Error::FailedToReadStdout)
-        } else {
-            let stdout = String::from_utf8(self.0.stdout).map_err(Error::FailedToReadStdout)?;
-            let stderr = String::from_utf8(self.0.stderr).map_err(Error::FailedToReadStderr)?;
-            let exit_status = self.0.status.code();
-
-            Err(Error::ExitFailure {
-                stdout,
-                stderr,
-                exit_status,
-            })
-        }
-    }
+pub fn npx<T: From<Error>>(work_dir: PathBuf, args: Vec<String>) -> Result<String, T> {
+    run(&Config {
+        work_dir,
+        cmd: "npx".to_string(),
+        args,
+    })
+    .map_err(From::from)
 }
