@@ -1,9 +1,11 @@
 pub mod cargo_node;
+pub mod integration;
 
 use std::{env, path::PathBuf};
 
 use cargo_node::package::{self, Package};
 use clap::{Parser, Subcommand};
+use integration::biome;
 
 #[derive(Debug, Parser)]
 #[command(about, author, version, long_about = None)]
@@ -23,6 +25,12 @@ enum Commands {
     },
     /// Create a new package in an existing directory
     Init,
+    /// Format given files of the current package
+    Fmt {
+        /// Arguments to pass to biomejs
+        #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
+        args: Vec<String>,
+    },
 }
 
 fn main() {
@@ -30,28 +38,26 @@ fn main() {
 
     match cli.command {
         Commands::New { package_name } => {
-            let current_dir = get_current_dir();
             let config = package::Config {
                 package_name,
-                current_dir,
+                current_dir: get_current_dir(),
                 template: package::Template::NodeTypeScript,
             };
             let package = Package::new(config);
             match package.create() {
-                Ok(_) => println!("note: run `npm install` to install dependencies"),
+                Ok(res) => println!("{}", res),
                 Err(e) => eprintln!("Error: {}", e),
             }
         }
         Commands::Init => {
-            let current_dir = get_current_dir();
             let config = package::Config {
-                package_name: current_dir
+                package_name: get_current_dir()
                     .file_name()
                     .unwrap()
                     .to_str()
                     .unwrap()
                     .to_string(),
-                current_dir,
+                current_dir: get_current_dir(),
                 template: package::Template::NodeTypeScript,
             };
             let package = Package::new(config);
@@ -60,6 +66,10 @@ fn main() {
                 Err(e) => eprintln!("Error: {}", e),
             }
         }
+        Commands::Fmt { args } => match biome::format(get_current_dir(), args) {
+            Ok(res) => println!("{}", res),
+            Err(err) => eprintln!("Error: {}", err),
+        },
     }
 }
 
