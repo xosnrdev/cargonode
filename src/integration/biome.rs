@@ -1,4 +1,4 @@
-use std::{fmt, path::PathBuf};
+use std::{fmt, path::PathBuf, result};
 
 use crate::cargo_node::exec;
 
@@ -14,7 +14,7 @@ impl fmt::Display for Error {
     }
 }
 
-type Result<T> = std::result::Result<T, Error>;
+type Result<T> = result::Result<T, Error>;
 
 fn run_biome_command(work_dir: PathBuf, command: &str, extra_args: Vec<String>) -> Result<String> {
     let mut args = vec!["biome".to_string(), command.to_string()];
