@@ -25,7 +25,7 @@ enum Commands {
     },
     /// Create a new package in an existing directory
     Init,
-    /// Format given files of the current package
+    /// Format given files of the current package using biomejs
     Fmt {
         /// Arguments to pass to biomejs
         #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
@@ -62,7 +62,7 @@ fn main() {
             };
             let package = Package::new(config);
             match package.create_as_init() {
-                Ok(_) => println!("note: run `npm install` to install dependencies"),
+                Ok(res) => println!("{:?}", res),
                 Err(e) => eprintln!("Error: {}", e),
             }
         }

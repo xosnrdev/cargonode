@@ -11,9 +11,9 @@ use crate::cargo_node::exec;
 
 use super::file_util;
 
-#[allow(dead_code)]
 enum Commands {
     New,
+    #[allow(dead_code)]
     Init,
 }
 
@@ -78,29 +78,27 @@ impl Package {
             &self.config.current_dir,
         )?;
 
-        exec::run(&exec::Config {
-            work_dir: self
-                .config
+        exec_npm_install(
+            self.config
                 .current_dir
                 .clone()
                 .join(&self.config.package_name),
-            cmd: "npm".to_string(),
-            args: vec!["install".to_string()],
-        })
-        .map_err(Error::NpmInstall)
+        )
     }
 
-    pub fn create_as_init(&self) -> Result<(), Error> {
+    pub fn create_as_init(&self) -> Result<Option<String>, Error> {
         println!("Creating package: {}", self.get_current_dir_name());
         validate_package_name(self.get_current_dir_name())?;
-        if self.has_existing_node_package() {
-            eprintln!("Error: `purr init` cannot be run on existing node packages");
-            return Ok(());
+        match self.has_existing_node_package() {
+            true => {
+                eprintln!("Error: `purr init` cannot be run on existing node packages");
+                Ok(None)
+            }
+            false => {
+                // init logic goes here
+                Ok(Some(exec_npm_install(self.config.current_dir.clone())?))
+            }
         }
-
-        // init logic goes here
-
-        Ok(())
     }
 
     fn has_existing_node_package(&self) -> bool {
@@ -325,4 +323,13 @@ fn validate_package_name(package_name: &str) -> Result<(), Error> {
         .all(identity)
         .then_some(())
         .ok_or(Error::InvalidPathName)
+}
+
+fn exec_npm_install(work_dir: PathBuf) -> Result<String, Error> {
+    exec::run(&exec::Config {
+        work_dir,
+        cmd: "npm".to_string(),
+        args: vec!["install".to_string()],
+    })
+    .map_err(Error::NpmInstall)
 }
