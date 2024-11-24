@@ -107,6 +107,7 @@ impl Package {
             return Ok(None);
         }
 
+        // TODO: should unpack the template contents into the current directory
         let temp_dir = tempfile::tempdir()
             .map_err(|e| Error::io("Failed to create temporary directory", e))?;
         let template_dir = self.prepare_template(&temp_dir, false)?;
