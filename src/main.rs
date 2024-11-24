@@ -5,7 +5,7 @@ use std::{env, path::PathBuf};
 
 use cargo_node::package::{self, Package};
 use clap::{Parser, Subcommand};
-use integration::biome;
+use integration::{biome, tsup};
 
 #[derive(Debug, Parser)]
 #[command(about, author, version, long_about = None)]
@@ -36,6 +36,13 @@ enum Commands {
     #[command(disable_help_flag = true)]
     Check {
         /// Flag arguments to pass to biomejs
+        #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
+        args: Vec<String>,
+    },
+    /// Build and bundle the current package using tsup
+    #[command(disable_help_flag = true)]
+    Build {
+        /// Flag arguments to pass to tsup
         #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
         args: Vec<String>,
     },
@@ -79,6 +86,10 @@ fn main() {
             Err(err) => eprintln!("Error: {}", err),
         },
         Commands::Check { args } => match biome::check(get_current_dir(), args) {
+            Ok(res) => println!("{}", res),
+            Err(err) => eprintln!("Error: {}", err),
+        },
+        Commands::Build { args } => match tsup::build(get_current_dir(), args) {
             Ok(res) => println!("{}", res),
             Err(err) => eprintln!("Error: {}", err),
         },

@@ -4,10 +4,7 @@
     "main": "dist/main.js",
     "type": "module",
     "scripts": {
-        "check": "biome check --write .",
-        "fix": "biome check --fix .",
         "test": "vitest",
-        "build": "tsup",
         "release": "release-it"
     },
     "devDependencies": {
