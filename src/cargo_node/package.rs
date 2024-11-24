@@ -7,6 +7,8 @@ use std::{
 
 use walkdir::WalkDir;
 
+use crate::cargo_node::exec;
+
 use super::file_util;
 
 #[allow(dead_code)]
@@ -37,6 +39,7 @@ pub enum Error {
     CopyToDestination(fs_extra::error::Error),
     RenameTemplateDir(io::Error),
     TempDir(io::Error),
+    NpmInstall(exec::Error),
 }
 
 impl fmt::Display for Error {
@@ -54,6 +57,7 @@ impl fmt::Display for Error {
                 write!(f, "Failed to rename template directory: {}", err)
             }
             Error::TempDir(err) => write!(f, "Failed to create temporary directory: {}", err),
+            Error::NpmInstall(err) => write!(f, "Failed to run npm install: {}", err),
         }
     }
 }
@@ -63,7 +67,7 @@ impl Package {
         Self { config }
     }
 
-    pub fn create(&self) -> Result<(), Error> {
+    pub fn create(&self) -> Result<String, Error> {
         println!("Creating package: `{}`", self.config.package_name);
         validate_package_name(&self.config.package_name)?;
         let temp_dir = tempfile::tempdir().map_err(Error::TempDir)?;
@@ -74,7 +78,16 @@ impl Package {
             &self.config.current_dir,
         )?;
 
-        Ok(())
+        exec::run(&exec::Config {
+            work_dir: self
+                .config
+                .current_dir
+                .clone()
+                .join(&self.config.package_name),
+            cmd: "npm".to_string(),
+            args: vec!["install".to_string()],
+        })
+        .map_err(Error::NpmInstall)
     }
 
     pub fn create_as_init(&self) -> Result<(), Error> {
