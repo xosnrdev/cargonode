@@ -4,7 +4,6 @@
     "main": "dist/main.js",
     "type": "module",
     "scripts": {
-        "fmt": "biome format --write .",
         "check": "biome check --write .",
         "fix": "biome check --fix .",
         "test": "vitest",
