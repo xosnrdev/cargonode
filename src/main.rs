@@ -25,9 +25,17 @@ enum Commands {
     },
     /// Create a new package in an existing directory
     Init,
-    /// Format given files of the current package using biomejs
+    /// Format files of the current package using biomejs
+    #[command(disable_help_flag = true)]
     Fmt {
-        /// Arguments to pass to biomejs
+        /// Flag arguments to pass to biomejs
+        #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
+        args: Vec<String>,
+    },
+    /// Check files of the current package using biomejs
+    #[command(disable_help_flag = true)]
+    Check {
+        /// Flag arguments to pass to biomejs
         #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
         args: Vec<String>,
     },
@@ -67,6 +75,10 @@ fn main() {
             }
         }
         Commands::Fmt { args } => match biome::format(get_current_dir(), args) {
+            Ok(res) => println!("{}", res),
+            Err(err) => eprintln!("Error: {}", err),
+        },
+        Commands::Check { args } => match biome::check(get_current_dir(), args) {
             Ok(res) => println!("{}", res),
             Err(err) => eprintln!("Error: {}", err),
         },
