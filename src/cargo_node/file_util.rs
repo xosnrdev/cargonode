@@ -2,6 +2,7 @@ use std::{
     fs::{self, File},
     io::{self, Read, Write},
     path::PathBuf,
+    result,
 };
 
 pub struct FileData {
@@ -9,7 +10,7 @@ pub struct FileData {
     pub permissions: fs::Permissions,
 }
 
-type Result<T> = std::result::Result<T, io::Error>;
+type Result<T> = result::Result<T, io::Error>;
 
 pub fn read(path: &PathBuf) -> Result<FileData> {
     let mut file = File::open(path)?;
