@@ -1,4 +1,4 @@
-use std::{fmt, path::PathBuf, result};
+use std::{fmt, path::Path, result};
 
 use crate::cargo_node::exec;
 
@@ -16,16 +16,16 @@ impl fmt::Display for Error {
 
 type Result<T> = result::Result<T, Error>;
 
-fn run_biome_command(work_dir: PathBuf, command: &str, extra_args: Vec<String>) -> Result<String> {
+fn run_biome_command(work_dir: &Path, command: &str, extra_args: Vec<String>) -> Result<String> {
     let mut args = vec!["biome".to_string(), command.to_string()];
     args.extend(extra_args);
     exec::npx(work_dir, args).map_err(|err| Error::BiomeError(err, command.to_string()))
 }
 
-pub fn format(work_dir: PathBuf, extra_args: Vec<String>) -> Result<String> {
+pub fn format(work_dir: &Path, extra_args: Vec<String>) -> Result<String> {
     run_biome_command(work_dir, "format", extra_args)
 }
 
-pub fn check(work_dir: PathBuf, extra_args: Vec<String>) -> Result<String> {
+pub fn check(work_dir: &Path, extra_args: Vec<String>) -> Result<String> {
     run_biome_command(work_dir, "check", extra_args)
 }
