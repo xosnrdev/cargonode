@@ -5,7 +5,7 @@ use std::{env, path::PathBuf};
 
 use cargo_node::package::{self, Package};
 use clap::{Parser, Subcommand};
-use integration::{biome, tsup, vitest};
+use integration::{biome, release_it, tsup, vitest};
 
 #[derive(Debug, Parser)]
 #[command(about, author, version, long_about = None)]
@@ -53,6 +53,13 @@ enum Commands {
         #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
         args: Vec<String>,
     },
+    /// Release the current package using release-it
+    #[command(disable_help_flag = true)]
+    Release {
+        /// Flag arguments to pass to release-it
+        #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
+        args: Vec<String>,
+    },
 }
 
 fn main() {
@@ -88,19 +95,23 @@ fn main() {
                 Err(e) => eprintln!("Error: {}", e),
             }
         }
-        Commands::Fmt { args } => match biome::format(get_current_dir(), args) {
+        Commands::Fmt { args } => match biome::format(&get_current_dir(), args) {
             Ok(res) => println!("{}", res),
             Err(err) => eprintln!("Error: {}", err),
         },
-        Commands::Check { args } => match biome::check(get_current_dir(), args) {
+        Commands::Check { args } => match biome::check(&get_current_dir(), args) {
             Ok(res) => println!("{}", res),
             Err(err) => eprintln!("Error: {}", err),
         },
-        Commands::Build { args } => match tsup::build(get_current_dir(), args) {
+        Commands::Build { args } => match tsup::build(&get_current_dir(), args) {
             Ok(res) => println!("{}", res),
             Err(err) => eprintln!("Error: {}", err),
         },
-        Commands::Test { args } => match vitest::test(get_current_dir(), args) {
+        Commands::Test { args } => match vitest::test(&get_current_dir(), args) {
+            Ok(res) => println!("{}", res),
+            Err(err) => eprintln!("Error: {}", err),
+        },
+        Commands::Release { args } => match release_it::release(&get_current_dir(), args) {
             Ok(res) => println!("{}", res),
             Err(err) => eprintln!("Error: {}", err),
         },

@@ -3,9 +3,6 @@
     "version": "0.1.0",
     "main": "dist/main.js",
     "type": "module",
-    "scripts": {
-        "release": "release-it"
-    },
     "devDependencies": {
         "@biomejs/biome": "1.9.4",
         "@vitest/coverage-v8": "2.1.5",
