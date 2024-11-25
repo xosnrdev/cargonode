@@ -5,7 +5,7 @@ use std::{env, path::PathBuf};
 
 use cargo_node::package::{self, Package};
 use clap::{Parser, Subcommand};
-use integration::{biome, tsup};
+use integration::{biome, tsup, vitest};
 
 #[derive(Debug, Parser)]
 #[command(about, author, version, long_about = None)]
@@ -43,6 +43,13 @@ enum Commands {
     #[command(disable_help_flag = true)]
     Build {
         /// Flag arguments to pass to tsup
+        #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
+        args: Vec<String>,
+    },
+    /// Run tests using vitest
+    #[command(disable_help_flag = true)]
+    Test {
+        /// Flag arguments to pass to vitest
         #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
         args: Vec<String>,
     },
@@ -90,6 +97,10 @@ fn main() {
             Err(err) => eprintln!("Error: {}", err),
         },
         Commands::Build { args } => match tsup::build(get_current_dir(), args) {
+            Ok(res) => println!("{}", res),
+            Err(err) => eprintln!("Error: {}", err),
+        },
+        Commands::Test { args } => match vitest::test(get_current_dir(), args) {
             Ok(res) => println!("{}", res),
             Err(err) => eprintln!("Error: {}", err),
         },
