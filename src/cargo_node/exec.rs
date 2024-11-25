@@ -1,7 +1,7 @@
 use std::{
     fmt::{self, Display, Formatter},
     io,
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::Command,
     string::FromUtf8Error,
 };
@@ -85,9 +85,9 @@ fn log(config: &Config) {
     }
 }
 
-pub fn npx<T: From<Error>>(work_dir: PathBuf, args: Vec<String>) -> Result<String, T> {
+pub fn npx<T: From<Error>, P: AsRef<Path>>(work_dir: P, args: Vec<String>) -> Result<String, T> {
     run(&Config {
-        work_dir,
+        work_dir: work_dir.as_ref().to_path_buf(),
         cmd: "npx".to_string(),
         args,
     })
