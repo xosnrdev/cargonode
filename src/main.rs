@@ -1,11 +1,10 @@
-pub mod cargo_node;
-pub mod integration;
+pub mod exec;
+mod integration;
+mod package;
 
-use std::{env, path::PathBuf};
-
-use cargo_node::package::{self, Package};
 use clap::{Parser, Subcommand};
-use integration::{biome, release_it, tsup, vitest};
+use integration::{build, check, format, release, test};
+use package::{get_current_dir, get_current_dir_name, Package};
 
 #[derive(Debug, Parser)]
 #[command(about, author, version, long_about = None)]
@@ -23,23 +22,23 @@ enum Commands {
         /// The name of the package to create
         package_name: String,
     },
-    /// Create a new package in an existing directory
+    /// Initialize package in current directory
     Init,
-    /// Format files of the current package using biomejs
+    /// Format files using biomejs
     #[command(disable_help_flag = true)]
     Fmt {
         /// Flag arguments to pass to biomejs
         #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
         args: Vec<String>,
     },
-    /// Check files of the current package using biomejs
+    /// Check files using biomejs
     #[command(disable_help_flag = true)]
     Check {
         /// Flag arguments to pass to biomejs
         #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
         args: Vec<String>,
     },
-    /// Build and bundle the current package using tsup
+    /// Build and bundle using tsup
     #[command(disable_help_flag = true)]
     Build {
         /// Flag arguments to pass to tsup
@@ -53,7 +52,7 @@ enum Commands {
         #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
         args: Vec<String>,
     },
-    /// Release the current package using release-it
+    /// Automate package release using release-it
     #[command(disable_help_flag = true)]
     Release {
         /// Flag arguments to pass to release-it
@@ -62,7 +61,8 @@ enum Commands {
     },
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let cli = Cli::parse();
 
     match cli.command {
@@ -73,51 +73,42 @@ fn main() {
                 template: package::Template::NodeTypeScript,
             };
             let package = Package::new(config);
-            match package.create() {
-                Ok(res) => println!("{}", res),
+            match package.create().await {
+                Ok(output) => println!("{}", output),
                 Err(e) => eprintln!("Error: {}", e),
             }
         }
         Commands::Init => {
             let config = package::Config {
-                package_name: get_current_dir()
-                    .file_name()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-                    .to_string(),
+                package_name: get_current_dir_name(),
                 current_dir: get_current_dir(),
                 template: package::Template::NodeTypeScript,
             };
             let package = Package::new(config);
-            match package.create_as_init() {
-                Ok(res) => println!("{:?}", res),
-                Err(e) => eprintln!("Error: {}", e),
+            match package.create_as_init().await {
+                Ok(output) => println!("{}", output.unwrap_or_default()),
+                Err(err) => eprintln!("Error: {}", err),
             }
         }
-        Commands::Fmt { args } => match biome::format(&get_current_dir(), args) {
-            Ok(res) => println!("{}", res),
+        Commands::Fmt { args } => match format(&get_current_dir(), args).await {
+            Ok(output) => println!("{}", output),
             Err(err) => eprintln!("Error: {}", err),
         },
-        Commands::Check { args } => match biome::check(&get_current_dir(), args) {
-            Ok(res) => println!("{}", res),
+        Commands::Check { args } => match check(&get_current_dir(), args).await {
+            Ok(output) => println!("{}", output),
             Err(err) => eprintln!("Error: {}", err),
         },
-        Commands::Build { args } => match tsup::build(&get_current_dir(), args) {
-            Ok(res) => println!("{}", res),
+        Commands::Build { args } => match build(&get_current_dir(), args).await {
+            Ok(output) => println!("{}", output),
             Err(err) => eprintln!("Error: {}", err),
         },
-        Commands::Test { args } => match vitest::test(&get_current_dir(), args) {
-            Ok(res) => println!("{}", res),
+        Commands::Test { args } => match test(&get_current_dir(), args).await {
+            Ok(output) => println!("{}", output),
             Err(err) => eprintln!("Error: {}", err),
         },
-        Commands::Release { args } => match release_it::release(&get_current_dir(), args) {
-            Ok(res) => println!("{}", res),
+        Commands::Release { args } => match release(&get_current_dir(), args).await {
+            Ok(output) => println!("{}", output),
             Err(err) => eprintln!("Error: {}", err),
         },
     }
-}
-
-fn get_current_dir() -> PathBuf {
-    env::current_dir().unwrap()
 }
