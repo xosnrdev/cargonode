@@ -1,70 +1,156 @@
-# cargo-node
+<div align="center">
 
-![WIP](https://img.shields.io/badge/status-WIP-yellow)
+<img src="./docs/logo.svg" width="250px" />
 
-cargo-node is a Rust-powered CLI tool designed to streamline your Node.js development. It integrates with existing tools like [tsup](https://tsup.egoist.dev/) for bundling and [biomejs](https://biomejs.dev/) for linting, e.t.c.
+A CLI tool built with Rust to revolutionize Node.js development workflows. By integrating powerful tools like [BiomeJS](https://biomejs.dev/guides/getting-started/), [Tsup](https://tsup.egoist.dev/), [Vitest](https://vitest.dev/guide/), and [Release-It](https://github.com/release-it/release-it), it transforms complex development processes into simple, efficient commands.
 
-<!-- ## Features
+</div>
 
-- **Tsup bundling**: Effortlessly bundle your TypeScript code.
-- **BiomeJS linting**: Lint, check, and format your code.
-- **Rust-powered**: Fast and efficient, leveraging the performance of Rust.
-- **Minimal setup**: Works out of the box with sensible defaults.
+## Why CargoNode?
 
-## Installation
+Developers face numerous challenges in modern Node.js projects:
 
-You can install **cargo-node** using your preferred package manager:
+- Repetitive configuration
+- Scattered tooling
+- Inconsistent development workflows
+- Performance bottlenecks
 
-### macOS / Linux
+> **CargoNode solves these problems** by providing a unified, lightning-fast CLI that simplifies your entire development lifecycle.
+
+## Key Features
+
+- 🚀 **High-Performance**: Built with Rust for maximum speed
+- 🔧 **Modular Design**: Seamless integration with popular tools
+- 🤖 **Automated Workflows**: Streamline build, test, lint, and release processes
+- 🛠️ **Flexible Configuration**: Customize every aspect of your development environment
+
+## Requirements
+
+### System Compatibility
+
+- **Node.js**: >=20.11.0 (Latest LTS recommended)
+- **Platforms**:
+  - macOS (x64, ARM)
+  - Linux (x64, ARM)
+  - Windows (x64)
+
+### Development Prerequisites
+
+- Rust 1.65.0+ (for building from source)
+
+## Quick Start
+
+### 1. Installation
 
 ```bash
+# Homebrew
 brew install cargo-node
+
+# npm
+npm install -g cargo-node
+
+# Binary (manual download)
+# Download from releases page and verify checksum
+shasum -a 256 cargo-node-*.tar.gz
 ```
+
+### 2. Project Initialization
 
 ```bash
-nix-env -iA cargo-node
+# Create new project
+cargonode new my-awesome-project
+
+# Or initialize in existing project
+cd my-project
+cargonode init
 ```
 
-### Windows
-
-Download the latest binary from the [releases page](https://github.com/xosnrdev/cargo-node/releases) or use `scoop`:
+### 3. Development Workflow
 
 ```bash
-scoop install cargo-node
+# Build project
+cargonode build
+
+# Run tests
+cargonode test
+
+# Lint and format
+cargonode fmt --fix
+cargonode check
 ```
 
-## Usage
+## Configuration Mastery
 
-Once installed, run the following commands in your project directory:
+### Configuration Precedence
 
-### Build
+Configuration resolution follows a clear hierarchy:
+
+1. CLI Flags (Highest Priority)
+2. Project `cargonode.toml`
+3. Global CargoNode Settings
+4. Default Values
+
+### Example `cargonode.toml`
+
+```toml
+# Global timeout
+default_timeout_secs = 180
+
+[commands.build]
+pre_checks = ["check", "format"]
+env_vars = { NODE_ENV = "production" }
+timeout_secs = 300
+```
+
+## Advanced Usage
+
+### Debugging & Troubleshooting
 
 ```bash
-cargo-node build
+# Enable verbose logging
+cargonode <command> --verbose
 ```
 
-### Lint
+#### Common Troubleshooting
+
+- Verify Node.js version (>=20.11.0)
+- Check configuration precedence
+- Validate tool dependencies
+
+## Contributing
+
+### How to Contribute
+
+1. Fork the repository
+2. Create a feature branch
+3. Implement changes
+4. Write comprehensive tests
+5. Update documentation
+6. Submit a pull request
+
+#### Development Setup
 
 ```bash
-cargo-node lint
+# Clone repository
+git clone https://github.com/xosnrdev/cargo-node.git
+
+# Setup development environment
+cargo build
+cargo test
 ```
 
-### Release
+## Roadmap & Vision
 
-```bash
-cargo-node release
-```
+- [ ] Enhanced plugin ecosystem
+- [ ] Advanced CI/CD integrations
+- [ ] Performance benchmarking
+- [ ] Expanded community tooling
 
-## Configuration
+## Support
 
-**cargo-node** looks for the default configuration files: `tsup.config.js` for **Tsup** and `.biome.json` for **BiomeJS**. You can customize them as needed. -->
-
-<!-- ## Contributing
-
-Contributions are welcome! To contribute, fork the repository, make your changes, and submit a pull request.
-
-Please ensure your changes adhere to the style guidelines and include tests where applicable. -->
+- **Issues**: [GitHub Issues](https://github.com/xosnrdev/cargo-node/issues)
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
+CargoNode is open-source, released under the MIT License.
+[View LICENSE](LICENSE)
