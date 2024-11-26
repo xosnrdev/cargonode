@@ -111,6 +111,7 @@ jobs:
       - name: Install packages (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
+          chmod +x ci/ubuntu_install_packages
           ci/ubuntu_install_packages
 
       - name: Install Rust
