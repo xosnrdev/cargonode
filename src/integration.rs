@@ -1,4 +1,4 @@
-//! CargoNode: A flexible command execution and configuration management module
+//! CargoNode integration module for command execution and configuration management
 //!
 //! # Overview
 //!
