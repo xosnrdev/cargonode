@@ -111,7 +111,7 @@ jobs:
       - name: Install packages (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
-          ci/ubuntu-install-packages
+          scripts/ubuntu_install_packages.sh
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
