@@ -68,13 +68,36 @@ inherits = "release"
 debug = false
 
 [package.metadata.deb]
-features = ["pcre2"]
 section = "utils"
 assets = [
-    ["target/release/cargonode", "usr/bin/", "755"],
-    ["LICENSE-MIT", "usr/share/doc/cargonode/", "644"],
-    ["LICENSE-APACHE", "usr/share/doc/cargonode/", "644"],
-    ["CHANGELOG.md", "usr/share/doc/cargonode/CHANGELOG", "644"],
-    ["README.md", "usr/share/doc/cargonode/README", "644"],
-    ["deployment/deb/cargonode.1", "usr/share/man/man1/cargonode.1", "644"],
+    [
+        "target/release/cargonode",
+        "usr/bin/",
+        "755",
+    ],
+    [
+        "LICENSE-MIT",
+        "usr/share/doc/cargonode/",
+        "644",
+    ],
+    [
+        "LICENSE-APACHE",
+        "usr/share/doc/cargonode/",
+        "644",
+    ],
+    [
+        "CHANGELOG.md",
+        "usr/share/doc/cargonode/CHANGELOG",
+        "644",
+    ],
+    [
+        "README.md",
+        "usr/share/doc/cargonode/README",
+        "644",
+    ],
+    [
+        "deployment/deb/cargonode.1",
+        "usr/share/man/man1/cargonode.1",
+        "644",
+    ],
 ]
