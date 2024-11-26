@@ -56,20 +56,20 @@ use crate::exec;
 ///
 /// # Variants
 ///
-/// - `CommandError`: Failure in executing a specific command
-/// - `ConfigError`: Issues with configuration loading or parsing
-/// - `IoError`: Standard input/output related errors
-/// - `TomlError`: Errors parsing TOML configuration
-/// - `PreCheckError`: Problems resolving pre-check commands
+/// - `Command`: Failure in executing a specific command
+/// - `Config`: Issues with configuration loading or parsing
+/// - `Io`: Standard input/output related errors
+/// - `Toml`: Errors parsing TOML configuration
+/// - `PreCheck`: Problems resolving pre-check commands
 ///
 /// # Examples
 ///
 /// ```
 /// match result {
-///     Err(Error::CommandError { command, error }) => {
+///     Err(Error::Command { command, error }) => {
 ///         eprintln!("Command {} failed: {}", command, error);
 ///     },
-///     Err(Error::ConfigError { message }) => {
+///     Err(Error::Config { message }) => {
 ///         eprintln!("Configuration problem: {}", message);
 ///     },
 ///     // ... handle other error types
@@ -79,7 +79,7 @@ use crate::exec;
 #[derive(Debug)]
 pub enum Error {
     /// Indicates a failure in command execution
-    CommandError {
+    Command {
         /// The command that failed
         command: String,
         /// Specific execution error
@@ -87,19 +87,19 @@ pub enum Error {
     },
 
     /// Represents configuration-related errors
-    ConfigError {
+    Config {
         /// Detailed error message
         message: String,
     },
 
     /// Wraps standard IO errors
-    IoError(io::Error),
+    Io(io::Error),
 
     /// Represents TOML parsing errors
-    TomlError(toml::de::Error),
+    Toml(toml::de::Error),
 
     /// Represents pre-check resolution errors
-    PreCheckError {
+    PreCheck {
         /// The pre-check command that could not be resolved
         pre_check: String,
     },
@@ -227,7 +227,7 @@ impl fmt::Display for Error {
     /// # Examples
     ///
     /// ```
-    /// let error = Error::CommandError {
+    /// let error = Error::Command {
     ///     command: "build".to_string(),
     ///     error: exec::Error::Timeout
     /// };
@@ -235,13 +235,13 @@ impl fmt::Display for Error {
     /// ```
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Error::CommandError { command, error } => {
+            Error::Command { command, error } => {
                 write!(f, "Failed to execute {}: {}", command, error)
             }
-            Error::ConfigError { message } => write!(f, "Configuration error: {}", message),
-            Error::IoError(err) => write!(f, "IO error: {}", err),
-            Error::TomlError(err) => write!(f, "TOML parsing error: {}", err),
-            Error::PreCheckError { pre_check } => {
+            Error::Config { message } => write!(f, "Configuration error: {}", message),
+            Error::Io(err) => write!(f, "IO error: {}", err),
+            Error::Toml(err) => write!(f, "TOML parsing error: {}", err),
+            Error::PreCheck { pre_check } => {
                 write!(f, "Unable to resolve pre-check command: {}", pre_check)
             }
         }
@@ -260,7 +260,7 @@ impl From<io::Error> for Error {
     /// }
     /// ```
     fn from(err: io::Error) -> Self {
-        Error::IoError(err)
+        Error::Io(err)
     }
 }
 
@@ -274,7 +274,7 @@ impl From<toml::de::Error> for Error {
     /// let config: Result<Config> = toml::from_str(toml_str).map_err(Error::from);
     /// ```
     fn from(err: toml::de::Error) -> Self {
-        Error::TomlError(err)
+        Error::Toml(err)
     }
 }
 
@@ -369,7 +369,7 @@ static CONFIG: Lazy<Result<Config>> = Lazy::new(|| {
         }
         Err(other_err) => {
             // Other IO errors
-            Err(Error::IoError(other_err))
+            Err(Error::Io(other_err))
         }
     }
 });
@@ -501,7 +501,7 @@ impl fmt::Display for Command {
 ///
 /// # Errors
 ///
-/// Returns a `ConfigError` if the global configuration cannot be loaded
+/// Returns a `Config` if the global configuration cannot be loaded
 ///
 /// # Examples
 ///
@@ -509,7 +509,7 @@ impl fmt::Display for Command {
 /// let config = resolve_command(&Command::Build)?;
 /// ```
 fn resolve_command(command: &Command) -> Result<CommandConfig> {
-    let config = CONFIG.as_ref().map_err(|e| Error::ConfigError {
+    let config = CONFIG.as_ref().map_err(|e| Error::Config {
         message: format!("Failed to load config: {}", e),
     })?;
 
@@ -531,9 +531,9 @@ fn resolve_command(command: &Command) -> Result<CommandConfig> {
 ///
 /// # Errors
 ///
-/// - `PreCheckError` if a pre-check command cannot be resolved
-/// - `CommandError` for execution failures
-/// - `ConfigError` for configuration loading issues
+/// - `PreCheck` if a pre-check command cannot be resolved
+/// - `Command` for execution failures
+/// - `Config` for configuration loading issues
 ///
 /// # Examples
 ///
@@ -556,7 +556,7 @@ async fn execute(work_dir: &Path, command: Command, extra_args: Vec<String>) -> 
             }
             None => {
                 // Fallback to custom command execution if no direct mapping
-                return Err(Error::PreCheckError {
+                return Err(Error::PreCheck {
                     pre_check: pre_check.clone(),
                 });
             }
@@ -587,11 +587,11 @@ async fn execute(work_dir: &Path, command: Command, extra_args: Vec<String>) -> 
         exec::npx(work_dir, full_args, env_vars),
     )
     .await
-    .map_err(|_| Error::CommandError {
+    .map_err(|_| Error::Command {
         command: config.command.clone(),
         error: exec::Error::Timeout,
     })?
-    .map_err(|e| Error::CommandError {
+    .map_err(|e| Error::Command {
         command: config.command.clone(),
         error: e,
     })?;
