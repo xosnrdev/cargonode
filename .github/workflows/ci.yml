@@ -111,7 +111,7 @@ jobs:
       - name: Install packages (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
-          scripts/ubuntu_install_packages.sh
+          ci/ubuntu_install_packages.sh
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
@@ -140,14 +140,7 @@ jobs:
       - name: Build cargonode and all crates
         run: ${{ env.CARGO }} build --verbose ${{ env.TARGET_FLAGS }}
 
-      - name: Build cargonode with PCRE2
-        run: ${{ env.CARGO }} build --verbose pcre2 ${{ env.TARGET_FLAGS }}
-
-      - name: Run tests with PCRE2 (sans cross)
-        if: matrix.target == ''
-        run: ${{ env.CARGO }} test --verbose pcre2 ${{ env.TARGET_FLAGS }}
-
-      - name: Run tests without PCRE2 (with cross)
+      - name: Run tests with cross
         if: matrix.target != ''
         run: ${{ env.CARGO }} test --verbose ${{ env.TARGET_FLAGS }}
 
