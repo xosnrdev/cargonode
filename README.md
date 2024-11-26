@@ -2,7 +2,7 @@
 
 <img src="./docs/logo.svg" width="250px" />
 
-A CLI tool built with Rust to revolutionize Node.js development workflows. By integrating powerful tools like [BiomeJS](https://biomejs.dev/guides/getting-started/), [Tsup](https://tsup.egoist.dev/), [Vitest](https://vitest.dev/guide/), and [Release-It](https://github.com/release-it/release-it), it transforms complex development processes into simple, efficient commands.
+A CLI tool built with Rust to revolutionize Node.js development workflows. By integrating powerful tools like [BiomeJS](https://biomejs.dev/guides/getting-started/), [Tsup](https://tsup.egoist.dev/), [Vitest](https://vitest.dev/guide/), and [Release-It](https://github.com/release-it/release-it?tab=readme-ov-file#readme), it transforms complex development processes into simple, efficient commands.
 
 </div>
 
