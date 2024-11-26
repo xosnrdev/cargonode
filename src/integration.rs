@@ -46,6 +46,7 @@
 //! The module provides a comprehensive [`Error`] enum to handle various failure scenarios,
 //! including command execution, configuration parsing, and pre-check resolution.
 
+use async_recursion::async_recursion;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt, fs, io, path::Path, result, time::Duration};
@@ -544,6 +545,7 @@ fn resolve_command(command: &Command) -> Result<CommandConfig> {
 ///     vec!["--verbose"]
 /// ).await?;
 /// ```
+#[async_recursion]
 async fn execute(work_dir: &Path, command: Command, extra_args: Vec<String>) -> Result<String> {
     let config = resolve_command(&command)?;
 
