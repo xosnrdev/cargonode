@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [0.1.0] - 2024-11-27
 
 ### 🚀 Features
 
@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - _(bin)_ Add jemalloc global allocator for musl target on 64-bit systems
 - _(workflows)_ Add release workflow for creating cross-binary releases
 - _(pkg)_ Add Homebrew formula for Cargo Node binary
+- _(Changelog)_ Add project changelog
 
 ### 🐛 Bug Fixes
 
@@ -29,6 +30,7 @@ All notable changes to this project will be documented in this file.
 - _(ci)_ Make ci happy
 - _(integration)_ Add async_recursion to execute function resolve recursive `async fn` error
 - _(ci)_ Remove pcre2
+- _(brandname)_ Replace cargo-node with cargonode
 
 ### 💼 Other
 
@@ -56,7 +58,7 @@ All notable changes to this project will be documented in this file.
 - Updated package.rs
 - Revamp main
 - _(docs)_ Update README.md with improved installation and usage instructions
-- _(integration)_ Update cargonode module description
+- _(integration)_ Update CargoNode module description
 - _(docs)_ Add Apache License to the repository
 - _(config)_ Update .cargo/config.toml for Windows and MUSL targets
 - _(deps)_ Add jemallocator crate for memory allocation optimization, update metadata
@@ -66,6 +68,7 @@ All notable changes to this project will be documented in this file.
 - _(docs)_ Remove prec2
 - _(ci)_ Add executable permission to Ubuntu package installation script
 - _(build)_ Update Cargo.toml to include build.rs
+- _(pkg)_ Update keywords in Cargo.toml
 
 ### 📚 Documentation
 
@@ -84,3 +87,4 @@ All notable changes to this project will be documented in this file.
 - Later things
 - Add GitHub Actions CI workflow
 - _(ci)_ Add script to install required packages on Ubuntu
+- _(dependency)_ Update yanked "url" crate
