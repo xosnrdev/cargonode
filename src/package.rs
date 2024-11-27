@@ -137,7 +137,7 @@ impl Package {
         validate_package_name(&dir_name)?;
 
         if self.has_node_package() {
-            eprintln!("Error: `purr init` cannot be run on existing node packages");
+            eprintln!("Error: `cargonode init` cannot be run on existing node packages");
             return Ok(None);
         }
 
