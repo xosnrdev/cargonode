@@ -36,7 +36,7 @@ Developers face numerous challenges in modern Node.js projects:
 
 ### Development Prerequisites
 
-- Rust 1.65.0+ (for building from source)
+- Rust 1.80+ (for building from source)
 
 ## Quick Start
 
