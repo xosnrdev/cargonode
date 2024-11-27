@@ -22,7 +22,7 @@ if ! grep -q "version = \"$version\"" Cargo.toml; then
 fi
 
 target=aarch64-apple-darwin
-cargo build --release --features pcre2 --target $target
+cargo build --release --features --target $target
 BIN=target/$target/release/cargonode
 NAME=cargonode-$version-$target
 ARCHIVE="deployment/m2/$NAME"
