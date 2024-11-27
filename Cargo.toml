@@ -8,14 +8,7 @@ categories = [
     "development-tools",
     "development-tools::build-utils",
 ]
-keywords = [
-    "cli",
-    "nodejs",
-    "bundling",
-    "linting",
-    "developer-tools",
-    "cross-platform",
-]
+keywords = ["nodejs-dev-tools", "nodejs-cli-tools", "cross-platform"]
 description = """
 A CLI tool built with Rust to revolutionize Node.js development workflows.
 """
