@@ -6,7 +6,7 @@ A CLI tool built with Rust to revolutionize Node.js development workflows. By in
 
 </div>
 
-## Why CargoNode?
+## Why cargonode?
 
 Developers face numerous challenges in modern Node.js projects:
 
@@ -15,7 +15,7 @@ Developers face numerous challenges in modern Node.js projects:
 - Inconsistent development workflows
 - Performance bottlenecks
 
-> **CargoNode solves these problems** by providing a unified, lightning-fast CLI that simplifies your entire development lifecycle.
+> **cargonode solves these problems** by providing a unified, lightning-fast CLI that simplifies your entire development lifecycle.
 
 ## Key Features
 
@@ -44,14 +44,14 @@ Developers face numerous challenges in modern Node.js projects:
 
 ```bash
 # Homebrew
-brew install cargo-node
+brew install cargonode
 
 # npm
-npm install -g cargo-node
+npm install -g cargonode
 
 # Binary (manual download)
 # Download from releases page and verify checksum
-shasum -a 256 cargo-node-*.tar.gz
+shasum -a 256 cargonode-*.tar.gz
 ```
 
 ### 2. Project Initialization
@@ -87,7 +87,7 @@ Configuration resolution follows a clear hierarchy:
 
 1. CLI Flags (Highest Priority)
 2. Project `cargonode.toml`
-3. Global CargoNode Settings
+3. Global cargonode Settings
 4. Default Values
 
 ### Example `cargonode.toml`
@@ -132,7 +132,7 @@ cargonode <command> --verbose
 
 ```bash
 # Clone repository
-git clone https://github.com/xosnrdev/cargo-node.git
+git clone https://github.com/xosnrdev/cargonode.git
 
 # Setup development environment
 cargo build
@@ -148,9 +148,9 @@ cargo test
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/xosnrdev/cargo-node/issues)
+- **Issues**: [GitHub Issues](https://github.com/xosnrdev/cargonode/issues)
 
 ## License
 
-CargoNode is open-source, released under the MIT License.
+cargonode is open-source, released under the MIT License.
 [View LICENSE](LICENSE)

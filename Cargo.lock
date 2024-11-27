@@ -173,7 +173,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cargo-node"
+name = "cargonode"
 version = "0.1.0"
 dependencies = [
  "async-recursion",

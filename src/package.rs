@@ -73,7 +73,7 @@ impl Template {
     pub fn info(&self) -> TemplateInfo {
         match self {
             Self::NodeTypeScript => TemplateInfo {
-                url: "https://github.com/xosnrdev/cargo-node/archive/refs/heads/master.zip",
+                url: "https://github.com/xosnrdev/cargonode/archive/refs/heads/master.zip",
                 path: "templates",
                 placeholder: "node_typescript",
             },

@@ -56,7 +56,7 @@ All notable changes to this project will be documented in this file.
 - Updated package.rs
 - Revamp main
 - _(docs)_ Update README.md with improved installation and usage instructions
-- _(integration)_ Update CargoNode module description
+- _(integration)_ Update cargonode module description
 - _(docs)_ Add Apache License to the repository
 - _(config)_ Update .cargo/config.toml for Windows and MUSL targets
 - _(deps)_ Add jemallocator crate for memory allocation optimization, update metadata

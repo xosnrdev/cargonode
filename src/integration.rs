@@ -1,4 +1,4 @@
-//! CargoNode integration module for command execution and configuration management
+//! cargonode integration module for command execution and configuration management
 //!
 //! # Overview
 //!

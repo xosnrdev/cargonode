@@ -1,5 +1,5 @@
 [package]
-name = "cargo-node"
+name = "cargonode"
 version = "0.1.0"
 edition = "2021"
 authors = ["Success Kingsley <hello@xosnrdev.tech>"]
@@ -20,7 +20,7 @@ description = """
 A CLI tool built with Rust to revolutionize Node.js development workflows.
 """
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/xosnrdev/cargo-node"
+repository = "https://github.com/xosnrdev/cargonode"
 build = "build.rs"
 
 [[bin]]
