@@ -21,6 +21,7 @@ A CLI tool built with Rust to revolutionize Node.js development workflows.
 """
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/xosnrdev/cargo-node"
+build = "build.rs"
 
 [[bin]]
 name = "cargonode"
@@ -43,8 +44,8 @@ toml = "0.8.19"
 ureq = "2.10.1"
 zip-extract = "0.2.1"
 
-[target.'cfg(all(target_env = "musl", target_pointer_width = "64"))'.dependencies.jemallocator]
-version = "0.5.0"
+[target.'cfg(all(target_env = "musl", target_pointer_width = "64"))'.dependencies]
+jemallocator = "0.5.4"
 
 [profile.release]
 debug = 1
@@ -94,11 +95,6 @@ assets = [
     [
         "README.md",
         "usr/share/doc/cargonode/README",
-        "644",
-    ],
-    [
-        "deployment/deb/cargonode.1",
-        "usr/share/man/man1/cargonode.1",
         "644",
     ],
 ]
