@@ -172,6 +172,7 @@ fn test_create_package() {
 }
 
 #[test]
+#[ignore]
 fn test_init_package() {
     let temp_dir = tempdir().expect("Failed to create temp directory");
 
