@@ -1,3 +1,5 @@
+//! Provides utilities for running shell commands and handling their output.
+
 use std::{
     fmt, io,
     path::{Path, PathBuf},
@@ -5,6 +7,7 @@ use std::{
     string::FromUtf8Error,
 };
 
+/// Executes a command based on the given configuration and applies a transformation on the output.
 macro_rules! exec_command {
     ($config:expr, $transform:expr) => {{
         log($config);
@@ -38,10 +41,14 @@ macro_rules! exec_command {
     }};
 }
 
+/// Represents errors that can occur during command execution.
 #[derive(Debug)]
 pub enum Error {
+    /// Represents an error that occurs while executing a command.
     Execute(io::Error),
+    /// Represents an error that occurs while reading command output.
     ReadOutput(FromUtf8Error),
+    /// Represents a command failure with details on the stdout, stderr, and exit status.
     ExitFailure {
         stdout: String,
         stderr: String,
@@ -50,6 +57,7 @@ pub enum Error {
 }
 
 impl fmt::Display for Error {
+    /// Formats the error for display purposes.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Error::Execute(err) => write!(f, "Failed to execute command: {}", err),
@@ -75,20 +83,27 @@ impl fmt::Display for Error {
     }
 }
 
+/// Represents the configuration required to run a command.
 #[derive(Clone)]
 pub struct Config {
+    /// Specifies the working directory for the command.
     pub work_dir: PathBuf,
+    /// Specifies the program to execute.
     pub program: &'static str,
+    /// Specifies the arguments to pass to the command.
     pub args: Vec<String>,
+    /// Specifies optional environment variables for the command.
     pub env_vars: Option<Vec<(String, String)>>,
 }
 
+/// Runs a shell command using the provided configuration and returns its output.
 pub fn run(config: &Config) -> Result<String, Error> {
     exec_command!(config, |stdout| {
         String::from_utf8(stdout).map_err(Error::ReadOutput)
     })
 }
 
+/// Logs the execution details of a command.
 fn log(config: &Config) {
     const GREEN: &str = "\x1b[32m";
     const RESET: &str = "\x1b[0m";
@@ -100,6 +115,7 @@ fn log(config: &Config) {
     println!("{}Executing:{} {}", GREEN, RESET, cmd_string);
 }
 
+/// Executes an `npx` command with the specified working directory, arguments, and environment variables.
 pub fn npx<P: AsRef<Path>>(
     work_dir: P,
     args: Vec<String>,
