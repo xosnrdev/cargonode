@@ -8,31 +8,57 @@ use std::{
 
 use crate::exec;
 
+// Macro for error mapping and context
+macro_rules! map_error {
+    ($context:expr) => {
+        |err| Error::Io {
+            context: $context,
+            error: err,
+        }
+    };
+}
+
+// Macro for command execution
+macro_rules! exec_command {
+    ($work_dir:expr, $program:expr, $($arg:expr),*) => {
+        exec::run(&exec::Config {
+            work_dir: $work_dir,
+            program: $program,
+            args: vec![$($arg.to_string()),*],
+            env_vars: None,
+        })
+    };
+}
+
+// Macro for validation
+macro_rules! validate {
+    ($name:expr, $($check:expr),+) => {
+        {
+            let is_valid = $($check($name))&&+;
+            if is_valid { Ok(()) } else { Err(Error::InvalidPackageName) }
+        }
+    };
+}
+
+// Macro for placeholder replacement
+macro_rules! replace_content {
+    ($content:expr, $placeholder:expr, $replacement:expr) => {
+        $content.replace($placeholder, $replacement)
+    };
+}
+
 /// Comprehensive error handling for package creation operations
 #[derive(Debug)]
 pub enum Error {
-    /// IO-related errors with contextual information
     Io {
         context: &'static str,
         error: io::Error,
     },
-    /// Invalid package name error
     InvalidPackageName,
-    /// URL retrieval error
     GetUrl(Box<ureq::Error>),
-    /// ZIP extraction error
     ZipExtract(zip_extract::ZipExtractError),
-    /// File/directory copy error
     CopyToDestination(fs_extra::error::Error),
-    /// Command execution error
     Command(exec::Error),
-}
-
-impl Error {
-    /// Convenience method for creating IO-related errors
-    fn io(context: &'static str, error: io::Error) -> Self {
-        Self::Io { context, error }
-    }
 }
 
 impl Display for Error {
@@ -43,7 +69,7 @@ impl Display for Error {
             Self::GetUrl(err) => write!(f, "Failed to get URL: {}", err),
             Self::ZipExtract(err) => write!(f, "Failed to extract zip: {}", err),
             Self::CopyToDestination(err) => write!(f, "Failed to copy to destination: {}", err),
-            Self::Command(err) => write!(f, "Failed to run npm install: {}", err),
+            Self::Command(err) => write!(f, "Failed to run command: {}", err),
         }
     }
 }
@@ -51,25 +77,17 @@ impl Display for Error {
 /// Represents detailed information about a project template
 #[derive(Clone)]
 pub struct TemplateInfo {
-    /// URL of the template source
-    url: &'static str,
-    /// Path within the downloaded template
-    path: &'static str,
-    /// Placeholder to be replaced in files and directories
-    placeholder: &'static str,
+    pub url: &'static str,
+    pub path: &'static str,
+    pub placeholder: &'static str,
 }
 
 /// Represents different template options for package initialization
 pub enum Template {
-    /// A pre-defined Node.js TypeScript template
     NodeTypeScript,
-    /// A custom template with specific configuration
-    #[allow(dead_code)]
-    Custom(TemplateInfo),
 }
 
 impl Template {
-    /// Retrieve the template information
     pub fn info(&self) -> TemplateInfo {
         match self {
             Self::NodeTypeScript => TemplateInfo {
@@ -77,24 +95,19 @@ impl Template {
                 path: "templates",
                 placeholder: "node_typescript",
             },
-            Self::Custom(info) => info.clone(),
         }
     }
 }
 
 /// Configuration for package creation
 pub struct Config {
-    /// Name of the package to be created
     pub package_name: String,
-    /// Current working directory
     pub current_dir: PathBuf,
-    /// Template to use for package creation
     pub template: Template,
 }
 
 /// Package creation and initialization struct
 pub struct Package {
-    /// Configuration for package creation
     config: Config,
 }
 
@@ -105,52 +118,72 @@ impl Package {
     }
 
     /// Create a new package in a separate directory
-    pub async fn create(&self) -> Result<String, Error> {
+    pub fn create_package(&self) -> Result<String, Error> {
         println!("Creating package: `{}`", self.config.package_name);
+
+        // Use validation macro
         validate_package_name(&self.config.package_name)?;
 
-        let temp_dir = tempfile::tempdir()
-            .map_err(|e| Error::io("Failed to create temporary directory", e))?;
+        // Use error mapping macro
+        let temp_dir =
+            tempfile::tempdir().map_err(map_error!("Failed to create temporary directory"))?;
+
         let template_dir = self.prepare_template(&temp_dir, true)?;
 
+        // Copy template to destination
         copy_to_dest(
             &self.config.package_name,
             &template_dir,
             &self.config.current_dir,
         )?;
 
-        init_git(
+        // Use command execution macro
+        exec_command!(
             self.config
                 .current_dir
                 .clone()
                 .join(&self.config.package_name),
+            "git",
+            "init"
         )
-        .await?;
+        .map_err(Error::Command)?;
 
-        exec_npm_install(self.config.current_dir.join(&self.config.package_name)).await
+        // Run npm install
+        exec_command!(
+            self.config
+                .current_dir
+                .clone()
+                .join(&self.config.package_name),
+            "npm",
+            "install"
+        )
+        .map_err(Error::Command)
     }
 
     /// Create a package in the current directory (init mode)
-    pub async fn create_as_init(&self) -> Result<Option<String>, Error> {
+    pub fn init_package(&self) -> Result<String, Error> {
         let dir_name = self.current_dir_name();
         println!("Creating package: {}", dir_name);
+
         validate_package_name(&dir_name)?;
 
         if self.has_node_package() {
             eprintln!("Error: `cargonode init` cannot be run on existing node packages");
-            return Ok(None);
+            return Ok("".to_string());
         }
 
-        let temp_dir = tempfile::tempdir()
-            .map_err(|e| Error::io("Failed to create temporary directory", e))?;
+        let temp_dir =
+            tempfile::tempdir().map_err(map_error!("Failed to create temporary directory"))?;
+
         let template_dir = self.prepare_template(&temp_dir, false)?;
 
         flatten_extracted_template(&template_dir, &self.config.current_dir)?;
 
-        init_git(self.config.current_dir.clone()).await?;
-        Ok(Some(
-            exec_npm_install(self.config.current_dir.clone()).await?,
-        ))
+        // Use command execution macro for git init
+        exec_command!(self.config.current_dir.clone(), "git", "init").map_err(Error::Command)?;
+
+        // Run npm install
+        exec_command!(self.config.current_dir.clone(), "npm", "install").map_err(Error::Command)
     }
 
     /// Check if the current directory contains a Node.js package
@@ -191,8 +224,25 @@ impl Package {
     }
 }
 
+/// Validate package name against naming conventions
+pub fn validate_package_name(name: &str) -> Result<(), Error> {
+    validate!(
+        name,
+        |n: &str| !n.is_empty(),
+        |n: &str| n
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c == '-' || c == '_'),
+        |n: &str| n
+            .chars()
+            .next()
+            .map(|c| c.is_ascii_lowercase())
+            .unwrap_or(false),
+        |n: &str| !n.ends_with('-') && !n.ends_with('_')
+    )
+}
+
 /// Download a file from a given URL
-fn download_file(template_info: &TemplateInfo) -> Result<Vec<u8>, Error> {
+pub fn download_file(template_info: &TemplateInfo) -> Result<Vec<u8>, Error> {
     let response = ureq::get(template_info.url)
         .call()
         .map_err(|err| Error::GetUrl(Box::new(err)))?;
@@ -201,30 +251,20 @@ fn download_file(template_info: &TemplateInfo) -> Result<Vec<u8>, Error> {
     response
         .into_reader()
         .read_to_end(&mut buffer)
-        .map_err(|e| Error::io("Failed to read response", e))?;
+        .map_err(map_error!("Failed to read response"))?;
 
     Ok(buffer)
 }
 
 /// Extract a ZIP file to a specified path
-fn extract_zip(bytes: Vec<u8>, path: &Path) -> Result<(), Error> {
+pub fn extract_zip(bytes: Vec<u8>, path: &Path) -> Result<(), Error> {
     zip_extract::extract(&mut Cursor::new(bytes), path, true).map_err(Error::ZipExtract)
 }
 
-/// Struct to collect file and directory paths
-struct Paths {
-    /// List of file paths
-    files: Vec<PathBuf>,
-    /// List of directory paths
-    dirs: Vec<PathBuf>,
-}
-
 /// Collect all files and directories in a given directory
-fn collect_dir_entries(dir: &Path) -> Result<Paths, io::Error> {
-    let mut paths = Paths {
-        files: Vec::new(),
-        dirs: Vec::new(),
-    };
+fn collect_dir_entries(dir: &Path) -> Result<(Vec<PathBuf>, Vec<PathBuf>), io::Error> {
+    let mut files = Vec::new();
+    let mut dirs = Vec::new();
 
     let mut stack = vec![dir.to_path_buf()];
 
@@ -233,45 +273,45 @@ fn collect_dir_entries(dir: &Path) -> Result<Paths, io::Error> {
             let entry = entry?;
             let path = entry.path();
             if path.is_dir() {
-                paths.dirs.push(path.clone());
+                dirs.push(path.clone());
                 stack.push(path);
             } else if path.is_file() {
-                paths.files.push(path);
+                files.push(path);
             }
         }
     }
 
-    Ok(paths)
+    Ok((files, dirs))
 }
 
 /// Replace placeholders in template files and directories
-fn replace_placeholders(
+pub fn replace_placeholders(
     package_name: &str,
     template_info: &TemplateInfo,
     template_dir: &Path,
     process_dirs: bool,
 ) -> Result<(), Error> {
-    let paths =
-        collect_dir_entries(template_dir).map_err(|e| Error::io("Failed to read directory", e))?;
+    let (files, dirs) =
+        collect_dir_entries(template_dir).map_err(map_error!("Failed to read directory"))?;
 
     // Process files
-    for path in &paths.files {
-        let content = fs::read_to_string(path).map_err(|e| Error::io("Failed to read file", e))?;
+    for path in files {
+        let content = fs::read_to_string(&path).map_err(map_error!("Failed to read file"))?;
 
-        let new_content = content.replace(template_info.placeholder, package_name);
+        let new_content = replace_content!(content, template_info.placeholder, package_name);
 
-        fs::write(path, new_content).map_err(|e| Error::io("Failed to write file", e))?;
+        fs::write(&path, new_content).map_err(map_error!("Failed to write file"))?;
     }
 
     // Process directories if needed
     if process_dirs {
-        for dir_path in &paths.dirs {
+        for dir_path in dirs {
             if let Some(dir_name) = dir_path.file_name().and_then(|n| n.to_str()) {
                 let new_name = dir_name.replace(template_info.placeholder, package_name);
                 if new_name != dir_name {
                     let new_path = dir_path.with_file_name(new_name);
-                    fs::rename(dir_path, new_path)
-                        .map_err(|e| Error::io("Failed to rename directory", e))?;
+                    fs::rename(&dir_path, &new_path)
+                        .map_err(map_error!("Failed to rename directory"))?;
                 }
             }
         }
@@ -284,7 +324,7 @@ fn replace_placeholders(
 fn copy_to_dest(package_name: &str, template_dir: &Path, dest: &Path) -> Result<(), Error> {
     let package_path = template_dir.with_file_name(package_name);
     fs::rename(template_dir, &package_path)
-        .map_err(|e| Error::io("Failed to rename template directory", e))?;
+        .map_err(map_error!("Failed to rename template directory"))?;
 
     fs_extra::dir::copy(
         package_path,
@@ -296,79 +336,35 @@ fn copy_to_dest(package_name: &str, template_dir: &Path, dest: &Path) -> Result<
     Ok(())
 }
 
-/// Validate package name against naming conventions
-fn validate_package_name(name: &str) -> Result<(), Error> {
-    let is_valid = !name.is_empty()
-        && name
-            .chars()
-            .all(|c| c.is_ascii_lowercase() || c == '-' || c == '_')
-        && name
-            .chars()
-            .next()
-            .map(|c| c.is_ascii_lowercase())
-            .unwrap_or(false);
-
-    if is_valid {
-        Ok(())
-    } else {
-        Err(Error::InvalidPackageName)
-    }
-}
-
-/// Run npm install in the project directory
-async fn exec_npm_install(work_dir: PathBuf) -> Result<String, Error> {
-    exec::run(&exec::Config {
-        work_dir,
-        program: "npm",
-        args: vec!["install".to_string()],
-        env_vars: None,
-    })
-    .await
-    .map_err(Error::Command)
-}
-
-/// Initialize git repository
-async fn init_git(work_dir: PathBuf) -> Result<String, Error> {
-    exec::run(&exec::Config {
-        work_dir,
-        program: "git",
-        args: vec!["init".to_string()],
-        env_vars: None,
-    })
-    .await
-    .map_err(Error::Command)
-}
-
 /// Flatten extracted template to current directory
 fn flatten_extracted_template(temp_dir: &Path, current_dir: &Path) -> Result<(), Error> {
     // List all entries in the temporary directory
     let entries: Vec<PathBuf> = fs::read_dir(temp_dir)
-        .map_err(|e| Error::io("Failed to read extracted template directory", e))?
+        .map_err(map_error!("Failed to read extracted template directory"))?
         .filter_map(Result::ok)
         .map(|entry| entry.path())
         .collect();
 
     // Ensure there's only one top-level directory (the template root)
     if entries.len() != 1 || !entries[0].is_dir() {
-        return Err(Error::io(
-            "Unexpected structure in extracted template",
-            io::Error::new(io::ErrorKind::Other, "Invalid template format"),
-        ));
+        return Err(Error::Io {
+            context: "Unexpected structure in extracted template",
+            error: io::Error::new(io::ErrorKind::Other, "Invalid template format"),
+        });
     }
 
     let root_dir = &entries[0];
 
     // Move all contents from the root directory into the current directory
-    for entry in fs::read_dir(root_dir)
-        .map_err(|e| Error::io("Failed to read root directory contents", e))?
+    for entry in
+        fs::read_dir(root_dir).map_err(map_error!("Failed to read root directory contents"))?
     {
-        let entry = entry.map_err(|e| Error::io("Failed to read entry", e))?;
+        let entry = entry.map_err(map_error!("Failed to read entry"))?;
         let source_path = entry.path();
         let dest_path = current_dir.join(entry.file_name());
 
         if source_path.is_dir() {
-            fs::create_dir_all(&dest_path)
-                .map_err(|e| Error::io("Failed to create directory", e))?;
+            fs::create_dir_all(&dest_path).map_err(map_error!("Failed to create directory"))?;
             fs_extra::dir::copy(
                 &source_path,
                 &dest_path,
@@ -376,7 +372,7 @@ fn flatten_extracted_template(temp_dir: &Path, current_dir: &Path) -> Result<(),
             )
             .map_err(Error::CopyToDestination)?;
         } else if source_path.is_file() {
-            fs::copy(&source_path, &dest_path).map_err(|e| Error::io("Failed to copy file", e))?;
+            fs::copy(&source_path, &dest_path).map_err(map_error!("Failed to copy file"))?;
         }
     }
 
