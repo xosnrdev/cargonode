@@ -1,19 +1,27 @@
+//! Provides configuration management and command execution utilities for the CargoNode tool.
+
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt, fs, path::Path, result};
 
 use crate::exec;
 
+/// Represents errors encountered during command execution or configuration parsing.
 #[derive(Debug)]
 pub enum Error {
+    /// Represents an error during command execution.
     Execution {
+        /// Specifies the command that failed.
         command: String,
+        /// Provides the source error.
         source: exec::Error,
     },
+    /// Represents an error while parsing the TOML configuration file.
     Toml(toml::de::Error),
 }
 
 impl fmt::Display for Error {
+    /// Formats the error for display purposes.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Error::Execution { command, source } => {
@@ -24,16 +32,23 @@ impl fmt::Display for Error {
     }
 }
 
+/// Represents predefined commands for the CargoNode tool.
 #[derive(Debug)]
-enum Command {
+pub enum Command {
+    /// Formats the project code.
     Format,
+    /// Runs linting and checks.
     Check,
+    /// Builds the project.
     Build,
+    /// Runs the test suite.
     Test,
+    /// Releases the project.
     Release,
 }
 
 impl fmt::Display for Command {
+    /// Converts the command to its string representation.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -49,16 +64,22 @@ impl fmt::Display for Command {
     }
 }
 
+/// Represents the configuration for a specific command.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-struct CommandConfig {
-    command: String,
-    args: Vec<String>,
+pub struct CommandConfig {
+    /// Specifies the command to be executed.
+    pub command: String,
+    /// Specifies the arguments to pass to the command.
+    pub args: Vec<String>,
+    /// Specifies a list of pre-check commands to execute before the main command.
     #[serde(default)]
-    pre_checks: Vec<String>,
+    pub pre_checks: Vec<String>,
+    /// Specifies environment variables to use during execution.
     #[serde(default)]
-    env_vars: HashMap<String, String>,
+    pub env_vars: HashMap<String, String>,
 }
 
+/// Generates a default configuration for a command.
 macro_rules! command_config {
     ($cmd:expr, $args:expr, $pre_checks:expr) => {
         CommandConfig {
@@ -71,8 +92,8 @@ macro_rules! command_config {
 }
 
 impl Command {
-    /// Parse a command from its string representation.
-    fn from_str(cmd: &str) -> Option<Self> {
+    /// Maps a string to a corresponding `Command` enum variant.
+    pub fn map_from_str(cmd: &str) -> Option<Self> {
         match cmd {
             "format" => Some(Self::Format),
             "check" => Some(Self::Check),
@@ -83,7 +104,8 @@ impl Command {
         }
     }
 
-    fn default_config(&self) -> CommandConfig {
+    /// Provides the default configuration for the command.
+    pub fn default_config(&self) -> CommandConfig {
         match self {
             Self::Format => command_config!("biome", ["format"], [""]),
             Self::Check => command_config!("biome", ["check"], [""]),
@@ -94,13 +116,16 @@ impl Command {
     }
 }
 
+/// Represents the configuration for the CargoNode tool.
 #[derive(Debug, Serialize, Deserialize, Default)]
-struct Config {
+pub struct Config {
+    /// Stores configurations for commands by their names.
     #[serde(default)]
-    commands: HashMap<String, CommandConfig>,
+    pub commands: HashMap<String, CommandConfig>,
 }
 
 impl Config {
+    /// Loads the configuration from the `cargonode.toml` file or provides a default configuration.
     fn load() -> Self {
         match fs::read_to_string("cargonode.toml") {
             Ok(content) => toml::from_str(&content)
@@ -113,7 +138,8 @@ impl Config {
         }
     }
 
-    fn merge(&self, default: &CommandConfig, command_name: &str) -> CommandConfig {
+    /// Merges the default configuration with any overrides from the loaded configuration file.
+    pub fn merge(&self, default: &CommandConfig, command_name: &str) -> CommandConfig {
         if let Some(file_config) = self.commands.get(command_name) {
             CommandConfig {
                 command: if !file_config.command.trim().is_empty() {
@@ -157,16 +183,19 @@ impl Config {
     }
 }
 
+/// Represents the result type for this module.
 type Result<T> = result::Result<T, Error>;
 
+/// Stores the global configuration loaded from the configuration file.
 static CONFIG: Lazy<Config> = Lazy::new(Config::load);
 
+/// Executes the specified command in the given working directory with optional additional arguments.
 fn execute(work_dir: &Path, command: Command, extra_args: Vec<String>) -> Result<String> {
     let config = CONFIG.merge(&command.default_config(), &command.to_string());
 
     // Execute pre-checks in order.
     for pre_check in &config.pre_checks {
-        Command::from_str(pre_check)
+        Command::map_from_str(pre_check)
             .map(|command| execute(work_dir, command, vec![]))
             // Stop if any pre-check fails.
             .transpose()?;
@@ -211,281 +240,3 @@ macro_rules! generate_command_fns {
 
 // Generate shorthand functions for all predefined commands.
 generate_command_fns!(Format => format, Check => check, Build => build, Test => test, Release => release);
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::collections::HashMap;
-
-    fn default_config() -> CommandConfig {
-        CommandConfig {
-            command: "biome".to_string(),
-            args: vec!["check".to_string()],
-            pre_checks: vec!["validate".to_string()],
-            env_vars: HashMap::from([("ENV".to_string(), "production".to_string())]),
-        }
-    }
-
-    #[test]
-    fn test_command_parsing() {
-        let valid_commands = ["format", "check", "build", "test", "release"];
-        for cmd in valid_commands {
-            assert!(Command::from_str(cmd).is_some(), "Failed to parse: {}", cmd);
-        }
-        assert!(
-            Command::from_str("invalid").is_none(),
-            "Invalid command parsed unexpectedly"
-        );
-    }
-
-    #[test]
-    fn test_merge_with_full_file_config() {
-        let mut config = Config::default();
-        config.commands.insert(
-            "build".to_string(),
-            CommandConfig {
-                command: "custom_command".to_string(),
-                args: vec!["custom_arg".to_string()],
-                pre_checks: vec!["custom_check".to_string()],
-                env_vars: HashMap::from([
-                    ("LOG_LEVEL".to_string(), "debug".to_string()),
-                    // Overrides default
-                    ("ENV".to_string(), "development".to_string()),
-                ]),
-            },
-        );
-
-        let default = default_config();
-        let merged = config.merge(&default, "build");
-
-        assert_eq!(merged.command, "custom_command");
-        assert_eq!(merged.args, vec!["custom_arg"]);
-        assert_eq!(merged.pre_checks, vec!["custom_check"]);
-        assert_eq!(
-            merged.env_vars,
-            HashMap::from([
-                ("LOG_LEVEL".to_string(), "debug".to_string()),
-                ("ENV".to_string(), "development".to_string()),
-            ])
-        );
-    }
-
-    #[test]
-    fn test_merge_with_partial_file_config() {
-        let mut config = Config::default();
-        config.commands.insert(
-            "test".to_string(),
-            CommandConfig {
-                // Should fallback to default
-                command: "".to_string(),
-                // Override
-                args: vec!["test_arg".to_string()],
-                // Fallback to default
-                pre_checks: vec![],
-                env_vars: HashMap::from([("LOG_LEVEL".to_string(), "debug".to_string())]),
-            },
-        );
-
-        let default = default_config();
-        let merged = config.merge(&default, "test");
-
-        assert_eq!(merged.command, "biome");
-        assert_eq!(merged.args, vec!["test_arg"]);
-        assert_eq!(merged.pre_checks, vec!["validate"]);
-        assert_eq!(
-            merged.env_vars,
-            HashMap::from([
-                // Default retained
-                ("ENV".to_string(), "production".to_string()),
-                // New added
-                ("LOG_LEVEL".to_string(), "debug".to_string()),
-            ])
-        );
-    }
-
-    #[test]
-    fn test_merge_with_no_file_config() {
-        let config = Config::default();
-        let default = default_config();
-        let merged = config.merge(&default, "nonexistent");
-
-        assert_eq!(merged, default, "Should default to default_config");
-    }
-
-    #[test]
-    fn test_merge_with_empty_file_config() {
-        let mut config = Config::default();
-        config
-            .commands
-            .insert("build".to_string(), CommandConfig::default());
-
-        let default = default_config();
-        let merged = config.merge(&default, "build");
-
-        assert_eq!(
-            merged, default,
-            "Should fallback entirely to default_config"
-        );
-    }
-
-    #[test]
-    fn test_environment_variable_merging() {
-        let default_config = CommandConfig {
-            command: "default-cmd".to_string(),
-            args: vec![],
-            pre_checks: vec![],
-            env_vars: HashMap::from([("DEFAULT_VAR".to_string(), "default".to_string())]),
-        };
-
-        let mut config = Config::default();
-        config.commands.insert(
-            "test".to_string(),
-            CommandConfig {
-                command: "test-cmd".to_string(),
-                env_vars: HashMap::from([("TEST_VAR".to_string(), "custom".to_string())]),
-                ..Default::default()
-            },
-        );
-
-        let merged_config = config.merge(&default_config, "test");
-
-        assert_eq!(
-            merged_config.env_vars,
-            HashMap::from([
-                ("DEFAULT_VAR".to_string(), "default".to_string()),
-                ("TEST_VAR".to_string(), "custom".to_string()),
-            ])
-        );
-    }
-
-    #[test]
-    fn test_default_command_configurations() {
-        let default_tests = [
-            (Command::Format, "biome", vec!["format"]),
-            (Command::Check, "biome", vec!["check"]),
-            (Command::Build, "tsup", vec![""]),
-            (Command::Test, "vitest", vec![""]),
-            (Command::Release, "release-it", vec![""]),
-        ];
-
-        for (cmd, expected_cmd, expected_args) in default_tests {
-            let default_config = cmd.default_config();
-            assert_eq!(default_config.command, expected_cmd);
-            assert_eq!(default_config.args, expected_args);
-        }
-    }
-
-    #[test]
-    fn test_pre_check_configurations() {
-        let pre_check_tests = [
-            (Command::Build, vec!["check"]),
-            (Command::Test, vec!["check"]),
-            (Command::Release, vec!["build"]),
-        ];
-
-        for (cmd, expected_checks) in pre_check_tests {
-            let config = cmd.default_config();
-            assert_eq!(config.pre_checks, expected_checks);
-        }
-    }
-
-    #[test]
-    fn test_merge_with_empty_or_whitespace_vectors() {
-        let default = CommandConfig {
-            command: "biome".to_string(),
-            args: vec!["check".to_string()],
-            pre_checks: vec!["validate".to_string()],
-            env_vars: HashMap::from([("ENV".to_string(), "production".to_string())]),
-        };
-
-        let mut config = Config::default();
-        config.commands.insert(
-            "test".to_string(),
-            CommandConfig {
-                // Should fallback to default
-                command: "  ".to_string(),
-                // Should fallback to default
-                args: vec!["  ".to_string()],
-                // Should fallback to default
-                pre_checks: vec![],
-                env_vars: HashMap::new(),
-            },
-        );
-
-        let merged = config.merge(&default, "test");
-
-        assert_eq!(merged.command, "biome");
-        assert_eq!(merged.args, vec!["check"]);
-        assert_eq!(merged.pre_checks, vec!["validate"]);
-        assert_eq!(
-            merged.env_vars,
-            HashMap::from([("ENV".to_string(), "production".to_string())])
-        );
-    }
-
-    #[test]
-    fn test_merge_with_partial_whitespace_vectors() {
-        let default = CommandConfig {
-            command: "biome".to_string(),
-            args: vec!["check".to_string()],
-            pre_checks: vec!["validate".to_string()],
-            env_vars: HashMap::from([("ENV".to_string(), "production".to_string())]),
-        };
-
-        let mut config = Config::default();
-        config.commands.insert(
-            "build".to_string(),
-            CommandConfig {
-                command: "custom-cmd".to_string(),
-                // Mixed, only valid-arg retained
-                args: vec!["valid-arg".to_string(), "  ".to_string()],
-                // Mixed, only custom-check retained
-                pre_checks: vec!["".to_string(), "custom-check".to_string()],
-                env_vars: HashMap::new(),
-            },
-        );
-
-        let merged = config.merge(&default, "build");
-
-        assert_eq!(merged.command, "custom-cmd");
-        assert_eq!(merged.args, vec!["valid-arg"]);
-        assert_eq!(merged.pre_checks, vec!["custom-check"]);
-        assert_eq!(
-            merged.env_vars,
-            HashMap::from([("ENV".to_string(), "production".to_string())])
-        );
-    }
-
-    #[test]
-    fn test_merge_with_empty_whitespace_and_non_empty_vectors() {
-        let default = CommandConfig {
-            command: "default-cmd".to_string(),
-            args: vec!["default-arg".to_string()],
-            pre_checks: vec!["default-check".to_string()],
-            env_vars: HashMap::from([("DEFAULT_ENV".to_string(), "default".to_string())]),
-        };
-
-        let mut config = Config::default();
-        config.commands.insert(
-            "release".to_string(),
-            CommandConfig {
-                command: "release-cmd".to_string(),
-                // Mixed
-                args: vec!["   ".to_string(), "release-arg".to_string()],
-                // Mixed
-                pre_checks: vec!["release-check".to_string(), "  ".to_string()],
-                env_vars: HashMap::new(),
-            },
-        );
-
-        let merged = config.merge(&default, "release");
-
-        assert_eq!(merged.command, "release-cmd");
-        assert_eq!(merged.args, vec!["release-arg"]);
-        assert_eq!(merged.pre_checks, vec!["release-check"]);
-        assert_eq!(
-            merged.env_vars,
-            HashMap::from([("DEFAULT_ENV".to_string(), "default".to_string())])
-        );
-    }
-}
