@@ -1,11 +1,11 @@
-pub mod exec;
-mod integration;
-mod package;
-
+use cargonode::{
+    build, check, format,
+    package::{get_current_dir, get_current_dir_name, Config, Package, Template},
+    release, test,
+};
 use clap::{Parser, Subcommand};
-use integration::{build, check, format, release, test};
-use package::{get_current_dir, get_current_dir_name, Package};
 
+/// Command-line interface (CLI) for managing Node.js and TypeScript packages.
 #[derive(Debug, Parser)]
 #[command(about, version, long_about = None)]
 struct Cli {
@@ -35,25 +35,28 @@ enum Commands {
 #[global_allocator]
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
+/// Main function for parsing CLI commands and executing respective actions.
 fn main() {
     let cli = Cli::parse();
     let current_dir = get_current_dir();
 
+    /// Macro for creating a new package with the specified name.
     macro_rules! create_package {
         ($package_name:expr, $current_dir:expr, $create_method:ident) => {{
-            let config = package::Config {
+            let config = Config {
                 package_name: $package_name,
                 current_dir: $current_dir.clone(),
-                template: package::Template::NodeTypeScript,
+                template: Template::NodeTypeScript,
             };
             let package = Package::new(config);
             match package.$create_method() {
-                Ok(output) => println!("{:?}", output),
+                Ok(output) => println!("{}", output),
                 Err(err) => eprintln!("Error: {}", err),
             }
         }};
     }
 
+    /// Macro for handling commands with the specified function.
     macro_rules! handle_command {
         ($cmd:expr, $func:expr) => {
             match $func(&current_dir, $cmd) {
@@ -63,6 +66,7 @@ fn main() {
         };
     }
 
+    // Map CLI commands to respective actions.
     match cli.command {
         Commands::New { package_name } => {
             create_package!(package_name, current_dir, create_package)
