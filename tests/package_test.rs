@@ -129,6 +129,9 @@ fn test_directory_placeholder_replacement() {
 fn test_create_package() {
     let temp_dir = tempdir().expect("Failed to create temp directory");
 
+    // Explicitly set the current directory
+    env::set_current_dir(&temp_dir).expect("Failed to set current directory");
+
     let config = Config {
         package_name: "test-package".to_string(),
         current_dir: temp_dir.path().to_path_buf(),
@@ -176,20 +179,28 @@ fn test_init_package() {
     let project_dir = temp_dir.path().join("valid-project");
     fs::create_dir_all(&project_dir).expect("Failed to create project directory");
 
+    // Temporarily change the current working directory
+    let original_dir = env::current_dir().expect("Failed to get current directory");
+    env::set_current_dir(&project_dir).expect("Failed to change current directory");
+
+    // Ensure the directory exists for debug purposes
+    assert!(
+        project_dir.exists(),
+        "Project directory does not exist: {:?}",
+        project_dir
+    );
+
     let config = Config {
-        // Explicitly set a valid name
         package_name: "valid-project".to_string(),
-        // Use the directory with a valid name
         current_dir: project_dir.clone(),
         template: Template::NodeTypeScript,
     };
 
-    // Temporarily change the current working directory
-    let original_dir = std::env::current_dir().expect("Failed to get current directory");
-    env::set_current_dir(&project_dir).expect("Failed to change current directory");
-
     let package = Package::new(config);
     let result = package.init_package();
+
+    // Restore the original working directory
+    env::set_current_dir(&original_dir).expect("Failed to restore original directory");
 
     if let Err(err) = &result {
         if matches!(err, Error::Command { .. }) {
