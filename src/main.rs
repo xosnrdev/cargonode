@@ -7,8 +7,7 @@ use integration::{build, check, format, release, test};
 use package::{get_current_dir, get_current_dir_name, Package};
 
 #[derive(Debug, Parser)]
-#[command(about, author, version, long_about = None)]
-#[command(propagate_version = true)]
+#[command(about, version, long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -17,102 +16,64 @@ struct Cli {
 #[derive(Debug, Subcommand)]
 enum Commands {
     /// Create a new package with <package_name>
-    #[command(arg_required_else_help = true)]
-    New {
-        /// The name of the package to create
-        package_name: String,
-    },
+    New { package_name: String },
     /// Initialize package in current directory
     Init,
     /// Format files using biomejs
-    #[command(disable_help_flag = true)]
-    Fmt {
-        /// Flag arguments to pass to biomejs
-        #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
-        args: Vec<String>,
-    },
+    Fmt { args: Vec<String> },
     /// Check files using biomejs
-    #[command(disable_help_flag = true)]
-    Check {
-        /// Flag arguments to pass to biomejs
-        #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
-        args: Vec<String>,
-    },
+    Check { args: Vec<String> },
     /// Build and bundle using tsup
-    #[command(disable_help_flag = true)]
-    Build {
-        /// Flag arguments to pass to tsup
-        #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
-        args: Vec<String>,
-    },
+    Build { args: Vec<String> },
     /// Run tests using vitest
-    #[command(disable_help_flag = true)]
-    Test {
-        /// Flag arguments to pass to vitest
-        #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
-        args: Vec<String>,
-    },
+    Test { args: Vec<String> },
     /// Automate package release using release-it
-    #[command(disable_help_flag = true)]
-    Release {
-        /// Flag arguments to pass to release-it
-        #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
-        args: Vec<String>,
-    },
+    Release { args: Vec<String> },
 }
 
 #[cfg(all(target_env = "musl", target_pointer_width = "64"))]
 #[global_allocator]
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let cli = Cli::parse();
+    let current_dir = get_current_dir();
+
+    macro_rules! create_package {
+        ($package_name:expr, $current_dir:expr, $create_method:ident) => {{
+            let config = package::Config {
+                package_name: $package_name,
+                current_dir: $current_dir.clone(),
+                template: package::Template::NodeTypeScript,
+            };
+            let package = Package::new(config);
+            match package.$create_method() {
+                Ok(output) => println!("{:?}", output),
+                Err(err) => eprintln!("Error: {}", err),
+            }
+        }};
+    }
+
+    macro_rules! handle_command {
+        ($cmd:expr, $func:expr) => {
+            match $func(&current_dir, $cmd) {
+                Ok(output) => println!("{}", output),
+                Err(err) => eprintln!("Error: {}", err),
+            }
+        };
+    }
 
     match cli.command {
         Commands::New { package_name } => {
-            let config = package::Config {
-                package_name,
-                current_dir: get_current_dir(),
-                template: package::Template::NodeTypeScript,
-            };
-            let package = Package::new(config);
-            match package.create().await {
-                Ok(output) => println!("{}", output),
-                Err(e) => eprintln!("Error: {}", e),
-            }
+            create_package!(package_name, current_dir, create_package)
         }
         Commands::Init => {
-            let config = package::Config {
-                package_name: get_current_dir_name(),
-                current_dir: get_current_dir(),
-                template: package::Template::NodeTypeScript,
-            };
-            let package = Package::new(config);
-            match package.create_as_init().await {
-                Ok(output) => println!("{}", output.unwrap_or_default()),
-                Err(err) => eprintln!("Error: {}", err),
-            }
+            create_package!(get_current_dir_name(), current_dir, init_package)
         }
-        Commands::Fmt { args } => match format(&get_current_dir(), args).await {
-            Ok(output) => println!("{}", output),
-            Err(err) => eprintln!("Error: {}", err),
-        },
-        Commands::Check { args } => match check(&get_current_dir(), args).await {
-            Ok(output) => println!("{}", output),
-            Err(err) => eprintln!("Error: {}", err),
-        },
-        Commands::Build { args } => match build(&get_current_dir(), args).await {
-            Ok(output) => println!("{}", output),
-            Err(err) => eprintln!("Error: {}", err),
-        },
-        Commands::Test { args } => match test(&get_current_dir(), args).await {
-            Ok(output) => println!("{}", output),
-            Err(err) => eprintln!("Error: {}", err),
-        },
-        Commands::Release { args } => match release(&get_current_dir(), args).await {
-            Ok(output) => println!("{}", output),
-            Err(err) => eprintln!("Error: {}", err),
-        },
+        Commands::Fmt { args } => handle_command!(args, format),
+        Commands::Check { args } => handle_command!(args, check),
+        Commands::Build { args } => handle_command!(args, build),
+        Commands::Test { args } => handle_command!(args, test),
+        Commands::Release { args } => handle_command!(args, release),
     }
 }
