@@ -47,6 +47,16 @@ macro_rules! replace_content {
     };
 }
 
+/// Macro for checking if a given command is available in the host system
+macro_rules! check_command {
+    ($command:expr) => {
+        match exec_command!(get_current_dir(), $command, "--version") {
+            Ok(output) => Ok(output),
+            Err(err) => Err(Error::Command(err)),
+        }
+    };
+}
+
 /// Comprehensive error handling for package creation operations
 #[derive(Debug)]
 pub enum Error {
@@ -137,6 +147,9 @@ impl Package {
             &self.config.current_dir,
         )?;
 
+        check_command!("git")?;
+        check_command!("npm")?;
+
         // Use command execution macro
         exec_command!(
             self.config
@@ -168,8 +181,11 @@ impl Package {
         validate_package_name(&dir_name)?;
 
         if self.has_node_package() {
-            eprintln!("Error: `cargonode init` cannot be run on existing node packages");
-            return Ok("".to_string());
+            return Ok(r#"
+                Error: `cargonode init` cannot be run on existing node packages.
+                To resolve, remove the existing package or choose a different directory.
+                "#
+            .to_string());
         }
 
         let temp_dir =
@@ -179,7 +195,10 @@ impl Package {
 
         flatten_extracted_template(&template_dir, &self.config.current_dir)?;
 
-        // Use command execution macro for git init
+        check_command!("git")?;
+        check_command!("npm")?;
+
+        // Run git init
         exec_command!(self.config.current_dir.clone(), "git", "init").map_err(Error::Command)?;
 
         // Run npm install
