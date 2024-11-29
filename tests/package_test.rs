@@ -129,6 +129,9 @@ fn test_directory_placeholder_replacement() {
 fn test_create_package() {
     let temp_dir = tempdir().expect("Failed to create temp directory");
 
+    // Explicitly set the current directory
+    env::set_current_dir(&temp_dir).expect("Failed to set current directory");
+
     let config = Config {
         package_name: "test-package".to_string(),
         current_dir: temp_dir.path().to_path_buf(),
