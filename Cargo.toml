@@ -10,7 +10,7 @@ categories = [
 ]
 keywords = ["nodejs-dev-tools", "nodejs-cli-tools", "cross-platform"]
 description = """
-A CLI tool built with Rust to streamline Node.js development workflows.
+CLI for Node.js development workflows.
 """
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/xosnrdev/cargonode"
