@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.1.0] - 2024-11-27
+## [0.1.0] - 2024-11-30
 
 ### 🚀 Features
 
@@ -31,49 +31,10 @@ All notable changes to this project will be documented in this file.
 - _(integration)_ Add async_recursion to execute function resolve recursive `async fn` error
 - _(ci)_ Remove pcre2
 - _(brandname)_ Replace cargo-node with cargonode
-
-### 💼 Other
-
-- Not necessary
-- Move npm install expression to a function call
-- "fmt" script not needed
-- Reduce boilerplate
-- Update command descriptions and arguments in main.rs
-- Std already imported
-- Work_dir now generic type AsRef of Path
-- Update params
-- Use tokio::process::Command for async support
-- Revamping modules
-
-### 🚜 Refactor
-
-- Rename to package
-- Rename template placeholder
-- Improve package creation logging
-- Std alread imported
-- Remove sample
-- Update cargo
-- Remove redundant crate
-- Make clippy happy
-- Updated package.rs
-- Revamp main
-- _(docs)_ Update README.md with improved installation and usage instructions
-- _(integration)_ Update CargoNode module description
-- _(docs)_ Add Apache License to the repository
-- _(config)_ Update .cargo/config.toml for Windows and MUSL targets
-- _(deps)_ Add jemallocator crate for memory allocation optimization, update metadata
-- _(docs)_ Update assets path in Cargo.toml
-- _(ci)_ Update Ubuntu package installation script path
-- _(ci)_ Update Ubuntu package installation script path
-- _(docs)_ Remove prec2
-- _(ci)_ Add executable permission to Ubuntu package installation script
-- _(build)_ Update Cargo.toml to include build.rs
-- _(pkg)_ Update keywords in Cargo.toml
-
-### 📚 Documentation
-
-- _(logo)_ Add cargonode logo
-- Update README.md
+- _(tests)_ Skip tests if required commands are missing in cross-docker environment
+- _(tests)_ Resolve "No such file or directory" error in GitHub Actions
+- _(tests)_ Resolve "No such file or directory" error in GitHub Actions
+- _(workflows)_ Moves the leading v from $VERSION if it exists
 
 ### ⚙️ Miscellaneous Tasks
 
@@ -88,3 +49,6 @@ All notable changes to this project will be documented in this file.
 - Add GitHub Actions CI workflow
 - _(ci)_ Add script to install required packages on Ubuntu
 - _(dependency)_ Update yanked "url" crate
+- _(pkg)_ Update Rust version requirement to 1.80+
+- _(changelog)_ Update changelog
+- _(package)_ Command typo
