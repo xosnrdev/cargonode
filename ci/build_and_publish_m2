@@ -27,7 +27,7 @@ BIN=target/${target}/release/cargonode
 NAME=cargonode-${version}-${target}
 ARCHIVE="deployment/m2/${NAME}"
 
-mkdir -p "${ARCHIVE}"/{complete,doc}
+mkdir -p "${ARCHIVE}"/doc
 cp "${BIN}" "${ARCHIVE}"/
 strip "${ARCHIVE}/cargonode"
 cp {README.md,LICENSE-MIT,LICENSE-APACHE} "${ARCHIVE}"/
