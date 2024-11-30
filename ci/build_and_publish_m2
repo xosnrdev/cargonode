@@ -16,7 +16,7 @@ if [ -z "$version" ]; then
     echo "Usage: "$(basename "$0")" <version>" >&2
     exit 1
 fi
-if ! grep -q "version = \"${VERSION#v}\"" Cargo.toml; then
+if ! grep -q "version = \"$VERSION\"" Cargo.toml; then
     echo "version does not match Cargo.toml" >&2
     exit 1
 fi
