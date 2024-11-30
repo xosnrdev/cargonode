@@ -2,6 +2,7 @@ class Cargonode < Formula
     version '0.1.0'
     desc "Streamline Node.js development workflows"
     homepage "https://github.com/xosnrdev/cargonode"
+    license "MIT OR Apache-2.0"
   
     if OS.mac?
         url "https://github.com/xosnrdev/cargonode/releases/download/#{version}/cargonode-#{version}-x86_64-apple-darwin.tar.gz"
@@ -13,6 +14,10 @@ class Cargonode < Formula
   
     def install
       bin.install "cargonode"
+    end
+
+    test do
+        system "#{bin}/cargonode", "--version"
     end
 
 end
