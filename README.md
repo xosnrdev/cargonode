@@ -1,143 +1,94 @@
 <div align="center">
-
 <img src="./docs/logo.svg" width="250px" />
 
-A CLI tool built with Rust to streamline Node.js development workflows. By integrating essential tools like [BiomeJS](https://biomejs.dev/guides/getting-started/), [Tsup](https://tsup.egoist.dev/), [Vitest](https://vitest.dev/guide/), and [Release-It](https://github.com/release-it/release-it?tab=readme-ov-file#readme), cargonode simplifies complex development tasks.
+CLI tool integrating [BiomeJS](https://biomejs.dev), [Tsup](https://tsup.egoist.dev), [Vitest](https://vitest.dev), and [Release-It](https://github.com/release-it/release-it) for Node.js development.
 
 </div>
 
-## Overview
+## Features
 
-cargonode addresses key challenges in Node.js projects, including:
-
-- Repetitive configuration
-- Fragmented tooling
-- Inconsistent workflows
-- Performance issues
-
-With cargonode, you gain a unified, high-performance CLI that enhances your development process.
-
-## Key Features
-
-- **High Performance**: Built with Rust for optimal speed.
-- **Modular Design**: Seamless integration with popular tools.
-- **Automated Workflows**: Streamlined build, test, lint, and release processes.
-- **Flexible Configuration**: Easily customizable environment.
+- Rust-powered performance
+- Tool-agnostic architecture
+- Command customization
+- Project templates
+- Inherited CLI arguments
+- Cross-platform support
 
 ## Requirements
 
-### System Compatibility
+### System
 
-- **Node.js**: Version 20.11.0 or higher (Latest LTS recommended).
-- **Supported Platforms**:
-  - **macOS**: x64, ARM
-  - **Linux**: x64, ARM (Ubuntu)
-  - **Windows**: x64, ARM
+- Node.js >= 20.11.0
+- Rust >= 1.80
 
-### Development Prerequisites
+### Platforms
 
-- Rust 1.80 or higher (for building from source).
+- macOS (x64, ARM)
+- Linux (x64, ARM)
+- Windows (x64, ARM)
 
 ## Installation
 
-To install `cargonode`, use Homebrew on macOS:
+macOS:
 
 ```bash
 brew install cargonode
 ```
 
-## Getting Started
-
-### Project Initialization
-
-Create a new project or initialize an existing one:
+Rust:
 
 ```bash
-# Create a new project
-cargonode new my-awesome-project
+cargo install cargonode
+```
 
-# Initialize in an existing project
-cd my-project
+Additional package managers planned.
+
+## Usage
+
+```bash
+# Project
+cargonode new my-project
 cargonode init
+
+# Operations
+cargonode build  # default: tsup
+cargonode test   # default: vitest
+cargonode fmt    # default: biome
+cargonode check  # default: biome
+cargonode release # default: release-it
+
+# Help
+cargonode --help
+cargonode build --help  # displays tsup help
+cargonode test run     # runs vitest run
+cargonode check --fix  # runs biome check --fix
 ```
 
-### Development Workflow
+## Configuration
 
-Manage your project with the following commands:
-
-```bash
-# Build the project
-cargonode build
-
-# Run tests
-cargonode test
-
-# Lint and format code
-cargonode fmt --fix
-cargonode check
-```
-
-## Configuration Example
-
-Here’s a sample `cargonode.toml` configuration file:
+Customize tools via `cargonode.toml`:
 
 ```toml
 [commands.format]
-# Command to format code
-command = "biome"
-# Arguments for the command
-args = ["format"]
-# Pre-checks to run before the command
-pre_checks = []
-# Environment variables to set
-env_vars = {}
+command = "eslint"  # replace biome
+args = ["--fix"]
 
-[commands.check]
-command = "biome"
-args = ["check"]
-pre_checks = []
-env_vars = {}
-
-# ... Add more commands as needed
+[commands.release]
+prechecks = ["test", "build"]
 ```
 
-_Note: This configuration serves as a template. Customize the commands and parameters as needed._
+[Template Reference](./templates/node_typescript/cargonode.toml)
 
-## Configuration Precedence
+### Precedence
 
-Configuration resolution follows this order:
-
-1. CLI Flags (Highest Priority)
-2. Project `cargonode.toml`
-3. Global cargonode Settings
-4. Default Values
-
-## Contributing
-
-To contribute to cargonode:
-
-1. Fork the repository.
-2. Create a feature branch.
-3. Implement your changes.
-4. Write tests.
-5. Update documentation.
-6. Submit a pull request.
-
-### Development Setup
-
-Clone the repository and set up the development environment:
-
-```bash
-git clone https://github.com/xosnrdev/cargonode.git
-cd cargonode
-cargo build
-cargo test
-```
+1. CLI Arguments
+2. Project Configuration
+3. Defaults
 
 ## Support
 
-For issues or questions, please visit [GitHub Issues](https://github.com/xosnrdev/cargonode/issues).
+[GitHub Issues](https://github.com/xosnrdev/cargonode/issues)
 
 ## License
 
-cargonode is open-source software released under the MIT License. [View LICENSE](LICENSE).
+[MIT](./LICENSE-MIT) OR [Apache-2.0](./LICENSE-APACHE)
