@@ -21,17 +21,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: Get the release version from the tag
         if: env.VERSION == ''
-        run: |
-          raw_version="${{ github.ref_name }}"
-          version="${raw_version#v}"
-          echo "VERSION=$version" >> $GITHUB_ENV
+        run: echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
       - name: Show the version
         run: |
           echo "version is: $VERSION"
       - name: Check that tag version and Cargo.toml version are the same
         shell: bash
         run: |
-          if ! grep -q "version = \"$VERSION\"" Cargo.toml; then
+          if ! grep -q "version = \"${VERSION#v}\"" Cargo.toml; then
             echo "version does not match Cargo.toml" >&2
             exit 1
           fi
@@ -288,7 +285,8 @@ jobs:
         shell: bash
         run: |
           cargo deb --profile deb --target ${{ env.TARGET }}
-          version="${{ needs.create-release.outputs.version }}"
+          raw_version="${{ needs.create-release.outputs.version }}"
+          version="${raw_version#v}"
           echo "DEB_DIR=target/${{ env.TARGET }}/debian" >> $GITHUB_ENV
           echo "DEB_NAME=cargonode_$version-1_amd64.deb" >> $GITHUB_ENV
 
