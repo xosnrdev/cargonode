@@ -2,8 +2,6 @@
 
 <img src="./docs/logo.svg" width="250px" />
 
-# cargonode
-
 A CLI tool built with Rust to streamline Node.js development workflows. By integrating essential tools like [BiomeJS](https://biomejs.dev/guides/getting-started/), [Tsup](https://tsup.egoist.dev/), [Vitest](https://vitest.dev/guide/), and [Release-It](https://github.com/release-it/release-it?tab=readme-ov-file#readme), cargonode simplifies complex development tasks.
 
 </div>
