@@ -94,7 +94,7 @@
     font-family="Arial, sans-serif"
     font-size="60"
     font-weight="bold"
-    fill="#FFFFFF"
+    fill="#FFFF00"
     filter="url(#text-shadow)"
     stroke="#333"
     stroke-width="1"
