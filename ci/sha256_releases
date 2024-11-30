@@ -7,19 +7,30 @@ if [ $# != 1 ]; then
 	exit 1
 fi
 version="$1"
+base_url="https://github.com/xosnrdev/cargonode/releases/download/${version}"
 
-# Linux and Darwin builds.
-for arch in i686 x86_64; do
-	for target in apple-darwin unknown-linux-musl; do
-		url="https://github.com/xosnrdev/cargonode/releases/download/${version}/cargonode-${version}-${arch}-${target}.tar.gz"
-		sha=$(curl -sfSL "${url}" | sha256sum)
-		echo "${version}-${arch}-${target} ${sha}"
-	done
-done
+# Function to fetch and extract SHA256 from .sha256 file
+get_sha256() {
+	local file=$1
+	curl -sfSL "${base_url}/${file}.sha256" | awk '{print $1}'
+}
 
-# Source.
-for ext in zip tar.gz; do
-	url="https://github.com/xosnrdev/cargonode/archive/${version}.${ext}"
-	sha=$(curl -sfSL "${url}" | sha256sum)
-	echo "source.${ext} ${sha}"
-done
+echo "bottle do"
+
+# ARM64 macOS builds (same binary for all versions)
+arm64_sha=$(get_sha256 "cargonode-${version}-aarch64-apple-darwin.tar.gz")
+echo "    sha256 cellar: :any,                 arm64_sonoma:   \"${arm64_sha}\""
+echo "    sha256 cellar: :any,                 arm64_ventura:  \"${arm64_sha}\""
+echo "    sha256 cellar: :any,                 arm64_monterey: \"${arm64_sha}\""
+
+# Intel macOS builds (same binary for all versions)
+x86_64_sha=$(get_sha256 "cargonode-${version}-x86_64-apple-darwin.tar.gz")
+echo "    sha256 cellar: :any,                 sonoma:         \"${x86_64_sha}\""
+echo "    sha256 cellar: :any,                 ventura:        \"${x86_64_sha}\""
+echo "    sha256 cellar: :any,                 monterey:       \"${x86_64_sha}\""
+
+# Linux build
+linux_sha=$(get_sha256 "cargonode-${version}-x86_64-unknown-linux-musl.tar.gz")
+echo "    sha256 cellar: :any_skip_relocation, x86_64_linux:   \"${linux_sha}\""
+
+echo "end"
