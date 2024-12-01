@@ -1,6 +1,10 @@
 # Changelog
 
-This file documents all notable changes to the project.
+All notable changes to this project will be documented in this file.
+
+## [0.1.1](https://github.com/xosnrdev/cargonode/compare/0.1.0...0.1.1) - 2024-12-01
+### Highlights
+- Patch release with minor bug fixes and improvements.
 
 ## [0.1.0] - 2024-11-30
 
