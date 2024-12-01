@@ -32,7 +32,7 @@ Unified tooling for Node.js, integrating [BiomeJS](https://biomejs.dev), [Tsup](
 macOS:
 
 ```bash
-brew install cargonode
+brew install xosnrdev/cargonode/cargonode
 ```
 
 Rust:
