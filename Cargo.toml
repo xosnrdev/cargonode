@@ -8,9 +8,9 @@ categories = [
     "development-tools",
     "development-tools::build-utils",
 ]
-keywords = ["nodejs-dev-tools", "nodejs-cli-tools", "cross-platform"]
+keywords = ["productivity", "developer-tools", "cross-platform"]
 description = """
-CLI for Node.js development workflows.
+Unified tooling for Node.js.
 """
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/xosnrdev/cargonode"

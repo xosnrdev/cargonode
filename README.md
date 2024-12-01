@@ -1,7 +1,7 @@
 <div align="center">
 <img src="./docs/logo.svg" width="250px" />
 
-CLI tool integrating [BiomeJS](https://biomejs.dev), [Tsup](https://tsup.egoist.dev), [Vitest](https://vitest.dev), and [Release-It](https://github.com/release-it/release-it) for Node.js development.
+Unified tooling for Node.js, integrating [BiomeJS](https://biomejs.dev), [Tsup](https://tsup.egoist.dev), [Vitest](https://vitest.dev), and [Release-It](https://github.com/release-it/release-it).
 
 </div>
 

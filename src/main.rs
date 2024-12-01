@@ -5,7 +5,7 @@ use cargonode::{
 };
 use clap::{Parser, Subcommand};
 
-/// Command-line interface (CLI) for managing Node.js and TypeScript packages.
+/// Unified Command-line interface.
 #[derive(Debug, Parser)]
 #[command(about, version, long_about = None)]
 struct Cli {
