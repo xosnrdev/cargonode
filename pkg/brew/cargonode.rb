@@ -2,7 +2,7 @@ class Cargonode < Formula
     desc "Unified tooling for Node.js"
     homepage "https://github.com/xosnrdev/cargonode"
     url "https://github.com/xosnrdev/cargonode/archive/refs/tags/0.1.0.tar.gz"
-    sha256 "42a936c2e863ebca38319c976dd229c38d0b5040862b14c6cf450b54ec7e5276"
+    sha256 "8b9e092e9ff4327a23d1930fdcf7f565556c745d17a2c6c205e6c2b20722158c"
     license "Apache-2.0"
     head "https://github.com/xosnrdev/cargonode.git", branch: "master"
   
