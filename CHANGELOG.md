@@ -2,8 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.1.1](https://github.com/xosnrdev/cargonode/compare/0.1.0...0.1.1) - 2024-12-01
+## [0.1.2](https://github.com/xosnrdev/cargonode/compare/0.1.1...0.1.2) - 2024-12-02
+
 ### Highlights
+
+- External tool help systems now display native documentation
+- Fixed help command delegation for integrated tools
+
+### 🐛 Bug Fixes
+
+- Fix(cli): delegate help to external tools (#2)
+  Pass help flags to integrated tools instead of showing generic help message.
+  Handles -h and --help flags appropriately for all integrated tooling.
+  Fixes #2
+
+### ⚙️ Miscellaneous Tasks
+
+- Release cargonode version 0.1.2
+
+### Everything Else
+
+- Merge pull request #3 from xosnrdev/issue-2/external-tools-help
+  Delegate help to external tools
+
+## [0.1.1](https://github.com/xosnrdev/cargonode/compare/0.1.0...0.1.1) - 2024-12-01
+
+### Highlights
+
 - Patch release with minor bug fixes and improvements.
 
 ## [0.1.0] - 2024-11-30
