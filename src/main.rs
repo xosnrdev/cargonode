@@ -20,15 +20,35 @@ enum Commands {
     /// Initialize package in current directory
     Init,
     /// Format files using biomejs
-    Fmt { args: Vec<String> },
+    #[command(disable_help_flag = true)]
+    Fmt {
+        #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
+        args: Vec<String>,
+    },
     /// Check files using biomejs
-    Check { args: Vec<String> },
+    #[command(disable_help_flag = true)]
+    Check {
+        #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
+        args: Vec<String>,
+    },
     /// Build and bundle using tsup
-    Build { args: Vec<String> },
+    #[command(disable_help_flag = true)]
+    Build {
+        #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
+        args: Vec<String>,
+    },
     /// Run tests using vitest
-    Test { args: Vec<String> },
+    #[command(disable_help_flag = true)]
+    Test {
+        #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
+        args: Vec<String>,
+    },
     /// Automate package release using release-it
-    Release { args: Vec<String> },
+    #[command(disable_help_flag = true)]
+    Release {
+        #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
+        args: Vec<String>,
+    },
 }
 
 #[cfg(all(target_env = "musl", target_pointer_width = "64"))]
