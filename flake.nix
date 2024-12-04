@@ -14,8 +14,6 @@
       
       devShells = {
         default = nixpkgs.legacyPackages.${system}.callPackage ./shell.nix { };
-        buildInputs = with nixpkgs.legacyPackages.${system}; [ bzip2 ];
-        nativeBuildInputs = with nixpkgs.legacyPackages.${system}; [ pkg-config ];
       };
     });
 }
