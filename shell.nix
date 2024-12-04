@@ -5,6 +5,8 @@ pkgs.mkShell {
   # Additional tooling
   buildInputs = with pkgs; [
     bzip2
+  ];
+  nativeBuildInputs = with pkgs; [
     pkg-config
   ];
 }
