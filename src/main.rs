@@ -1,3 +1,4 @@
+//! Unified tooling for Node.js
 use cargonode::{
     build, check, format,
     package::{get_current_dir, get_current_dir_name, Config, Package, Template},
@@ -5,7 +6,6 @@ use cargonode::{
 };
 use clap::{Parser, Subcommand};
 
-/// Unified Command-line interface.
 #[derive(Debug, Parser)]
 #[command(about, version, long_about = None)]
 struct Cli {
@@ -55,7 +55,6 @@ enum Commands {
 #[global_allocator]
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
-/// Main function for parsing CLI commands and executing respective actions.
 fn main() {
     let cli = Cli::parse();
     let current_dir = get_current_dir();
@@ -76,7 +75,6 @@ fn main() {
         }};
     }
 
-    /// Macro for handling commands with the specified function.
     macro_rules! handle_command {
         ($cmd:expr, $func:expr) => {
             match $func(&current_dir, $cmd) {
@@ -86,7 +84,6 @@ fn main() {
         };
     }
 
-    // Map CLI commands to respective actions.
     match cli.command {
         Commands::New { package_name } => {
             create_package!(package_name, current_dir, create_package)

@@ -1,5 +1,3 @@
-//! Provides configuration management and command execution utilities for the CargoNode tool.
-
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt, fs, path::Path, result};
