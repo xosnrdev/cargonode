@@ -1,8 +1,5 @@
-//! Provides configuration management and command execution utilities for the CargoNode tool.
-
-use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fmt, fs, path::Path, result};
+use std::{collections::HashMap, fmt, fs, path::Path, result, sync::LazyLock};
 
 use crate::exec;
 
@@ -187,7 +184,7 @@ impl Config {
 type Result<T> = result::Result<T, Error>;
 
 /// Stores the global configuration loaded from the configuration file.
-static CONFIG: Lazy<Config> = Lazy::new(Config::load);
+static CONFIG: LazyLock<Config> = LazyLock::new(Config::load);
 
 /// Executes the specified command in the given working directory with optional additional arguments.
 fn execute(work_dir: &Path, command: Command, extra_args: Vec<String>) -> Result<String> {

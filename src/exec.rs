@@ -1,5 +1,3 @@
-//! Provides utilities for running shell commands and handling their output.
-
 use std::{
     fmt, io,
     path::{Path, PathBuf},
