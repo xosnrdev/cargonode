@@ -138,7 +138,6 @@ dependencies = [
  "clap",
  "fs_extra",
  "jemallocator",
- "once_cell",
  "serde",
  "tempfile",
  "toml",
