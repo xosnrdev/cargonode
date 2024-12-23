@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # This script builds a cargonode release for the aarch64-apple-darwin target.
-# At time of writing, GitHub Actions does not free Apple silicon
-# runners. Since I have somewhat recently acquired an M2 mac mini, I just use
-# this script to build the release tarball and upload it with `gh`.
+# At time of writing, GitHub Actions does not offer Apple silicon runners
+# for free. Since you have an M2 Mac mini, you use this script locally
+# to build the release tarball and upload it with `gh`.
 #
-# Once GitHub Actions has proper support for Apple silicon, we should add it
+# Once GitHub Actions has proper support for Apple silicon, we can add it
 # to our release workflow and drop this script.
 
 set -e
@@ -23,16 +23,30 @@ fi
 
 target=aarch64-apple-darwin
 cargo build --release --target "${target}"
-BIN=target/${target}/release/cargonode
-NAME=cargonode-${version}-${target}
-ARCHIVE="deployment/m2/${NAME}"
+BIN="target/${target}/release/cargonode"
+NAME="cargonode-${version}-${target}"
 
-mkdir -p "${ARCHIVE}"/doc
-cp "${BIN}" "${ARCHIVE}"/
-strip "${ARCHIVE}/cargonode"
-cp {README.md,LICENSE-MIT,LICENSE-APACHE} "${ARCHIVE}"/
-cp CHANGELOG.md "${ARCHIVE}"/doc/
+# We'll store our release artifacts in the deployment/m2/ directory
+RELEASE_DIR="deployment/m2"
+ARCHIVE_DIR="${RELEASE_DIR}/${NAME}"
+ARCHIVE_FILE="${NAME}.tar.gz"
+ARCHIVE_PATH="${RELEASE_DIR}/${ARCHIVE_FILE}"
 
-tar c -C deployment/m2 -z -f "${ARCHIVE}.tar.gz" "${NAME}"
-shasum -a 256 "${ARCHIVE}.tar.gz" >"${ARCHIVE}.tar.gz.sha256"
-gh release upload "${version}" "${ARCHIVE}.tar.gz" "${ARCHIVE}.tar.gz.sha256"
+mkdir -p "${ARCHIVE_DIR}/doc"
+cp "${BIN}" "${ARCHIVE_DIR}/"
+strip "${ARCHIVE_DIR}/cargonode"
+
+# Copy license/readme docs
+cp {README.md,LICENSE-MIT,LICENSE-APACHE} "${ARCHIVE_DIR}/"
+cp CHANGELOG.md "${ARCHIVE_DIR}/doc/"
+
+# Create the tar.gz archive
+tar -C "${RELEASE_DIR}" -zcf "${ARCHIVE_PATH}" "${NAME}"
+
+# Generate the SHA-256 checksum file referencing only the bare filename
+pushd "${RELEASE_DIR}" >/dev/null
+shasum -a 256 "${ARCHIVE_FILE}" >"${ARCHIVE_FILE}.sha256"
+popd >/dev/null
+
+# Upload both the tar.gz and the .sha256 to GitHub
+gh release upload "${version}" "${ARCHIVE_PATH}" "${ARCHIVE_PATH}.sha256"

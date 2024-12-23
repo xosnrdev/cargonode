@@ -1,0 +1,57 @@
+name: 🧪 ci installation
+
+on:
+  push:
+    paths:
+      - "install_cargonode.sh"
+      - ".github/workflows/ci_installation.yml"
+    branches:
+      - master
+  pull_request:
+    paths:
+      - "install_cargonode.sh"
+      - ".github/workflows/ci_installation.yml"
+  workflow_dispatch:
+
+jobs:
+  install-test:
+    # Step 1: define a build matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        # For demonstration, one can also include multiple “versions” or arch
+        # but for GitHub-hosted runners, you only have x86_64. We'll show how
+        # to handle musl or ARM via Docker in a separate job.
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v3
+
+      - name: Show environment details
+        run: |
+          uname -a
+          echo "OS: ${{ runner.os }}"
+
+      # Step 2: Install dependencies
+      # (e.g., for Linux, we might need dpkg, shasum, etc.)
+      - name: Install Dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg zip curl unzip
+
+      # Step 3: Run the install script
+      # We attempt to install a *specific version* or use the default.
+      - name: Install cargonode
+        run: |
+          chmod +x ./install_cargonode.sh
+          ./install_cargonode.sh --verbose --force
+        shell: bash
+
+      # Step 4: Verify that cargonode is installed and on PATH
+      - name: Verify installation
+        run: |
+          cargonode --version
+        shell: bash
