@@ -13,13 +13,7 @@ on:
 
 jobs:
   install-test:
-    # Step 1: define a build matrix
-    # macOS removed, as installation is handled via Homebrew
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out repo
@@ -30,24 +24,16 @@ jobs:
           uname -a
           echo "OS: ${{ runner.os }}"
 
-      # Step 2: Install dependencies (Linux only).
-      # For Windows, the built-in environment typically has curl, etc.
       - name: Install Dependencies (Linux)
-        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y dpkg zip curl unzip
 
-      # Step 3: Run the install script
-      # We attempt to install a specific version or use the default
       - name: Install cargonode
         run: |
           chmod +x ./install_cargonode.sh
           ./install_cargonode.sh --verbose --force
-        shell: bash
 
-      # Step 4: Verify that cargonode is installed and on PATH
       - name: Verify installation
         run: |
           cargonode --version
-        shell: bash

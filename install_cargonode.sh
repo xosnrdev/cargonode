@@ -5,9 +5,9 @@ IFS=$'\n\t'
 
 # install_cargonode.sh
 # ---------------------
-# This script downloads and installs the cargonode binary for Linux or Windows.
-#
+# This script downloads and installs the cargonode binary for Linux.
 # macOS users should install via Homebrew.
+# Windows users should install via Scoop.
 #
 # Usage:
 #   ./install_cargonode.sh [options]
@@ -19,13 +19,13 @@ IFS=$'\n\t'
 #   --help               Display this help message
 #
 # The script performs the following tasks:
-#   1. Detects OS and architecture (Linux or Windows)
-#   2. Determines the installation directory based on OS or environment variable
-#   3. Maps to the appropriate release
+#   1. Detects OS and architecture (Linux only)
+#   2. Determines the installation directory based on environment variable or defaults
+#   3. Maps to the appropriate release (glibc or musl if relevant)
 #   4. Downloads the release archive and checksum from GitHub
 #   5. Verifies checksum using 'shasum' or 'sha256sum'
 #   6. Installs the cargonode binary to the appropriate directory
-#   7. Configures shell environment (for Linux) or PATH (for Windows)
+#   7. Configures the user's shell environment
 
 # --------------------
 # Color Variables
@@ -73,7 +73,7 @@ usage() {
     printf "    ./install_cargonode.sh --version=0.2.0 --verbose\n\n"
     printf "  Install and overwrite existing installation without prompting:\n"
     printf "    ./install_cargonode.sh --force\n\n"
-    printf "\nNote: macOS users should install via Homebrew.\n"
+    printf "\nNote: macOS users should install via Homebrew. Windows users via Scoop.\n"
     exit 0
 }
 
@@ -84,7 +84,7 @@ VERSION="0.1.2"
 GITHUB_REPO="xosnrdev/cargonode"
 
 # --------------------
-# Global Variables (to be set later)
+# Global Variables
 # --------------------
 BIN_DIR=""
 TEMP_DIR=""
@@ -180,12 +180,9 @@ detect_platform() {
     Linux*)
         PLATFORM_OS="unknown-linux-gnu"
         ;;
-    CYGWIN* | MINGW* | MSYS*)
-        PLATFORM_OS="pc-windows-msvc"
-        ;;
     *)
-        # macOS is intentionally excluded here:
-        error "Unsupported operating system: $OS. macOS users should install via Homebrew."
+        # macOS, Windows, etc. are excluded. We'll just throw an error:
+        error "Unsupported operating system: $OS. macOS users should install via Homebrew; Windows users via Scoop."
         ;;
     esac
 
@@ -240,23 +237,15 @@ detect_musl_for_arm() {
 # Map Release
 # --------------------
 map_release() {
-    case "$PLATFORM_OS" in
-    "unknown-linux-gnu")
-        if [ "$PLATFORM_ARCH" = "x86_64" ] && command -v ldd >/dev/null 2>&1; then
+    # If we're on Linux, check for musl
+    if [ "$PLATFORM_OS" = "unknown-linux-gnu" ] && [ "$PLATFORM_ARCH" = "x86_64" ]; then
+        if command -v ldd >/dev/null 2>&1; then
             if ldd --version 2>&1 | grep -q musl; then
                 PLATFORM="${PLATFORM_ARCH}-unknown-linux-musl"
                 info "Detected x86_64 musl environment. Using $PLATFORM"
             fi
         fi
-        ;;
-    "pc-windows-msvc")
-        if [ "$PLATFORM_ARCH" = "x86_64" ]; then
-            PLATFORM="x86_64-pc-windows-msvc"
-        elif [ "$PLATFORM_ARCH" = "i686" ]; then
-            PLATFORM="i686-pc-windows-msvc"
-        fi
-        ;;
-    esac
+    fi
     info "Mapped platform to: $PLATFORM"
 }
 
@@ -267,16 +256,11 @@ determine_install_dir() {
     BIN_DIR="${INSTALL_DIR:-}"
 
     if [ -z "$BIN_DIR" ]; then
+        # Linux only
         case "$PLATFORM_OS" in
         "unknown-linux-gnu" | "unknown-linux-musl" | \
             "unknown-linux-gnueabihf" | "unknown-linux-musleabihf" | "unknown-linux-musleabi")
             BIN_DIR="$HOME/.local/bin"
-            ;;
-        "pc-windows-msvc")
-            if [ -z "${APPDATA:-}" ]; then
-                error "APPDATA environment variable not found. Cannot determine install directory on Windows."
-            fi
-            BIN_DIR="$APPDATA/Programs/cargonode/bin"
             ;;
         *)
             error "Unsupported operating system for installation directory determination."
@@ -293,21 +277,13 @@ determine_install_dir() {
 # Archive Type Determination
 # --------------------
 determine_archive_type() {
-    case "$PLATFORM_OS" in
-    "pc-windows-msvc")
-        ARCHIVE_EXT="zip"
-        ;;
-    *)
-        # For Linux x86_64 with glibc, prefer .deb. Otherwise .tar.gz
-        if [ "$PLATFORM_OS" = "unknown-linux-gnu" ] && [ "$PLATFORM_ARCH" = "x86_64" ]; then
-            DEB_PACKAGE=true
-            ARCHIVE_EXT="deb"
-        else
-            ARCHIVE_EXT="tar.gz"
-        fi
-        ;;
-    esac
-
+    # If x86_64 glibc, use .deb, otherwise .tar.gz
+    if [ "$PLATFORM_OS" = "unknown-linux-gnu" ] && [ "$PLATFORM_ARCH" = "x86_64" ]; then
+        DEB_PACKAGE=true
+        ARCHIVE_EXT="deb"
+    else
+        ARCHIVE_EXT="tar.gz"
+    fi
     info "Archive extension determined: $ARCHIVE_EXT"
 }
 
@@ -348,12 +324,14 @@ download_files() {
     fi
 
     info "Downloading archive..."
-    curl --retry 3 --retry-delay 5 --fail --location --progress-bar -o "${ARCHIVE_NAME}" "${DOWNLOAD_URL}" || {
+    curl --retry 3 --retry-delay 5 --fail --location --progress-bar \
+        -o "${ARCHIVE_NAME}" "${DOWNLOAD_URL}" || {
         error "Failed to download archive"
     }
 
     info "Downloading checksum..."
-    curl --retry 3 --retry-delay 5 --fail --location --silent -o "${CHECKSUM_FILE}" "${CHECKSUM_URL}" || {
+    curl --retry 3 --retry-delay 5 --fail --location --silent \
+        -o "${CHECKSUM_FILE}" "${CHECKSUM_URL}" || {
         error "Failed to download checksum"
     }
 }
@@ -403,11 +381,6 @@ install_files() {
                 error "Failed to extract archive"
             }
             ;;
-        "zip")
-            unzip "$ARCHIVE_NAME" || {
-                error "Failed to extract zip archive"
-            }
-            ;;
         *)
             error "Unsupported archive format: $ARCHIVE_EXT"
             ;;
@@ -418,23 +391,13 @@ install_files() {
 
         cd "$EXTRACT_DIR"
 
-        if [ "$PLATFORM_OS" = "pc-windows-msvc" ]; then
-            if [ -f "cargonode.exe" ]; then
-                CARGONODE_BIN="cargonode.exe"
-            elif [ -f "cargonode" ]; then
-                CARGONODE_BIN="cargonode"
-            else
-                error "cargonode binary (.exe) not found in the extracted archive."
-            fi
+        if [ -f "cargonode" ]; then
+            CARGONODE_BIN="cargonode"
         else
-            if [ -f "cargonode" ]; then
-                CARGONODE_BIN="cargonode"
-            else
-                error "cargonode binary not found in the extracted archive."
-            fi
+            error "cargonode binary not found in the extracted archive."
         fi
 
-        if [ -f "$BIN_DIR/cargonode" ] || [ -f "$BIN_DIR/cargonode.exe" ]; then
+        if [ -f "$BIN_DIR/cargonode" ]; then
             if [ "$FORCE_INSTALL" = false ]; then
                 warn "cargonode is already installed in $BIN_DIR."
                 printf "Do you want to overwrite it? [y/N]: "
@@ -454,20 +417,13 @@ install_files() {
         fi
 
         info "Installing cargonode binary..."
-        if [ "$PLATFORM_OS" = "pc-windows-msvc" ]; then
-            install -Dm755 "$CARGONODE_BIN" "$BIN_DIR/cargonode.exe" || {
-                error "Failed to install cargonode binary"
-            }
-            info "cargonode.exe installed successfully to $BIN_DIR."
-        else
-            install -Dm755 "$CARGONODE_BIN" "$BIN_DIR/cargonode" || {
-                error "Failed to install cargonode binary"
-            }
-            info "cargonode installed successfully to $BIN_DIR."
+        install -Dm755 "$CARGONODE_BIN" "$BIN_DIR/cargonode" || {
+            error "Failed to install cargonode binary"
+        }
+        info "cargonode installed successfully to $BIN_DIR."
 
-            if [ ! -x "$BIN_DIR/cargonode" ]; then
-                warn "cargonode binary is not executable. Please check permissions."
-            fi
+        if [ ! -x "$BIN_DIR/cargonode" ]; then
+            warn "cargonode binary is not executable. Please check permissions."
         fi
     fi
 }
@@ -478,11 +434,8 @@ install_files() {
 configure_shell_env() {
     info "Configuring shell environment..."
 
-    if [ "$PLATFORM_OS" = "pc-windows-msvc" ]; then
-        configure_windows_path
-    else
-        configure_unix_shells
-    fi
+    # Linux only
+    configure_unix_shells
 }
 
 configure_unix_shells() {
@@ -530,26 +483,6 @@ configure_unix_shells() {
     info "Shell environment configured. Please restart your shell or source your shell's config file."
 }
 
-configure_windows_path() {
-    local bin_dir="$BIN_DIR"
-
-    info "Configuring PATH for Windows..."
-
-    if ! echo "$PATH" | tr ';' '\n' | grep -Fxq "$bin_dir"; then
-        if command -v powershell >/dev/null 2>&1; then
-            powershell -Command "if (-not ([Environment]::GetEnvironmentVariable('Path', 'User') -split ';') -contains '$bin_dir') { [Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path', 'User') + ';$bin_dir', 'User') }"
-            info "Added $bin_dir to user PATH."
-        else
-            warn "PowerShell not found. Cannot automatically configure PATH."
-            warn "Please add $bin_dir to your PATH manually."
-        fi
-    else
-        info "$bin_dir is already in the user PATH."
-    fi
-
-    info "Please restart your terminal or log out and log back in for changes to take effect."
-}
-
 # --------------------
 # Main Function
 # --------------------
@@ -575,11 +508,7 @@ main() {
     if [ "${DEB_PACKAGE:-false}" = true ]; then
         info "cargonode has been installed via .deb package."
     else
-        if [ "$PLATFORM_OS" = "pc-windows-msvc" ]; then
-            info "Please ensure that $BIN_DIR is in your PATH."
-        else
-            info "Please ensure that $BIN_DIR is in your PATH."
-        fi
+        info "Please ensure that $BIN_DIR is in your PATH."
     fi
 
     info "Try running: cargonode --help"
