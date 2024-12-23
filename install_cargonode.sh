@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 set -euo pipefail
 IFS=$'\n\t'
@@ -265,7 +265,7 @@ determine_archive_type() {
 # URL Construction Function
 # --------------------
 construct_urls() {
-    BASE_URL="https://github.com/${GITHUB_REPO}/releases/download/cargonode-v${VERSION}"
+    BASE_URL="https://github.com/${GITHUB_REPO}/releases/download/${VERSION}"
     if [ "$ARCHIVE_EXT" = "deb" ]; then
         ARCHIVE_NAME="cargonode_${VERSION}-1_amd64.deb"
         CHECKSUM_FILE="${ARCHIVE_NAME}.sha256"
