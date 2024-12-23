@@ -1,102 +1,173 @@
 <div align="center">
-<img src="./docs/logo.svg" width="250px" />
+  <a href="https://github.com/xosnrdev/cargonode" target="_blank">
+    <img src="https://raw.githubusercontent.com/xosnrdev/cargonode/master/assets/logo.svg" alt="cargonode logo" width="100"></img>
+  </a>
 
-Unified tooling for Node.js, integrating [BiomeJS](https://biomejs.dev), [Tsup](https://tsup.egoist.dev), [Vitest](https://vitest.dev), and [Release-It](https://github.com/release-it/release-it).
+  <h1 align="center">cargonode</h1>
 
+  <p>
+    <a href="https://github.com/xosnrdev/cargonode/actions?query=">
+      <img src="https://github.com/xosnrdev/cargonode/actions/workflows/ci.yml/badge.svg" alt="Build Status">
+    </a>
+    <a href="https://crates.io/crates/cargonode">
+      <img src="https://img.shields.io/crates/v/cargonode?label=crates" alt="cargonode Crate">
+    </a>
+    <a href="https://docs.rs/cargonode">
+      <img src="https://img.shields.io/static/v1?label=Docs&message=docs.rs&color=blue" alt="cargonode Docs">
+    </a>
+    <a href="https://github.com/xosnrdev/cargonode/blob/master/LICENSE">
+      <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License">
+      <img src="https://img.shields.io/badge/License-MIT%20-blue.svg" alt="License">
+    </a>
+  </p>
 </div>
 
-## Features
+## Overview
 
-- Rust-powered performance
-- Tool-agnostic architecture
-- Command customization
-- Project templates
-- Inherited CLI arguments
-- Cross-platform support
+**cargonode** is a Rust-based CLI that simplifies Node.js development by consolidating common tooling under a single executable. It serves as a wrapper around key utilities for building, testing, formatting, linting, and releasing your projects.
+
+### Why cargonode?
+
+1. **High Performance**  
+   Written in Rust, cargonode offers fast execution and low overhead.
+2. **Centralized Commands**  
+   Replaces multiple shell scripts or separate binary invocations with a single CLI.
+3. **Flexible Customization**  
+   Allows swapping out default commands or adding custom prechecks.
+4. **Cross-Platform Compatibility**  
+   Runs on macOS (Intel and ARM), Linux (x64, ARM), and Windows (x64, ARM).
+
+---
 
 ## Requirements
 
-### System
+- Node.js ≥ 20.11.0  
+  Needed for the underlying tools (Biome, Tsup, Vitest, Release-It).
+- Rust ≥ 1.80  
+  Required for installation from source or cargo. Binary releases do not require a Rust compiler on the end-user machine.
 
-- Node.js >= 20.11.0
-- Rust >= 1.80
+### Supported Platforms
 
-### Platforms
+- **macOS** (x64, ARM)
+- **Linux** (x64, ARM)
+- **Windows** (x64, ARM)
 
-- macOS (x64, ARM)
-- Linux (x64, ARM)
-- Windows (x64, ARM)
+---
 
 ## Installation
 
-macOS:
+Choose the option that fits your environment:
 
-```bash
-brew install xosnrdev/cargonode/cargonode
-```
+1. **Shell Installer**
 
-nixOS:
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/xosnrdev/cargonode/master/install_cargonode.sh | sh
+   ```
 
-see [nixpkgs](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=cargonode)
+   Downloads the latest release from GitHub and installs locally, typically in `~/.local/bin`.
 
-```bash
-nix-env -iA nixpkgs.cargonode
-```
+2. **Homebrew (macOS)**
 
-Rust:
+   ```bash
+   brew install xosnrdev/cargonode/cargonode
+   ```
 
-```bash
-cargo install cargonode
-```
+   Recommended if you prefer managing software through Homebrew on macOS.
 
-Additional package managers planned.
+3. **Nix (nixOS)**
+
+   ```bash
+   nix-env -iA nixpkgs.cargonode
+   ```
+
+   See [nixpkgs](https://search.nixos.org/packages?channel=unstable&query=cargonode) for additional details.
+
+4. **Cargo (Rust)**
+   ```bash
+   cargo install cargonode
+   ```
+   Installs the executable from source via the Rust package manager.
+
+---
 
 ## Usage
 
+Below are common commands. Each command calls an underlying tool with sensible defaults:
+
 ```bash
-# Project
-cargonode new my-project
+# Create a new project
+cargonode new my-app
+
+# Convert an existing Node.js project
 cargonode init
 
-# Operations
-cargonode build  # default: tsup
-cargonode test   # default: vitest
-cargonode fmt    # default: biome
-cargonode check  # default: biome
-cargonode release # default: release-it
+# Build using tsup by default
+cargonode build
 
-# Help
-cargonode --help
-cargonode build --help  # displays tsup help
-cargonode test run     # runs vitest run
-cargonode check --fix  # runs biome check --fix
+# Test using vitest
+cargonode test
+
+# Format code with biome
+cargonode fmt
+
+# Lint/check code with biome
+cargonode check
+
+# Release with release-it
+cargonode release
 ```
+
+### Passing Tool Arguments
+
+Any extra flags provided after the subcommand go directly to the underlying tool:
+
+```bash
+# Calls 'vitest run'
+cargonode test run
+# Calls 'biome check --fix'
+cargonode check --fix
+```
+
+To see available flags, run:
+
+```bash
+cargonode --help
+cargonode build --help
+```
+
+---
 
 ## Configuration
 
-Customize tools via `cargonode.toml`:
+By default, cargonode uses several best-practice settings, but it can be customized through a `cargonode.toml` in your project root. For instance:
 
 ```toml
 [commands.format]
-command = "eslint"  # replace biome
+command = "eslint"
 args = ["--fix"]
 
 [commands.release]
 prechecks = ["test", "build"]
 ```
 
-[Template Reference](./templates/node_typescript/cargonode.toml)
+In this example, `eslint` replaces biome for the `format` command, and `prechecks` ensures tests and builds run before any release process.
 
-### Precedence
+### Configuration Precedence
 
-1. CLI Arguments
-2. Project Configuration
-3. Defaults
+1. Command-line arguments
+2. Project configuration in `cargonode.toml`
+3. Built-in defaults
+
+See the [Template Reference](./templates/node_typescript/cargonode.toml) for additional examples.
+
+---
 
 ## Support
 
-[GitHub Issues](https://github.com/xosnrdev/cargonode/issues)
+For issues, feature requests, or general feedback, visit the [GitHub Issues](https://github.com/xosnrdev/cargonode/issues) page. Contributions are welcome, whether in the form of bug reports, pull requests, or suggestions.
+
+---
 
 ## License
 
-[MIT](./LICENSE-MIT) OR [Apache-2.0](./LICENSE-APACHE)
+This project is available under a dual license: [MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE). Choose whichever license works best for your project or organization.
