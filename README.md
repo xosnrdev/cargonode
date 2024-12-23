@@ -58,10 +58,10 @@
 
 Choose the option that fits your environment:
 
-1. **Shell Installer**
+1. **Shell Installer (Linux)**
 
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/xosnrdev/cargonode/master/install_cargonode.sh | sh
+   curl -fsSL https://raw.githubusercontent.com/xosnrdev/cargonode/master/install_cargonode.sh | bash
    ```
 
    Downloads the latest release from GitHub and installs locally, typically in `~/.local/bin`.
