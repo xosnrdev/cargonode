@@ -1,11 +1,13 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 set -euo pipefail
 IFS=$'\n\t'
 
 # install_cargonode.sh
 # ---------------------
-# This script downloads and installs the cargonode binary for the user's platform.
+# This script downloads and installs the cargonode binary for Linux or Windows.
+#
+# macOS users should install via Homebrew.
 #
 # Usage:
 #   ./install_cargonode.sh [options]
@@ -17,13 +19,13 @@ IFS=$'\n\t'
 #   --help               Display this help message
 #
 # The script performs the following tasks:
-#   1. Detects OS and architecture (including musl vs. glibc for x86_64 and ARM)
+#   1. Detects OS and architecture (Linux or Windows)
 #   2. Determines the installation directory based on OS or environment variable
 #   3. Maps to the appropriate release
 #   4. Downloads the release archive and checksum from GitHub
 #   5. Verifies checksum using 'shasum' or 'sha256sum'
 #   6. Installs the cargonode binary to the appropriate directory
-#   7. Configures shell environment
+#   7. Configures shell environment (for Linux) or PATH (for Windows)
 
 # --------------------
 # Color Variables
@@ -71,6 +73,7 @@ usage() {
     printf "    ./install_cargonode.sh --version=0.2.0 --verbose\n\n"
     printf "  Install and overwrite existing installation without prompting:\n"
     printf "    ./install_cargonode.sh --force\n\n"
+    printf "\nNote: macOS users should install via Homebrew.\n"
     exit 0
 }
 
@@ -85,6 +88,10 @@ GITHUB_REPO="xosnrdev/cargonode"
 # --------------------
 BIN_DIR=""
 TEMP_DIR=""
+PLATFORM_OS=""
+PLATFORM_ARCH=""
+PLATFORM=""
+DEB_PACKAGE=false
 
 # --------------------
 # Cleanup Function
@@ -96,11 +103,10 @@ cleanup() {
     fi
 }
 
-# Trap EXIT to ensure cleanup is called
 trap cleanup EXIT INT TERM
 
 # --------------------
-# Argument Parsing Function
+# Argument Parsing
 # --------------------
 parse_arguments() {
     for arg in "$@"; do
@@ -128,7 +134,6 @@ parse_arguments() {
 # Checksum Utility Detection
 # --------------------
 detect_checksum_utility() {
-    # Attempt to find a suitable SHA-256 tool
     if command -v sha256sum >/dev/null 2>&1; then
         CHECKSUM_CMD="sha256sum"
         CHECKSUM_ARGS=""
@@ -141,11 +146,11 @@ detect_checksum_utility() {
 }
 
 # --------------------
-# Command Checks Function
+# Command Checks
 # --------------------
 check_commands() {
     missing_commands=""
-    for cmd in curl tar unzip; do
+    for cmd in curl tar unzip install; do
         if ! command -v "$cmd" >/dev/null 2>&1; then
             missing_commands="${missing_commands} $cmd"
         fi
@@ -155,19 +160,17 @@ check_commands() {
         error "Missing required commands:${missing_commands}"
     fi
 
-    # We detect the checksum tool separately
     detect_checksum_utility
 
-    # Additional checks for Windows
-    if [ "$PLATFORM_OS" = "pc-windows-msvc" ] || [ "$PLATFORM_OS" = "pc-windows-gnu" ]; then
-        if ! command -v powershell >/dev/null 2>&1; then
-            warn "PowerShell not found. PATH configuration on Windows may not be automated."
+    if [ "$DEB_PACKAGE" = true ]; then
+        if ! command -v dpkg >/dev/null 2>&1; then
+            warn "dpkg not found; .deb installation may fail. Install dpkg or use a non-.deb distribution."
         fi
     fi
 }
 
 # --------------------
-# Platform Detection Function
+# Platform Detection
 # --------------------
 detect_platform() {
     OS="$(uname -s)"
@@ -177,15 +180,12 @@ detect_platform() {
     Linux*)
         PLATFORM_OS="unknown-linux-gnu"
         ;;
-    Darwin*)
-        PLATFORM_OS="apple-darwin"
-        ;;
     CYGWIN* | MINGW* | MSYS*)
-        # We'll finalize the arch below in map_release if needed
         PLATFORM_OS="pc-windows-msvc"
         ;;
     *)
-        error "Unsupported operating system: $OS"
+        # macOS is intentionally excluded here:
+        error "Unsupported operating system: $OS. macOS users should install via Homebrew."
         ;;
     esac
 
@@ -213,9 +213,7 @@ detect_platform() {
         ;;
     esac
 
-    # Combine them
     PLATFORM="${PLATFORM_ARCH}-${PLATFORM_OS}"
-
     info "Detected platform: $PLATFORM"
 }
 
@@ -223,17 +221,13 @@ detect_platform() {
 # ARM Musl vs. glibc Detection (Optional)
 # --------------------
 detect_musl_for_arm() {
-    # If the user is on ARM Linux, we try to detect musl vs. glibc.
-    # This is a best-effort approach; might fail in cross-compilation or unusual environments.
     if [ "$PLATFORM_ARCH" = "armv7" ] && [ "$PLATFORM_OS" = "unknown-linux-gnu" ]; then
         if command -v ldd >/dev/null 2>&1; then
             if ldd --version 2>&1 | grep -q musl; then
-                # Heuristic check for musl, deciding to assume 'musleabihf'
                 PLATFORM_OS="unknown-linux-musleabihf"
                 info "Detected ARM musl environment. Using $PLATFORM_ARCH-$PLATFORM_OS"
                 PLATFORM="${PLATFORM_ARCH}-${PLATFORM_OS}"
             else
-                # Possibly glibc-based system using eabihf
                 PLATFORM_OS="unknown-linux-gnueabihf"
                 info "Detected ARM glibc environment. Using $PLATFORM_ARCH-$PLATFORM_OS"
                 PLATFORM="${PLATFORM_ARCH}-${PLATFORM_OS}"
@@ -243,12 +237,11 @@ detect_musl_for_arm() {
 }
 
 # --------------------
-# Map Release Function
+# Map Release
 # --------------------
 map_release() {
     case "$PLATFORM_OS" in
     "unknown-linux-gnu")
-        # Check for musl specifically on x86_64
         if [ "$PLATFORM_ARCH" = "x86_64" ] && command -v ldd >/dev/null 2>&1; then
             if ldd --version 2>&1 | grep -q musl; then
                 PLATFORM="${PLATFORM_ARCH}-unknown-linux-musl"
@@ -257,7 +250,6 @@ map_release() {
         fi
         ;;
     "pc-windows-msvc")
-        # Finalize arch for Windows
         if [ "$PLATFORM_ARCH" = "x86_64" ]; then
             PLATFORM="x86_64-pc-windows-msvc"
         elif [ "$PLATFORM_ARCH" = "i686" ]; then
@@ -265,24 +257,25 @@ map_release() {
         fi
         ;;
     esac
-
     info "Mapped platform to: $PLATFORM"
 }
 
 # --------------------
-# Determine Installation Directory Function
+# Determine Installation Directory
 # --------------------
 determine_install_dir() {
     BIN_DIR="${INSTALL_DIR:-}"
 
     if [ -z "$BIN_DIR" ]; then
         case "$PLATFORM_OS" in
-        "unknown-linux-gnu" | "unknown-linux-musl" | "apple-darwin" | \
+        "unknown-linux-gnu" | "unknown-linux-musl" | \
             "unknown-linux-gnueabihf" | "unknown-linux-musleabihf" | "unknown-linux-musleabi")
             BIN_DIR="$HOME/.local/bin"
             ;;
-        "pc-windows-msvc" | "pc-windows-gnu")
-            # For Windows, use %APPDATA%\Programs\cargonode\bin
+        "pc-windows-msvc")
+            if [ -z "${APPDATA:-}" ]; then
+                error "APPDATA environment variable not found. Cannot determine install directory on Windows."
+            fi
             BIN_DIR="$APPDATA/Programs/cargonode/bin"
             ;;
         *)
@@ -297,11 +290,11 @@ determine_install_dir() {
 }
 
 # --------------------
-# Archive Type Determination Function
+# Archive Type Determination
 # --------------------
 determine_archive_type() {
     case "$PLATFORM_OS" in
-    "pc-windows-msvc" | "pc-windows-gnu")
+    "pc-windows-msvc")
         ARCHIVE_EXT="zip"
         ;;
     *)
@@ -319,7 +312,7 @@ determine_archive_type() {
 }
 
 # --------------------
-# URL Construction Function
+# URL Construction
 # --------------------
 construct_urls() {
     BASE_URL="https://github.com/${GITHUB_REPO}/releases/download/${VERSION}"
@@ -340,14 +333,12 @@ construct_urls() {
 }
 
 # --------------------
-# Download Files Function
+# Download Files
 # --------------------
 download_files() {
     info "Downloading cargonode ${VERSION} for ${PLATFORM}..."
-
     cd "$TEMP_DIR"
 
-    # Check if the release exists
     if ! curl --head --silent --fail "$DOWNLOAD_URL" >/dev/null; then
         error "Release archive not found: $DOWNLOAD_URL"
     fi
@@ -368,22 +359,19 @@ download_files() {
 }
 
 # --------------------
-# Checksum Verification Function
+# Checksum Verification
 # --------------------
 verify_checksum() {
     info "Verifying checksum..."
     cd "$TEMP_DIR"
 
     if [ "${DEB_PACKAGE:-false}" = true ]; then
-        # .deb checksum is manual
         CALCULATED_CHECKSUM=$($CHECKSUM_CMD $CHECKSUM_ARGS "$ARCHIVE_NAME" | awk '{print $1}')
         EXPECTED_CHECKSUM=$(awk '{print $1}' "$CHECKSUM_FILE")
         if [ "$CALCULATED_CHECKSUM" != "$EXPECTED_CHECKSUM" ]; then
             error "Checksum verification failed for $ARCHIVE_NAME"
         fi
     else
-        # For tar.gz or zip
-        # We rely on the .sha256 file containing "<hash>  <filename>"
         if ! $CHECKSUM_CMD $CHECKSUM_ARGS -c "$CHECKSUM_FILE" >/dev/null 2>&1; then
             error "Checksum verification failed for $ARCHIVE_NAME"
         fi
@@ -393,13 +381,12 @@ verify_checksum() {
 }
 
 # --------------------
-# Install Files Function
+# Install Files
 # --------------------
 install_files() {
     info "Installing cargonode..."
 
     if [ "${DEB_PACKAGE:-false}" = true ]; then
-        # Install .deb package
         if command -v dpkg >/dev/null 2>&1; then
             info "Installing .deb package (requires sudo privileges)..."
             sudo dpkg -i "$TEMP_DIR/$ARCHIVE_NAME" || {
@@ -410,7 +397,6 @@ install_files() {
             error "dpkg not found. Cannot install .deb package."
         fi
     else
-        # Extract tar.gz or unzip zip
         case "$ARCHIVE_EXT" in
         "tar.gz")
             tar -xzf "$ARCHIVE_NAME" || {
@@ -427,15 +413,12 @@ install_files() {
             ;;
         esac
 
-        # Find the extracted directory or binary
         EXTRACT_DIR=$(find "$TEMP_DIR" -mindepth 1 -maxdepth 1 -type d | head -n 1)
         [ -z "$EXTRACT_DIR" ] && EXTRACT_DIR="$TEMP_DIR"
 
         cd "$EXTRACT_DIR"
 
-        # Check for windows .exe if needed
-        if [ "$PLATFORM_OS" = "pc-windows-msvc" ] || [ "$PLATFORM_OS" = "pc-windows-gnu" ]; then
-            # We expect cargonode.exe or cargonode
+        if [ "$PLATFORM_OS" = "pc-windows-msvc" ]; then
             if [ -f "cargonode.exe" ]; then
                 CARGONODE_BIN="cargonode.exe"
             elif [ -f "cargonode" ]; then
@@ -444,7 +427,6 @@ install_files() {
                 error "cargonode binary (.exe) not found in the extracted archive."
             fi
         else
-            # Unix-like
             if [ -f "cargonode" ]; then
                 CARGONODE_BIN="cargonode"
             else
@@ -452,9 +434,7 @@ install_files() {
             fi
         fi
 
-        # Check if cargonode is already installed
         if [ -f "$BIN_DIR/cargonode" ] || [ -f "$BIN_DIR/cargonode.exe" ]; then
-            # If --force is used, overwrite automatically
             if [ "$FORCE_INSTALL" = false ]; then
                 warn "cargonode is already installed in $BIN_DIR."
                 printf "Do you want to overwrite it? [y/N]: "
@@ -474,7 +454,7 @@ install_files() {
         fi
 
         info "Installing cargonode binary..."
-        if [ "$PLATFORM_OS" = "pc-windows-msvc" ] || [ "$PLATFORM_OS" = "pc-windows-gnu" ]; then
+        if [ "$PLATFORM_OS" = "pc-windows-msvc" ]; then
             install -Dm755 "$CARGONODE_BIN" "$BIN_DIR/cargonode.exe" || {
                 error "Failed to install cargonode binary"
             }
@@ -493,12 +473,12 @@ install_files() {
 }
 
 # --------------------
-# Shell Environment Configuration Function
+# Shell Environment Configuration
 # --------------------
 configure_shell_env() {
     info "Configuring shell environment..."
 
-    if [ "$PLATFORM_OS" = "pc-windows-msvc" ] || [ "$PLATFORM_OS" = "pc-windows-gnu" ]; then
+    if [ "$PLATFORM_OS" = "pc-windows-msvc" ]; then
         configure_windows_path
     else
         configure_unix_shells
@@ -506,24 +486,20 @@ configure_shell_env() {
 }
 
 configure_unix_shells() {
-    # Function to check if a line exists in a file
     line_exists() {
         grep -Fxq "$1" "$2" 2>/dev/null
     }
 
-    # Function to add PATH configuration for sh/bash/zsh
     setup_posix_shell() {
         local shell_rc="$1"
         local shell_name="$2"
 
         info "Setting up $shell_name configuration..."
 
-        # Backup shell config if not already backed up
         if [ -f "$shell_rc" ] && [ ! -f "${shell_rc}.bak" ]; then
             cp "$shell_rc" "${shell_rc}.bak" 2>/dev/null || true
         fi
 
-        # PATH configuration
         local path_line='export PATH="$HOME/.local/bin:$PATH"'
         if ! line_exists "$path_line" "$shell_rc"; then
             echo >>"$shell_rc"
@@ -535,31 +511,6 @@ configure_unix_shells() {
         fi
     }
 
-    # Function to set up fish shell
-    setup_fish() {
-        local fish_config="$HOME/.config/fish/config.fish"
-
-        info "Setting up fish configuration..."
-
-        mkdir -p "$(dirname "$fish_config")"
-        touch "$fish_config"
-
-        if [ -f "$fish_config" ] && [ ! -f "${fish_config}.bak" ]; then
-            cp "$fish_config" "${fish_config}.bak" 2>/dev/null || true
-        fi
-
-        local fish_line='set -gx PATH $HOME/.local/bin $PATH'
-        if ! grep -Fxq "$fish_line" "$fish_config"; then
-            echo >>"$fish_config"
-            echo '# Added by cargonode installer' >>"$fish_config"
-            echo "$fish_line" >>"$fish_config"
-            info "Updated fish config to include ~/.local/bin in PATH."
-        else
-            info "Fish config already contains ~/.local/bin in PATH."
-        fi
-    }
-
-    # Function to check if a shell is available
     check_shell() {
         command -v "$1" >/dev/null 2>&1
     }
@@ -568,18 +519,12 @@ configure_unix_shells() {
     if check_shell bash; then
         setup_posix_shell "$HOME/.bashrc" "bash"
     fi
-
     # Configure zsh if installed
     if check_shell zsh; then
         setup_posix_shell "$HOME/.zshrc" "zsh"
     fi
 
-    # Configure fish if installed
-    if check_shell fish; then
-        setup_fish
-    fi
-
-    # Always configure .profile for POSIX shell compatibility
+    # Also ensure we set up .profile for generic sh
     setup_posix_shell "$HOME/.profile" "sh"
 
     info "Shell environment configured. Please restart your shell or source your shell's config file."
@@ -590,9 +535,7 @@ configure_windows_path() {
 
     info "Configuring PATH for Windows..."
 
-    # Check if the bin_dir is already in PATH
     if ! echo "$PATH" | tr ';' '\n' | grep -Fxq "$bin_dir"; then
-        # Add bin_dir to PATH for the current user using PowerShell
         if command -v powershell >/dev/null 2>&1; then
             powershell -Command "if (-not ([Environment]::GetEnvironmentVariable('Path', 'User') -split ';') -contains '$bin_dir') { [Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path', 'User') + ';$bin_dir', 'User') }"
             info "Added $bin_dir to user PATH."
@@ -611,18 +554,12 @@ configure_windows_path() {
 # Main Function
 # --------------------
 main() {
-    # Create a temp directory for downloads
     TEMP_DIR="$(mktemp -d 2>/dev/null || mktemp -d -t cargonode)"
 
     parse_arguments "$@"
     detect_platform
-
-    # Extra detection for ARM musl/glibc
     detect_musl_for_arm
-
-    # Possibly map to windows-specific or musl variants
     map_release
-
     determine_install_dir
     check_commands
     determine_archive_type
@@ -638,18 +575,14 @@ main() {
     if [ "${DEB_PACKAGE:-false}" = true ]; then
         info "cargonode has been installed via .deb package."
     else
-        if [ "$PLATFORM_OS" = "pc-windows-msvc" ] || [ "$PLATFORM_OS" = "pc-windows-gnu" ]; then
+        if [ "$PLATFORM_OS" = "pc-windows-msvc" ]; then
             info "Please ensure that $BIN_DIR is in your PATH."
         else
             info "Please ensure that $BIN_DIR is in your PATH."
         fi
     fi
 
-    # Encourage user to try it out
     info "Try running: cargonode --help"
 }
 
-# --------------------
-# Execute Main Function
-# --------------------
 main "$@"
