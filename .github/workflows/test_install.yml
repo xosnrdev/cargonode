@@ -1,0 +1,147 @@
+name: Test Installation Script
+
+on:
+  push:
+    paths:
+      - "install_cargonode.sh"
+      - ".github/workflows/test-install.yml"
+  pull_request:
+    paths:
+      - "install_cargonode.sh"
+      - ".github/workflows/test-install.yml"
+  workflow_dispatch:
+
+jobs:
+  test-installation:
+    name: Test on ${{ matrix.os }} / ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Ubuntu (both glibc and musl)
+          - os: ubuntu-latest
+            arch: x86_64
+            container: null
+            shell: bash
+          - os: ubuntu-latest
+            arch: x86_64
+            # For musl testing
+            container: alpine:latest
+            shell: sh
+
+          # macOS (Intel and Apple Silicon)
+          - os: macos-latest
+            arch: x86_64
+            container: null
+            shell: bash
+            # Apple Silicon runner
+          - os: macos-14
+            arch: aarch64
+            container: null
+            shell: bash
+
+          # Windows
+          - os: windows-latest
+            arch: x86_64
+            container: null
+            shell: msys2 {0}
+
+    container: ${{ matrix.container }}
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up MSYS2 (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            curl
+            tar
+            unzip
+
+      - name: Install dependencies (Alpine)
+        if: matrix.container == 'alpine:latest'
+        run: |
+          apk add --no-cache \
+            bash \
+            curl \
+            tar \
+            unzip \
+            shasum
+
+      - name: Make script executable
+        run: chmod +x ./install_cargonode.sh
+
+      - name: Test default installation
+        run: |
+          ./install_cargonode.sh --verbose
+
+      - name: Verify installation (Unix-like)
+        if: runner.os != 'Windows'
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          which cargonode
+          # Don't fail if binary exists but returns non-zero
+          cargonode --version || true
+
+      - name: Verify installation (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          export PATH="$APPDATA/Programs/cargonode/bin:$PATH"
+          which cargonode
+          # Don't fail if binary exists but returns non-zero
+          cargonode --version || true
+
+      - name: Test specific version installation
+        run: |
+          ./install_cargonode.sh --version=0.1.1 --verbose
+
+      - name: Test shell configuration
+        if: runner.os != 'Windows'
+        run: |
+          # Test bash configuration
+          if [ -f "$HOME/.bashrc" ]; then
+            grep -q "Added by cargonode installer" "$HOME/.bashrc"
+          fi
+
+          # Test zsh configuration
+          if [ -f "$HOME/.zshrc" ]; then
+            grep -q "Added by cargonode installer" "$HOME/.zshrc"
+          fi
+
+          # Test fish configuration
+          if [ -f "$HOME/.config/fish/config.fish" ]; then
+            grep -q "Added by cargonode installer" "$HOME/.config/fish/config.fish"
+          fi
+
+      - name: Test PATH configuration (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+          $binDir = "$env:APPDATA\Programs\cargonode\bin"
+          if (-not ($userPath -split ';' -contains $binDir)) {
+            exit 1
+          }
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-logs-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            ~/.local/bin/cargonode*
+            ~/.bashrc
+            ~/.zshrc
+            ~/.config/fish/config.fish
+            $APPDATA/Programs/cargonode/bin/cargonode*
+          if-no-files-found: ignore
