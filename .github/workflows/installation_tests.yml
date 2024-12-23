@@ -2,12 +2,16 @@ name: 🧪 installation tests
 
 on:
   pull_request:
-    branches: ["**"]
+    types:
+      - opened
+      - synchronize
   push:
     branches:
       - master
   schedule:
     - cron: "00 01 * * *"
+
+  workflow_dispatch:
 
 permissions:
   contents: write
