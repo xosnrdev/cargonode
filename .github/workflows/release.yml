@@ -1,4 +1,4 @@
-name: release
+name: 🚀 release
 
 # Only do the release on x.y.z tags.
 on:
