@@ -16,7 +16,7 @@ teardown() {
 
 @test "Install cargonode to default directory" {
     # Run the installation script
-    run ./install_cargonode.sh --version=0.1.2
+    run ../../install_cargonode.sh --version=0.1.2
 
     # Assert the script exited successfully
     [ "$status" -eq 0 ]

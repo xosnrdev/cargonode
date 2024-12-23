@@ -30,7 +30,7 @@ teardown() {
 
 @test "Exit with error when a required command is missing" {
     # Run the installation script
-    run ./install_cargonode.sh --version=0.1.2
+    run ../../install_cargonode.sh --version=0.1.2
 
     # Assert that the script exited with an error
     [ "$status" -ne 0 ]

@@ -16,7 +16,7 @@ teardown() {
 
 @test "Verbose mode outputs detailed logs" {
     # Run the installation script with verbose flag
-    run ./install_cargonode.sh --version=0.1.2 --verbose
+    run ../../install_cargonode.sh --version=0.1.2 --verbose
 
     # Assert the script exited successfully
     [ "$status" -eq 0 ]

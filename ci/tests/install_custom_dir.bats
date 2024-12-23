@@ -15,7 +15,7 @@ teardown() {
 
 @test "Install cargonode to custom directory via INSTALL_DIR" {
     # Run the installation script with INSTALL_DIR set
-    run INSTALL_DIR="$CUSTOM_DIR" ./install_cargonode.sh --version=0.1.2
+    run INSTALL_DIR="$CUSTOM_DIR" ../../install_cargonode.sh --version=0.1.2
 
     # Assert the script exited successfully
     [ "$status" -eq 0 ]

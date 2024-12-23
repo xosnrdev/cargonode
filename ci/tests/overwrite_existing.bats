@@ -20,7 +20,7 @@ teardown() {
 
 @test "Overwrite existing cargonode binary upon user confirmation" {
     # Simulate user input 'y' to overwrite
-    run echo "y" | ./install_cargonode.sh --version=0.1.2
+    run echo "y" | ../../install_cargonode.sh --version=0.1.2
 
     # Assert the script exited successfully
     [ "$status" -eq 0 ]
@@ -34,6 +34,6 @@ teardown() {
     # Optionally, check that the content has been overwritten
     # Assuming the new binary contains different content
     # echo "New Version" > "$HOME/.local/bin/cargonode"
-    # run ./install_cargonode.sh --version=0.1.2
+    # run ../../install_cargonode.sh --version=0.1.2
     # [[ "$(cat "$HOME/.local/bin/cargonode")" == "New Version" ]]
 }

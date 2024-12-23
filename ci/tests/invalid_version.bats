@@ -16,7 +16,7 @@ teardown() {
 
 @test "Exit with error when specifying a non-existent version" {
     # Run the installation script with an invalid version
-    run ./install_cargonode.sh --version=999.999.999
+    run ../../install_cargonode.sh --version=999.999.999
 
     # Assert that the script exited with an error
     [ "$status" -ne 0 ]
