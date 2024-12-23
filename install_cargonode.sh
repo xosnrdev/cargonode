@@ -181,6 +181,7 @@ detect_platform() {
         PLATFORM_OS="apple-darwin"
         ;;
     CYGWIN* | MINGW* | MSYS*)
+        # We'll finalize the arch below in map_release if needed
         PLATFORM_OS="pc-windows-msvc"
         ;;
     *)
@@ -212,8 +213,10 @@ detect_platform() {
         ;;
     esac
 
-    # Initial platform string
+    # Combine them
     PLATFORM="${PLATFORM_ARCH}-${PLATFORM_OS}"
+
+    info "Detected platform: $PLATFORM"
 }
 
 # --------------------
@@ -225,9 +228,7 @@ detect_musl_for_arm() {
     if [ "$PLATFORM_ARCH" = "armv7" ] && [ "$PLATFORM_OS" = "unknown-linux-gnu" ]; then
         if command -v ldd >/dev/null 2>&1; then
             if ldd --version 2>&1 | grep -q musl; then
-                # Heuristic check for musl, deciding to assume 'musleabihf' or 'musleabi'
-                # If your release assets require a more precise check, refine here.
-                # We'll default to 'musleabihf' for ARMv7, but you can tweak as needed.
+                # Heuristic check for musl, deciding to assume 'musleabihf'
                 PLATFORM_OS="unknown-linux-musleabihf"
                 info "Detected ARM musl environment. Using $PLATFORM_ARCH-$PLATFORM_OS"
                 PLATFORM="${PLATFORM_ARCH}-${PLATFORM_OS}"
@@ -251,14 +252,21 @@ map_release() {
         if [ "$PLATFORM_ARCH" = "x86_64" ] && command -v ldd >/dev/null 2>&1; then
             if ldd --version 2>&1 | grep -q musl; then
                 PLATFORM="${PLATFORM_ARCH}-unknown-linux-musl"
+                info "Detected x86_64 musl environment. Using $PLATFORM"
             fi
         fi
         ;;
     "pc-windows-msvc")
-        # Default to msvc; adjust if necessary
-        PLATFORM="${PLATFORM_ARCH}-pc-windows-msvc"
+        # Finalize arch for Windows
+        if [ "$PLATFORM_ARCH" = "x86_64" ]; then
+            PLATFORM="x86_64-pc-windows-msvc"
+        elif [ "$PLATFORM_ARCH" = "i686" ]; then
+            PLATFORM="i686-pc-windows-msvc"
+        fi
         ;;
     esac
+
+    info "Mapped platform to: $PLATFORM"
 }
 
 # --------------------
@@ -269,7 +277,8 @@ determine_install_dir() {
 
     if [ -z "$BIN_DIR" ]; then
         case "$PLATFORM_OS" in
-        "unknown-linux-gnu" | "unknown-linux-musl" | "apple-darwin" | "unknown-linux-gnueabihf" | "unknown-linux-musleabihf" | "unknown-linux-musleabi")
+        "unknown-linux-gnu" | "unknown-linux-musl" | "apple-darwin" | \
+            "unknown-linux-gnueabihf" | "unknown-linux-musleabihf" | "unknown-linux-musleabi")
             BIN_DIR="$HOME/.local/bin"
             ;;
         "pc-windows-msvc" | "pc-windows-gnu")
@@ -305,6 +314,8 @@ determine_archive_type() {
         fi
         ;;
     esac
+
+    info "Archive extension determined: $ARCHIVE_EXT"
 }
 
 # --------------------
@@ -323,6 +334,9 @@ construct_urls() {
 
     DOWNLOAD_URL="${BASE_URL}/${ARCHIVE_NAME}"
     CHECKSUM_URL="${BASE_URL}/${CHECKSUM_FILE}"
+
+    info "DOWNLOAD_URL=$DOWNLOAD_URL"
+    info "CHECKSUM_URL=$CHECKSUM_URL"
 }
 
 # --------------------
@@ -606,7 +620,9 @@ main() {
     # Extra detection for ARM musl/glibc
     detect_musl_for_arm
 
+    # Possibly map to windows-specific or musl variants
     map_release
+
     determine_install_dir
     check_commands
     determine_archive_type
