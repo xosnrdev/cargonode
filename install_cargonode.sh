@@ -317,7 +317,7 @@ verify_checksum() {
 
     if [ "$ARCHIVE_EXT" = "deb" ]; then
         # For .deb, calculate checksum manually
-        CALCULATED_CHECKSUM=$(shasum -a 256 "$ARCHIVE_NAME" | awk '{print $1}')
+        CALCULATED_CHECKSUM=$(sha256sum "$ARCHIVE_NAME" | awk '{print $1}')
         EXPECTED_CHECKSUM=$(awk '{print $1}' "$CHECKSUM_FILE")
 
         if [ "$CALCULATED_CHECKSUM" != "$EXPECTED_CHECKSUM" ]; then
@@ -325,7 +325,7 @@ verify_checksum() {
         fi
     else
         # For tar.gz and zip, use shasum to verify
-        if ! shasum -a 256 -c "$CHECKSUM_FILE" >/dev/null 2>&1; then
+        if ! sha256sum -c "$CHECKSUM_FILE" >/dev/null 2>&1; then
             error "Checksum verification failed for $ARCHIVE_NAME"
         fi
     fi
@@ -343,7 +343,11 @@ install_files() {
         # Install .deb package
         if command -v dpkg >/dev/null 2>&1; then
             info "Installing .deb package (requires sudo privileges)..."
-            sudo dpkg -i "$TEMP_DIR/$ARCHIVE_NAME" || {
+            if [ ! -f "$TEMP_DIR/$ARCHIVE_NAME" ]; then
+                error "DEB package not found at $TEMP_DIR/$ARCHIVE_NAME"
+            fi
+            cd "$TEMP_DIR"
+            sudo dpkg -i "$ARCHIVE_NAME" || {
                 error "Failed to install .deb package. Ensure you have sudo privileges."
             }
             info ".deb package installed successfully."

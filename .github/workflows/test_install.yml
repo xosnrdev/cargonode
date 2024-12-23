@@ -9,14 +9,14 @@ on:
     paths:
       - "install_cargonode.sh"
       - ".github/workflows/test-install.yml"
-  workflow_dispatch:
+  workflow_dispatch: # Allow manual triggering
 
 jobs:
   test-installation:
     name: Test on ${{ matrix.os }} / ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
+      fail-fast: false # Continue with other tests even if one fails
       matrix:
         include:
           # Ubuntu (both glibc and musl)
@@ -26,8 +26,7 @@ jobs:
             shell: bash
           - os: ubuntu-latest
             arch: x86_64
-            # For musl testing
-            container: alpine:latest
+            container: alpine:latest # For musl testing
             shell: sh
 
           # macOS (Intel and Apple Silicon)
@@ -35,8 +34,7 @@ jobs:
             arch: x86_64
             container: null
             shell: bash
-            # Apple Silicon runner
-          - os: macos-14
+          - os: macos-14 # Apple Silicon runner
             arch: aarch64
             container: null
             shell: bash
@@ -75,22 +73,36 @@ jobs:
             curl \
             tar \
             unzip \
-            shasum
+            coreutils
 
       - name: Make script executable
         run: chmod +x ./install_cargonode.sh
 
       - name: Test default installation
         run: |
-          ./install_cargonode.sh --verbose
+          # Create temp directory for downloads
+          TEMP_DIR=$(mktemp -d)
+          cd "$TEMP_DIR"
+
+          # Run installation script with absolute path
+          $GITHUB_WORKSPACE/install_cargonode.sh --verbose
+
+          # Store exit code
+          INSTALL_EXIT=$?
+
+          # Print debug information
+          echo "Contents of temp directory:"
+          ls -la
+
+          # Exit with stored code
+          exit $INSTALL_EXIT
 
       - name: Verify installation (Unix-like)
         if: runner.os != 'Windows'
         run: |
           export PATH="$HOME/.local/bin:$PATH"
           which cargonode
-          # Don't fail if binary exists but returns non-zero
-          cargonode --version || true
+          cargonode --version || true  # Don't fail if binary exists but returns non-zero
 
       - name: Verify installation (Windows)
         if: runner.os == 'Windows'
@@ -98,8 +110,7 @@ jobs:
         run: |
           export PATH="$APPDATA/Programs/cargonode/bin:$PATH"
           which cargonode
-          # Don't fail if binary exists but returns non-zero
-          cargonode --version || true
+          cargonode --version || true  # Don't fail if binary exists but returns non-zero
 
       - name: Test specific version installation
         run: |
