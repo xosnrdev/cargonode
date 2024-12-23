@@ -1,0 +1,81 @@
+name: 🧪 installation tests
+
+on:
+  pull_request:
+    branches: ["**"]
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: "00 01 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  test-installation:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies (Linux/macOS)
+        if: matrix.os != 'windows-latest'
+        run: |
+          # Install Bats
+          git clone https://github.com/bats-core/bats-core.git
+          cd bats-core
+          sudo ./install.sh /usr/local
+          cd ..
+          # Verify Bats Installation
+          bats --version
+        shell: bash
+
+      - name: Install Dependencies (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          # Install Git Bash via Chocolatey
+          choco install git -y
+          # Clone Bats Repository
+          git clone https://github.com/bats-core/bats-core.git
+          cd bats-core
+          # Install Bats (Requires Git Bash)
+          bash install.sh "/c/Program Files/Bats"
+          cd ..
+          # Add Bats to PATH
+          echo "::add-path::C:\\Program Files\\Bats\\bin"
+          # Verify Bats Installation
+          bats --version
+        shell: powershell
+
+      - name: Make install_cargonode.sh Executable (Linux/macOS)
+        if: matrix.os != 'windows-latest'
+        run: chmod +x install_cargonode.sh
+        shell: bash
+
+      - name: Make install_cargonode.sh Executable (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          # Use Git Bash to make the script executable
+          bash -c "chmod +x install_cargonode.sh"
+        shell: bash
+
+      - name: Run Bats Tests
+        run: |
+          # Navigate to tests directory
+          cd ci/tests
+          # Execute all Bats tests
+          bats .
+        shell: bash
+
+      - name: Upload Test Results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs-${{ matrix.os }}
+          path: ci/tests/*.log
