@@ -12,17 +12,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  install-test:
+  test-installer:
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
-
-      - name: Show environment details
-        run: |
-          uname -a
-          echo "OS: ${{ runner.os }}"
 
       - name: Install Dependencies (Linux)
         run: |
