@@ -19,12 +19,12 @@ repository = "https://github.com/xosnrdev/cargonode"
 name = "cargonode"
 
 [dependencies]
-clap = { version = "4.5.21", features = ["derive"] }
+clap = { version = "4.5.23", features = ["derive"] }
 fs_extra = "1.3.0"
-serde = { version = "1.0.215", features = ["derive"] }
+serde = { version = "1.0.216", features = ["derive"] }
 tempfile = "3.14.0"
 toml = "0.8.19"
-ureq = "2.10.1"
+ureq = "2.12.1"
 zip-extract = "0.2.1"
 
 [target.'cfg(all(target_env = "musl", target_pointer_width = "64"))'.dependencies]
