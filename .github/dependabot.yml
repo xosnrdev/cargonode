@@ -5,20 +5,61 @@
 
 version: 2
 updates:
-  - package-ecosystem: "cargo" # See documentation for possible values
-    directory: "/" # Location of package manifests
-    commit-message:
-      prefix: "chore"
-      include: "scope"
-    target-branch: "master"
+  - package-ecosystem: cargo
+    directory: "/"
     schedule:
-      interval: "weekly"
+      interval: daily
+      time: "20:00"
+    assignees:
+      - xosnrdev
+    commit-message:
+      prefix: "dep:"
+      include: "scope"
+    groups:
+      dev-deps:
+        dependency-type: development
+        update-types:
+          - patch
+          - minor
+      deps:
+        dependency-type: production
+        update-types:
+          - patch
+          - minor
+
+  - package-ecosystem: npm
+    directory: "/templates/node_typescript"
+    schedule:
+      interval: daily
+      time: "20:00"
+    assignees:
+      - xosnrdev
+    commit-message:
+      prefix: "dep:"
+      include: "scope"
+    groups:
+      dev-deps:
+        dependency-type: development
+        update-types:
+          - patch
+          - minor
+      deps:
+        dependency-type: production
+        update-types:
+          - patch
+          - minor
 
   - package-ecosystem: "github-actions"
     directory: "/"
-    commit-message:
-      prefix: "chore(ci)"
-      include: "scope"
-    target-branch: "main"
     schedule:
-      interval: "weekly"
+      interval: weekly
+      time: "20:02"
+    assignees:
+      - xosnrdev
+    commit-message:
+      prefix: "chore(ci):"
+    groups:
+      ci-deps:
+        update-types:
+          - patch
+          - minor
