@@ -1,13 +1,19 @@
-{
-  pkgs ? import <nixpkgs> { },
+{ pkgs ? import <nixpkgs> { }
+,
 }:
+
 pkgs.mkShell {
-  # Get dependencies from the main package
-  inputsFrom = [ (pkgs.callPackage ./default.nix { }) ];
-  # Additional tooling
   buildInputs = with pkgs; [
-    bzip2
+    rustc
+    cargo
+    rustfmt
+    clippy
+    rust-analyzer
+    pkg-config
   ];
 
-  nativeBuildInputs = with pkgs; [ pkg-config ];
+  shellHook = ''
+    export RUST_BACKTRACE=1
+    export RUST_LOG=debug
+  '';
 }

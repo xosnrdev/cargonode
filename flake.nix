@@ -1,5 +1,5 @@
 {
-  description = "Unified tooling for Node.js";
+  description = "Dev environment with Nix Flakes";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -7,10 +7,10 @@
   };
 
   outputs =
-    {
-      self,
-      nixpkgs,
-      flake-utils,
+    { self
+    , nixpkgs
+    , flake-utils
+    ,
     }:
     flake-utils.lib.eachDefaultSystem (
       system:
@@ -26,7 +26,7 @@
           default = pkgs.callPackage ./shell.nix { };
         };
 
-        formatter = pkgs.nixfmt-rfc-style;
+        formatter = pkgs.nixpkgs-fmt;
       }
     );
 }

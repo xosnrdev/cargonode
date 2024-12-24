@@ -1,10 +1,9 @@
-{
-  lib,
-  rustPlatform,
-  fetchFromGitHub,
-  pkg-config,
-  bzip2,
-  git,
+{ lib
+, rustPlatform
+, fetchFromGitHub
+, pkg-config
+, bzip2
+,
 }:
 
 rustPlatform.buildRustPackage rec {
@@ -21,8 +20,6 @@ rustPlatform.buildRustPackage rec {
   cargoHash = "sha256-v+Fs2VJrpnIOk9nPRanYYChlR7WOfkXF1kbYOKjOUYc=";
 
   nativeBuildInputs = [ pkg-config ];
-
-  nativeCheckInputs = [ git ];
 
   meta = with lib; {
     description = "Unified tooling for Node.js";
