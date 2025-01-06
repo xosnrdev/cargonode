@@ -6,7 +6,7 @@
     "devDependencies": {
         "@biomejs/biome": "1.9.4",
         "@vitest/coverage-v8": "2.1.8",
-        "release-it": "17.11.0",
+        "release-it": "18.0.0",
         "tsup": "8.3.5",
         "typescript": "5.7.2",
         "vitest": "2.1.8"
