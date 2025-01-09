@@ -1,13 +1,9 @@
 //! Unified tooling for Node.js
-use cargonode::{
-    build, check, format,
-    package::{get_current_dir, get_current_dir_name, Config, Package, Template},
-    release, test,
-};
+use cargonode::{build, check, format, package::*, release, test, ui};
 use clap::{Parser, Subcommand};
 
 #[derive(Debug, Parser)]
-#[command(about, version, long_about = None)]
+#[command(about, version, long_about = None, styles = ui::styles())]
 struct Cli {
     #[command(subcommand)]
     command: Commands,

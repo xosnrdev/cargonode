@@ -1,10 +1,4 @@
-{ lib
-, rustPlatform
-, fetchFromGitHub
-, pkg-config
-, bzip2
-,
-}:
+{ lib, rustPlatform, fetchFromGitHub, pkg-config }:
 
 rustPlatform.buildRustPackage rec {
   pname = "cargonode";
@@ -25,7 +19,8 @@ rustPlatform.buildRustPackage rec {
     description = "Unified tooling for Node.js";
     mainProgram = "cargonode";
     homepage = "https://github.com/xosnrdev/cargonode";
-    changelog = "https://github.com/xosnrdev/cargonode/blob/${version}/CHANGELOG.md";
+    changelog =
+      "https://github.com/xosnrdev/cargonode/blob/${version}/CHANGELOG.md";
     license = with licenses; [
       asl20 # or
       mit
