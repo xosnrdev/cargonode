@@ -61,21 +61,21 @@ projects.
 
 Choose the option that fits your environment:
 
-[//]: # (1. **Shell Installer &#40;Linux&#41;**)
+1. **Install prebuilt binaries via shell script**
 
-[//]: # ()
+   ```bash
 
-[//]: # (   ```bash)
+   curl --proto '=https' --tlsv1.2 -LsSf https://github.com/xosnrdev/cargonode/releases/download/0.1.3/cargonode-installer.sh | sh
 
-[//]: # (   curl -fsSL https://raw.githubusercontent.com/xosnrdev/cargonode/master/install_cargonode.sh | bash)
+   ```
 
-[//]: # (   ```)
+2. **Install prebuilt binaries via powershell script**
 
-[//]: # ()
+    ```bash
+        powershell -ExecutionPolicy ByPass -c "irm https://github.com/xosnrdev/cargonode/releases/download/0.1.3/cargonode-installer.ps1 | iex"
+    ```
 
-[//]: # (   Downloads the latest release from GitHub and installs locally, typically in `~/.local/bin`.)
-
-1. **Homebrew (macOS)**
+3. **Homebrew (macOS)**
 
    ```bash
    brew install xosnrdev/cargonode/cargonode
@@ -83,7 +83,7 @@ Choose the option that fits your environment:
 
    Recommended if you prefer managing software through Homebrew on macOS.
 
-2. **Nix (nixOS)**
+4. **Nix (nixOS)**
 
    ```bash
    nix-env -iA nixpkgs.cargonode
@@ -91,7 +91,7 @@ Choose the option that fits your environment:
 
    See [nixpkgs](https://search.nixos.org/packages?channel=unstable&query=cargonode) for additional details.
 
-3. **Cargo (Rust)**
+5. **Cargo (Rust)**
    ```bash
    cargo install cargonode
    ```
