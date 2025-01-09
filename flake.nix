@@ -49,6 +49,7 @@
             pkgs.git-cliff
             pkgs.cargo-release
             pkgs.cargo-edit
+            pkgs.cargo-dist
           ];
 
           shellHook = ''
