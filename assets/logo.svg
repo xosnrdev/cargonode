@@ -1,140 +1,140 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
-  <defs>
-    <!-- Rust-inspired gradient -->
-    <linearGradient id="rustGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FF4A00">
-        <animate attributeName="stop-color"
-          values="#FF4A00;#FF7446;#FF4A00"
-          dur="4s"
-          repeatCount="indefinite" />
-      </stop>
-      <stop offset="100%" stop-color="#FF7446">
-        <animate attributeName="stop-color"
-          values="#FF7446;#FF4A00;#FF7446"
-          dur="4s"
-          repeatCount="indefinite" />
-      </stop>
-    </linearGradient>
+    <defs>
+        <!-- Rust-inspired gradient -->
+        <linearGradient id="rustGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FF4A00">
+                <animate attributeName="stop-color"
+                         values="#FF4A00;#FF7446;#FF4A00"
+                         dur="4s"
+                         repeatCount="indefinite"/>
+            </stop>
+            <stop offset="100%" stop-color="#FF7446">
+                <animate attributeName="stop-color"
+                         values="#FF7446;#FF4A00;#FF7446"
+                         dur="4s"
+                         repeatCount="indefinite"/>
+            </stop>
+        </linearGradient>
 
-    <!-- Node.js-inspired gradient -->
-    <linearGradient id="nodeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#43853d">
-        <animate attributeName="stop-color"
-          values="#43853d;#68A063;#43853d"
-          dur="4s"
-          repeatCount="indefinite" />
-      </stop>
-      <stop offset="100%" stop-color="#68A063">
-        <animate attributeName="stop-color"
-          values="#68A063;#43853d;#68A063"
-          dur="4s"
-          repeatCount="indefinite" />
-      </stop>
-    </linearGradient>
+        <!-- Node.js-inspired gradient -->
+        <linearGradient id="nodeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#43853d">
+                <animate attributeName="stop-color"
+                         values="#43853d;#68A063;#43853d"
+                         dur="4s"
+                         repeatCount="indefinite"/>
+            </stop>
+            <stop offset="100%" stop-color="#68A063">
+                <animate attributeName="stop-color"
+                         values="#68A063;#43853d;#68A063"
+                         dur="4s"
+                         repeatCount="indefinite"/>
+            </stop>
+        </linearGradient>
 
-    <!-- Tool integration effect -->
-    <filter id="toolGlow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
-      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-        result="glow" />
-      <feBlend in="SourceGraphic" in2="glow" mode="normal" />
-    </filter>
+        <!-- Tool integration effect -->
+        <filter id="toolGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+            <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
+                           result="glow"/>
+            <feBlend in="SourceGraphic" in2="glow" mode="normal"/>
+        </filter>
 
-    <!-- Circuit pattern -->
-    <pattern id="circuit" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-      <path d="M 20 0 L 15 0 L 15 15 L 0 15" fill="none" stroke="rgba(255,255,255,0.2)"
-        stroke-width="0.5" />
-    </pattern>
-  </defs>
+        <!-- Circuit pattern -->
+        <pattern id="circuit" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M 20 0 L 15 0 L 15 15 L 0 15" fill="none" stroke="rgba(255,255,255,0.2)"
+                  stroke-width="0.5"/>
+        </pattern>
+    </defs>
 
-  <!-- Main container hexagon -->
-  <path class="container"
-    d="M120 40 L200 80 L200 160 L120 200 L40 160 L40 80 Z"
-    fill="none"
-    stroke="#FF4A00"
-    stroke-width="2"
-    opacity="0.3">
-    <animate attributeName="stroke-dasharray"
-      values="0,1000;1000,0"
-      dur="3s"
-      fill="freeze" />
-  </path>
+    <!-- Main container hexagon -->
+    <path class="container"
+          d="M120 40 L200 80 L200 160 L120 200 L40 160 L40 80 Z"
+          fill="none"
+          stroke="#FF4A00"
+          stroke-width="2"
+          opacity="0.3">
+        <animate attributeName="stroke-dasharray"
+                 values="0,1000;1000,0"
+                 dur="3s"
+                 fill="freeze"/>
+    </path>
 
-  <!-- Tool integration circles -->
-  <g transform="translate(120 120)" filter="url(#toolGlow)">
-    <!-- Central Node.js hub -->
-    <circle r="30" fill="url(#nodeGradient)" opacity="0.9">
-      <animate attributeName="r"
-        values="30;32;30"
-        dur="2s"
-        repeatCount="indefinite" />
-    </circle>
+    <!-- Tool integration circles -->
+    <g transform="translate(120 120)" filter="url(#toolGlow)">
+        <!-- Central Node.js hub -->
+        <circle r="30" fill="url(#nodeGradient)" opacity="0.9">
+            <animate attributeName="r"
+                     values="30;32;30"
+                     dur="2s"
+                     repeatCount="indefinite"/>
+        </circle>
 
-    <!-- Orbiting tool modules -->
-    <g>
-      <circle cx="0" cy="-45" r="12" fill="url(#rustGradient)" opacity="0.8">
-        <animateTransform attributeName="transform"
-          type="rotate"
-          from="0 0 0"
-          to="360 0 0"
-          dur="10s"
-          repeatCount="indefinite" />
-      </circle>
+        <!-- Orbiting tool modules -->
+        <g>
+            <circle cx="0" cy="-45" r="12" fill="url(#rustGradient)" opacity="0.8">
+                <animateTransform attributeName="transform"
+                                  type="rotate"
+                                  from="0 0 0"
+                                  to="360 0 0"
+                                  dur="10s"
+                                  repeatCount="indefinite"/>
+            </circle>
 
-      <!-- Connecting beams -->
-      <path d="M0 -45 L0 -30" stroke="#FF4A00" stroke-width="2" opacity="0.6">
-        <animateTransform attributeName="transform"
-          type="rotate"
-          from="0 0 0"
-          to="360 0 0"
-          dur="10s"
-          repeatCount="indefinite" />
-      </path>
+            <!-- Connecting beams -->
+            <path d="M0 -45 L0 -30" stroke="#FF4A00" stroke-width="2" opacity="0.6">
+                <animateTransform attributeName="transform"
+                                  type="rotate"
+                                  from="0 0 0"
+                                  to="360 0 0"
+                                  dur="10s"
+                                  repeatCount="indefinite"/>
+            </path>
+        </g>
+
+        <!-- Tool integration lines -->
+        <g stroke="#43853d" stroke-width="1.5" opacity="0.6">
+            <line x1="-26" y1="-15" x2="26" y2="-15">
+                <animate attributeName="stroke-dasharray"
+                         values="0,100;100,0"
+                         dur="2s"
+                         repeatCount="indefinite"/>
+            </line>
+            <line x1="-26" y1="0" x2="26" y2="0">
+                <animate attributeName="stroke-dasharray"
+                         values="0,100;100,0"
+                         dur="2s"
+                         begin="0.4s"
+                         repeatCount="indefinite"/>
+            </line>
+            <line x1="-26" y1="15" x2="26" y2="15">
+                <animate attributeName="stroke-dasharray"
+                         values="0,100;100,0"
+                         dur="2s"
+                         begin="0.8s"
+                         repeatCount="indefinite"/>
+            </line>
+        </g>
+
+        <!-- Data flow particles -->
+        <circle r="2" fill="#FF4A00">
+            <animateMotion
+                    path="M-30,-30 A42.43 42.43 0 0 1 30,-30 A42.43 42.43 0 0 1 30,30 A42.43 42.43 0 0 1 -30,30 A42.43 42.43 0 0 1 -30,-30"
+                    dur="4s"
+                    repeatCount="indefinite"/>
+        </circle>
+        <circle r="2" fill="#43853d">
+            <animateMotion
+                    path="M-30,-30 A42.43 42.43 0 0 1 30,-30 A42.43 42.43 0 0 1 30,30 A42.43 42.43 0 0 1 -30,30 A42.43 42.43 0 0 1 -30,-30"
+                    dur="4s"
+                    begin="2s"
+                    repeatCount="indefinite"/>
+        </circle>
     </g>
 
-    <!-- Tool integration lines -->
-    <g stroke="#43853d" stroke-width="1.5" opacity="0.6">
-      <line x1="-26" y1="-15" x2="26" y2="-15">
-        <animate attributeName="stroke-dasharray"
-          values="0,100;100,0"
-          dur="2s"
-          repeatCount="indefinite" />
-      </line>
-      <line x1="-26" y1="0" x2="26" y2="0">
-        <animate attributeName="stroke-dasharray"
-          values="0,100;100,0"
-          dur="2s"
-          begin="0.4s"
-          repeatCount="indefinite" />
-      </line>
-      <line x1="-26" y1="15" x2="26" y2="15">
-        <animate attributeName="stroke-dasharray"
-          values="0,100;100,0"
-          dur="2s"
-          begin="0.8s"
-          repeatCount="indefinite" />
-      </line>
-    </g>
-
-    <!-- Data flow particles -->
-    <circle r="2" fill="#FF4A00">
-      <animateMotion
-        path="M-30,-30 A42.43 42.43 0 0 1 30,-30 A42.43 42.43 0 0 1 30,30 A42.43 42.43 0 0 1 -30,30 A42.43 42.43 0 0 1 -30,-30"
-        dur="4s"
-        repeatCount="indefinite" />
-    </circle>
-    <circle r="2" fill="#43853d">
-      <animateMotion
-        path="M-30,-30 A42.43 42.43 0 0 1 30,-30 A42.43 42.43 0 0 1 30,30 A42.43 42.43 0 0 1 -30,30 A42.43 42.43 0 0 1 -30,-30"
-        dur="4s"
-        begin="2s"
-        repeatCount="indefinite" />
-    </circle>
-  </g>
-
-  <!-- Circuit overlay -->
-  <path class="overlay"
-    d="M120 40 L200 80 L200 160 L120 200 L40 160 L40 80 Z"
-    fill="url(#circuit)"
-    opacity="0.1" />
+    <!-- Circuit overlay -->
+    <path class="overlay"
+          d="M120 40 L200 80 L200 160 L120 200 L40 160 L40 80 Z"
+          fill="url(#circuit)"
+          opacity="0.1"/>
 </svg>

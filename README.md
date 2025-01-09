@@ -24,7 +24,9 @@
 
 ## Overview
 
-**cargonode** is a Rust-based CLI that simplifies Node.js development by consolidating common tooling under a single executable. It serves as a wrapper around key utilities for building, testing, formatting, linting, and releasing your projects.
+**cargonode** is a Rust-based CLI that simplifies Node.js development by consolidating common tooling under a single
+executable. It serves as a wrapper around key utilities for building, testing, formatting, linting, and releasing your
+projects.
 
 ### Why cargonode?
 
@@ -44,7 +46,8 @@
 - Node.js ≥ 20.11.0  
   Needed for the underlying tools (Biome, Tsup, Vitest, Release-It).
 - Rust ≥ 1.80  
-  Required for installation from source or cargo. Binary releases do not require a Rust compiler on the end-user machine.
+  Required for installation from source or cargo. Binary releases do not require a Rust compiler on the end-user
+  machine.
 
 ### Supported Platforms
 
@@ -58,15 +61,21 @@
 
 Choose the option that fits your environment:
 
-1. **Shell Installer (Linux)**
+[//]: # (1. **Shell Installer &#40;Linux&#41;**)
 
-   ```bash
-   curl -fsSL https://raw.githubusercontent.com/xosnrdev/cargonode/master/install_cargonode.sh | bash
-   ```
+[//]: # ()
 
-   Downloads the latest release from GitHub and installs locally, typically in `~/.local/bin`.
+[//]: # (   ```bash)
 
-2. **Homebrew (macOS)**
+[//]: # (   curl -fsSL https://raw.githubusercontent.com/xosnrdev/cargonode/master/install_cargonode.sh | bash)
+
+[//]: # (   ```)
+
+[//]: # ()
+
+[//]: # (   Downloads the latest release from GitHub and installs locally, typically in `~/.local/bin`.)
+
+1. **Homebrew (macOS)**
 
    ```bash
    brew install xosnrdev/cargonode/cargonode
@@ -74,7 +83,7 @@ Choose the option that fits your environment:
 
    Recommended if you prefer managing software through Homebrew on macOS.
 
-3. **Nix (nixOS)**
+2. **Nix (nixOS)**
 
    ```bash
    nix-env -iA nixpkgs.cargonode
@@ -82,7 +91,7 @@ Choose the option that fits your environment:
 
    See [nixpkgs](https://search.nixos.org/packages?channel=unstable&query=cargonode) for additional details.
 
-4. **Cargo (Rust)**
+3. **Cargo (Rust)**
    ```bash
    cargo install cargonode
    ```
@@ -139,7 +148,8 @@ cargonode build --help
 
 ## Configuration
 
-By default, cargonode uses several best-practice settings, but it can be customized through a `cargonode.toml` in your project root. For instance:
+By default, cargonode uses several best-practice settings, but it can be customized through a `cargonode.toml` in your
+project root. For instance:
 
 ```toml
 [commands.format]
@@ -150,7 +160,8 @@ args = ["--fix"]
 prechecks = ["test", "build"]
 ```
 
-In this example, `eslint` replaces biome for the `format` command, and `prechecks` ensures tests and builds run before any release process.
+In this example, `eslint` replaces biome for the `format` command, and `prechecks` ensures tests and builds run before
+any release process.
 
 ### Configuration Precedence
 
@@ -164,10 +175,13 @@ See the [Template Reference](./templates/node_typescript/cargonode.toml) for add
 
 ## Support
 
-For issues, feature requests, or general feedback, visit the [GitHub Issues](https://github.com/xosnrdev/cargonode/issues) page. Contributions are welcome, whether in the form of bug reports, pull requests, or suggestions.
+For issues, feature requests, or general feedback, visit
+the [GitHub Issues](https://github.com/xosnrdev/cargonode/issues) page. Contributions are welcome, whether in the form
+of bug reports, pull requests, or suggestions.
 
 ---
 
 ## License
 
-This project is available under a dual license: [MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE). Choose whichever license works best for your project or organization.
+This project is available under a dual license: [MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE). Choose whichever
+license works best for your project or organization.

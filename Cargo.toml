@@ -6,7 +6,7 @@ authors = ["Success Kingsley <hello@xosnrdev.tech>"]
 categories = [
     "command-line-utilities",
     "development-tools",
-    "development-tools::build-utils",
+    "development-tools::build-utils"
 ]
 keywords = ["productivity", "developer-tools", "cross-platform"]
 description = """
@@ -14,6 +14,7 @@ Unified tooling for Node.js.
 """
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/xosnrdev/cargonode"
+homepage = "https://github.com/xosnrdev/cargonode?tab=readme-ov-file#readme"
 
 [[bin]]
 name = "cargonode"
@@ -45,39 +46,13 @@ panic = "abort"
 incremental = false
 codegen-units = 1
 
-# This is the main way to strip binaries in the deb package created by
-# 'cargo deb'. For other release binaries, we (currently) call 'strip'
-# explicitly in the release process.
-[profile.deb]
+# The profile that 'cargo dist' will build with
+[profile.dist]
 inherits = "release"
-debug = false
+lto = "thin"
 
-[package.metadata.deb]
-section = "utils"
-assets = [
-    [
-        "target/release/cargonode",
-        "usr/bin/",
-        "755",
-    ],
-    [
-        "LICENSE-MIT",
-        "usr/share/doc/cargonode/",
-        "644",
-    ],
-    [
-        "LICENSE-APACHE",
-        "usr/share/doc/cargonode/",
-        "644",
-    ],
-    [
-        "CHANGELOG.md",
-        "usr/share/doc/cargonode/CHANGELOG",
-        "644",
-    ],
-    [
-        "README.md",
-        "usr/share/doc/cargonode/README",
-        "644",
-    ],
-]
+[package.metadata.wix]
+upgrade-guid = "B753834A-440E-42E6-A3B5-D5C5DCDE0BF0"
+path-guid = "7B2FC1F5-FF2E-45F3-A62B-C35866B43452"
+license = false
+eula = false
