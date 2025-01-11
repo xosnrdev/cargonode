@@ -8,4 +8,5 @@ pub mod exec;
 pub mod package;
 
 pub use integration::*;
+pub mod error;
 pub mod ui;
