@@ -1,8 +1,20 @@
+//----------------------------------------------------------------------
+// Types
+//----------------------------------------------------------------------
+
+/// Centralized Error Struct
 #[derive(Debug)]
 pub struct CliError {
     error: Option<anyhow::Error>,
     code: i32,
 }
+
+/// Alias for Result type
+pub type AppResult<T> = anyhow::Result<T>;
+
+//----------------------------------------------------------------------
+// Implementations
+//----------------------------------------------------------------------
 
 impl CliError {
     pub fn silent_with_code(code: i32) -> Self {
@@ -56,5 +68,3 @@ impl std::fmt::Display for CliError {
 }
 
 impl std::error::Error for CliError {}
-
-pub type AppResult<T> = anyhow::Result<T>;

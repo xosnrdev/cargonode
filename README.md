@@ -24,9 +24,7 @@
 
 ## Overview
 
-**cargonode** is a Rust-based CLI that simplifies Node.js development by consolidating common tooling under a single
-executable. It serves as a wrapper around key utilities for building, testing, formatting, linting, and releasing your
-projects.
+Unified tooling for Node.js.
 
 ### Why cargonode?
 
@@ -38,8 +36,6 @@ projects.
    Allows swapping out default commands or adding custom prechecks.
 4. **Cross-Platform Compatibility**  
    Runs on macOS (Intel and ARM), Linux (x64, ARM), and Windows (x64, ARM).
-
----
 
 ## Requirements
 
@@ -55,8 +51,6 @@ projects.
 - **Linux** (x64, ARM)
 - **Windows** (x64, ARM)
 
----
-
 ## Installation
 
 Choose the option that fits your environment:
@@ -71,9 +65,9 @@ Choose the option that fits your environment:
 
 2. **Install prebuilt binaries via powershell script**
 
-    ```bash
-        powershell -ExecutionPolicy ByPass -c "irm https://github.com/xosnrdev/cargonode/releases/download/0.1.3/cargonode-installer.ps1 | iex"
-    ```
+   ```bash
+       powershell -ExecutionPolicy ByPass -c "irm https://github.com/xosnrdev/cargonode/releases/download/0.1.3/cargonode-installer.ps1 | iex"
+   ```
 
 3. **Homebrew (macOS)**
 
@@ -96,8 +90,6 @@ Choose the option that fits your environment:
    cargo install cargonode
    ```
    Installs the executable from source via the Rust package manager.
-
----
 
 ## Usage
 
@@ -144,8 +136,6 @@ cargonode --help
 cargonode build --help
 ```
 
----
-
 ## Configuration
 
 By default, cargonode uses several best-practice settings, but it can be customized through a `cargonode.toml` in your
@@ -171,15 +161,11 @@ any release process.
 
 See the [Template Reference](./templates/node_typescript/cargonode.toml) for additional examples.
 
----
-
 ## Support
 
 For issues, feature requests, or general feedback, visit
 the [GitHub Issues](https://github.com/xosnrdev/cargonode/issues) page. Contributions are welcome, whether in the form
 of bug reports, pull requests, or suggestions.
-
----
 
 ## License
 
