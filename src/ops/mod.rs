@@ -3,3 +3,5 @@
 //----------------------------------------------------------------
 
 pub mod parser;
+pub mod replace;
+pub mod validate;

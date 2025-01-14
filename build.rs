@@ -117,7 +117,6 @@ fn compress_and_embed_templates(
 ) -> Result<()> {
     let current_hash = compute_hash(files)?;
 
-    // Read the previous hash if it exists
     let previous_hash = if hash_file.exists() {
         fs::read(hash_file).context("Failed to read previous hash file")?
     } else {
@@ -128,7 +127,6 @@ fn compress_and_embed_templates(
     if current_hash != previous_hash {
         println!("cargo:warning=Template changed. Compressing and embedding.");
 
-        // Create the compressed archive
         let tar_gz = File::create(destination).context("Could not create tar.gz file")?;
         let enc = GzEncoder::new(tar_gz, Compression::default());
         let mut tar = Builder::new(enc);
@@ -140,7 +138,6 @@ fn compress_and_embed_templates(
 
         tar.finish().context("Could not finish tar.gz")?;
 
-        // Read the compressed data
         let mut compressed_data = Vec::new();
         File::open(destination)
             .context("Could not open compressed template file")?
@@ -152,12 +149,11 @@ fn compress_and_embed_templates(
 
         writeln!(
             embedded_file,
-            "pub const EMBEDDED_TEMPLATE: &[u8] = {:?};\n",
+            "pub const EMBEDDED_TEMPLATE: &[u8] = &{:?};\n",
             compressed_data
         )
         .context("Could not write to embedded_template.rs")?;
 
-        // Update the stored hash
         let mut f = File::create(hash_file).context("Could not create hash file")?;
         f.write_all(&current_hash)
             .context("Could not write hash to file")?;
