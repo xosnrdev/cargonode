@@ -43,6 +43,18 @@ pub enum Subcommands {
     },
     /// Initialize a new package in current directory.
     Init,
+    /// Run entry point or file. Defaults to src/main.js.
+    #[command(disable_help_flag = true, visible_alias = "r")]
+    Run {
+        #[arg(
+            default_value = "src/main.js",
+            value_name = "ENTRY",
+            help = "Specify the entry point",
+            allow_hyphen_values = true,
+            trailing_var_arg = true
+        )]
+        entry_point: Option<String>,
+    },
     /// Formats files using biomejs.
     #[command(disable_help_flag = true)]
     Fmt {
@@ -68,7 +80,7 @@ pub enum Subcommands {
         args: Vec<String>,
     },
     /// Automate package release using release-it
-    #[command(disable_help_flag = true, visible_alias = "r")]
+    #[command(disable_help_flag = true)]
     Release {
         #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
         args: Vec<String>,
@@ -167,6 +179,11 @@ impl Command {
             Some(Subcommands::Init) => {
                 todo!()
             }
+            Some(Subcommands::Run { entry_point }) => {
+                log::trace!("Running entry point: {:?}", entry_point);
+                todo!()
+            }
+
             Some(Subcommands::Fmt { args }) => {
                 log::trace!("Formatting files with args: {:?}", args);
                 todo!()
@@ -220,7 +237,6 @@ impl ConfigArgs {
             .unwrap_or_else(|| PathBuf::from(DEFAULT_CONFIG_FILE));
         trace!("Using configuration file: {:?}", config_path);
 
-        // Check if the configuration file exists
         if config_path.exists() {
             debug!("Configuration file {:?} found. Loading...", config_path);
 
@@ -229,7 +245,6 @@ impl ConfigArgs {
                 key: DEFAULT_CONFIG_KEY,
             };
 
-            // Load configuration from file
             let file_config = file_source.load_config()?;
             config.merge(file_config);
             debug!("Loaded configuration from file.");
