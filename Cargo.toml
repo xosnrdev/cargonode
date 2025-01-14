@@ -6,12 +6,10 @@ authors = ["Success Kingsley <hello@xosnrdev.tech>"]
 categories = [
     "command-line-utilities",
     "development-tools",
-    "development-tools::build-utils"
+    "development-tools::build-utils",
 ]
 keywords = ["productivity", "developer-tools", "cross-platform"]
-description = """
-Unified tooling for Node.js.
-"""
+description = "Unified tooling for Node.js development"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/xosnrdev/cargonode"
 homepage = "https://github.com/xosnrdev/cargonode?tab=readme-ov-file#readme"

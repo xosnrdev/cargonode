@@ -1,5 +1,5 @@
 {
-  description = "Unified tooling for Node.js";
+  description = "Unified tooling for Node.js development";
 
   # ----------------------------------------------------------------------------
   # Inputs
