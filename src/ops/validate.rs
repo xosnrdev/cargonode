@@ -4,22 +4,13 @@ use std::sync::LazyLock;
 
 use crate::error::AppResult;
 
-//----------------------------------------------------------------------
-// Constants
-//----------------------------------------------------------------------
-
-/// Maximum allowed length for package names (214 characters as per NPM specs)
 const PKG_NAME_LENGTH: usize = 214;
 
 /// Reference: https://docs.npmjs.com/cli/v7/configuring-npm/package-json#name
-static PKG_NAME_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^(?:@[a-z0-9-*~][a-z0-9-*._~]*\/)?[a-z0-9-*~][a-z0-9-._~]*$")
+pub static PKG_NAME_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^(?:(?:@(?:[a-z0-9-*~][a-z0-9-*._~]*)?/[a-z0-9-._~])|[a-z0-9-~])[a-z0-9-._~]*$")
         .expect("Failed to compile package name regex pattern")
 });
-
-//----------------------------------------------------------------------
-// Functions
-//----------------------------------------------------------------------
 
 pub fn validate_pkg_name(name: &str) -> AppResult<()> {
     log::debug!("Validating package name: {}", name);
@@ -46,10 +37,6 @@ pub fn validate_pkg_name(name: &str) -> AppResult<()> {
 
     Ok(())
 }
-
-//----------------------------------------------------------------------
-// Tests
-//----------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {

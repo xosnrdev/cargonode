@@ -1,18 +1,13 @@
-use anyhow::Ok;
+use anyhow::Context;
 use clap::{ArgGroup, Args, Parser, Subcommand};
-use log::{debug, trace, warn};
 use std::path::PathBuf;
 
 use crate::{
-    cmd::do_call,
-    config::{Config, DEFAULT_CONFIG_FILE, DEFAULT_CONFIG_KEY},
-    error::AppResult,
-    source::{ConfigSource, FileConfigSource},
+    cmd,
+    config::Config,
+    error::{AppResult, CliError},
+    WorkflowSteps,
 };
-
-//----------------------------------------------------------------------
-// Types
-//----------------------------------------------------------------------
 
 #[derive(Debug, Parser)]
 #[command(
@@ -20,74 +15,99 @@ use crate::{
     author,
     about,
     visible_alias = "cn",
+    propagate_version = true,
     styles = clap_cargo::style::CLAP_STYLING,
+    propagate_version = true
 )]
-#[command(propagate_version = true)]
-pub struct Command {
+pub struct Cli {
     #[command(subcommand)]
-    pub subs: Option<Subcommands>,
+    pub workflow: Option<Workflow>,
 
     #[command(flatten)]
-    pub args: ConfigArgs,
+    pub workflow_config: WorkflowConfig,
+}
+
+impl Cli {
+    pub fn run(self) -> Result<(), CliError> {
+        let config = self.workflow_config.from_args()?;
+        let mut builder = get_logging(*config.get_global_scope().get_verbose());
+        builder.init();
+
+        #[allow(unused_variables)]
+        match self.workflow {
+            Some(Workflow::New { name }) => cmd::project::with_name(name),
+            Some(Workflow::Init) => unimplemented!(),
+            Some(Workflow::Run { executable }) => unimplemented!(),
+            Some(Workflow::Fmt { args }) => unimplemented!(),
+            Some(Workflow::Check { args }) => unimplemented!(),
+            Some(Workflow::Build { args }) => unimplemented!(),
+            Some(Workflow::Test { args }) => unimplemented!(),
+            Some(Workflow::Release { args }) => unimplemented!(),
+            None => cmd::do_call(&config),
+        }
+    }
 }
 
 #[derive(Debug, Subcommand)]
-pub enum Subcommands {
-    /// Bootstrap a new package at <PATH>.
+pub enum Workflow {
+    /// Create a new project at the specified path.
     New {
-        #[arg(
-            value_name = "PATH",
-            help = "Specify the path to create the new package"
-        )]
-        path: String,
+        /// Name or path for the new project.
+        #[arg(value_name = "NAME")]
+        name: PathBuf,
     },
-    /// Initialize a new package in current directory.
+    /// Initialize a project in the current directory.
     Init,
-    /// Run entry point or file. Defaults to src/main.js.
+    /// Run a custom script or command (default: dist/main.cjs).
     #[command(disable_help_flag = true, visible_alias = "r")]
     Run {
+        /// Script or binary to run.
         #[arg(
-            default_value = "src/main.js",
-            value_name = "ENTRY",
-            help = "Specify the entry point",
+            default_value = "dist/main.cjs",
+            value_name = "EXECUTABLE",
             allow_hyphen_values = true,
             trailing_var_arg = true
         )]
-        entry_point: Option<String>,
+        executable: Option<PathBuf>,
     },
-    /// Formats files using biomejs.
+    /// Format files (default: biome format).
     #[command(disable_help_flag = true)]
     Fmt {
+        /// Arguments for the formatter.
         #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
         args: Vec<String>,
     },
-    /// Lint files using biomejs
+    /// Check code (default: biome check).
     #[command(disable_help_flag = true, visible_alias = "c")]
     Check {
+        /// Arguments for the checker.
         #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
         args: Vec<String>,
     },
-    /// Build and bundle the current package
+    /// Build or bundle (default: tsup).
     #[command(disable_help_flag = true, visible_alias = "b")]
     Build {
+        /// Arguments for the builder.
         #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
         args: Vec<String>,
     },
-    /// Run the tests
+    /// Run tests (default: vitest).
     #[command(disable_help_flag = true, visible_alias = "t")]
     Test {
+        /// Arguments for the test runner.
         #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
         args: Vec<String>,
     },
-    /// Automate package release using release-it
+    /// Release project (default: release-it).
     #[command(disable_help_flag = true)]
     Release {
+        /// Arguments for the release command.
         #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
         args: Vec<String>,
     },
 }
 
-#[derive(Debug, Args)]
+#[derive(Debug, Args, Default)]
 #[command(
     group(
         ArgGroup::new("config_source")
@@ -96,180 +116,124 @@ pub enum Subcommands {
             .args(&["config_file"])
     )
 )]
-pub struct ConfigArgs {
-    /// Path to the configuration file (e.g., package.json)
+pub struct WorkflowConfig {
+    /// Path to a JSON config file (default: package.json).
     #[arg(
         short,
         long,
-        value_name = "FILE",
-        help = "Specify the path to the configuration file",
+        value_name = "CONFIG FILE",
         global = true,
-        group = "config_source"
+        group = "config_source",
+        //default_value = "package.json"
+        //default_value = "package.json"
     )]
     pub config_file: Option<PathBuf>,
 
-    /// Executable to run
-    #[arg(short = 'x', long, help = "Specify the executable to run")]
-    pub executable: Option<String>,
+    /// Override the configured executable.
+    #[arg(short = 'x', long, value_name = "EXECUTABLE")]
+    pub executable: Option<PathBuf>,
 
-    /// Arguments for the executable
+    /// Additional arguments passed to the executable.
+    #[arg(short, long, value_name = "ARGS", allow_hyphen_values = true)]
+    pub args: Option<Vec<String>>,
+
+    /// Environment variables (KEY=VALUE).
     #[arg(
         short,
         long,
-        value_name = "ARGS",
-        allow_hyphen_values = true,
-        help = "Specify arguments for the executable"
+        value_name = "ENV_VARS",
+        num_args = 0..,
     )]
-    pub args: Option<Vec<String>>,
-
-    /// Environment variables (key=value)
-    #[arg(short, long, value_name = "KEY=VALUE", num_args = 0.., help = "Specify environment variables in KEY=VALUE format")]
     pub env_vars: Option<Vec<String>>,
 
-    /// Working directory
+    /// Working directory (default: .).
     #[arg(
         short = 'w',
         long,
-        value_name = "DIR",
-        help = "Specify the working directory",
+        value_name = "WORKING DIRECTORY",
         global = true,
         default_value = "."
     )]
-    pub working_dir: Option<PathBuf>,
+    pub working_dir: PathBuf,
 
-    /// Pre-check commands
-    #[arg(short = 'p', long, value_name = "CHECKS", num_args = 0.., help = "Specify pre-check commands", global = true)]
-    pub pre_checks: Option<Vec<String>>,
+    /// Extra steps to run before the main executable.
+    #[arg(
+        long,
+        value_name = "STEPS",
+        num_args = 0..,
+        global = true
+    )]
+    pub workflow_step: Option<Vec<WorkflowSteps>>,
 
-    /// Timeout in seconds
+    /// Time limit in seconds (default: 60).
     #[arg(
         short,
         long,
         value_name = "SECONDS",
-        help = "Specify timeout in seconds",
         global = true,
         default_value = "60"
     )]
-    pub timeout: Option<u64>,
+    pub timeout: u64,
 
-    /// Pass many times for more log output
-    ///
-    /// By default, it'll report warn. Passing `-v` one time adds debug
-    /// logs, `-vv` adds trace logs.
-    #[arg(short, long, action = clap::ArgAction::Count, help = "Increase output verbosity", global = true)]
+    /// Increase logging verbosity (use multiple times for more detail).
+    #[arg(short, long, action = clap::ArgAction::Count, global = true)]
     pub verbose: u8,
 }
 
-//----------------------------------------------------------------------
-// Implementations
-//----------------------------------------------------------------------
-
-impl Command {
-    pub fn run(&self) -> AppResult<()> {
-        let config = self.args.parse_config()?;
-
-        let mut builder = get_logging(config.verbose);
-        builder.init();
-
-        match &self.subs {
-            Some(Subcommands::New { path }) => {
-                log::trace!("Creating new package at path: {}", path);
-                todo!()
-            }
-            Some(Subcommands::Init) => {
-                todo!()
-            }
-            Some(Subcommands::Run { entry_point }) => {
-                log::trace!("Running entry point: {:?}", entry_point);
-                todo!()
-            }
-
-            Some(Subcommands::Fmt { args }) => {
-                log::trace!("Formatting files with args: {:?}", args);
-                todo!()
-            }
-            Some(Subcommands::Check { args }) => {
-                log::trace!("Linting files with args: {:?}", args);
-                todo!()
-            }
-            Some(Subcommands::Build { args }) => {
-                log::trace!("Building and bundling package with args: {:?}", args);
-                todo!()
-            }
-            Some(Subcommands::Test { args }) => {
-                log::trace!("Running tests with args: {:?}", args);
-                todo!()
-            }
-            Some(Subcommands::Release { args }) => {
-                log::trace!("Releasing package with args: {:?}", args);
-                todo!()
-            }
-            // Do call whatever executable config has
-            None => do_call(&config),
-        }
-    }
-}
-
-impl ConfigArgs {
-    /// Constructs a new ConfigArgs with only the config_file specified.
-    pub const fn new(config_file: Option<PathBuf>) -> Self {
-        Self {
-            config_file,
-            executable: None,
-            args: None,
-            env_vars: None,
-            working_dir: None,
-            pre_checks: None,
-            timeout: None,
-            verbose: 0,
-        }
-    }
-
-    /// Parses the configuration by combining file and command-line configs.
-    /// Command-line configs take precedence over the configuration file.
-    pub fn parse_config(&self) -> AppResult<Config> {
-        debug!("Starting parsing process.");
-
+impl WorkflowConfig {
+    pub fn from_args(self) -> AppResult<Config> {
         let mut config = Config::default();
-        let config_path = self
-            .config_file
-            .clone()
-            .unwrap_or_else(|| PathBuf::from(DEFAULT_CONFIG_FILE));
-        trace!("Using configuration file: {:?}", config_path);
 
-        if config_path.exists() {
-            debug!("Configuration file {:?} found. Loading...", config_path);
+        if let Some(config_path) = self.config_file {
+            let canonical_path = config_path.canonicalize().with_context(|| {
+                format!(
+                    "Failed to canonicalize config file path: {}",
+                    config_path.display()
+                )
+            })?;
 
-            let file_source = FileConfigSource {
-                path: config_path,
-                key: DEFAULT_CONFIG_KEY,
-            };
-
-            let file_config = file_source.load_config()?;
-            config.merge(file_config);
-            debug!("Loaded configuration from file.");
-        } else {
-            warn!(
-                "Configuration file {:?} not found. Skipping file-based configurations.",
-                config_path
-            );
+            let file_config = Config::from_file(&canonical_path)?;
+            config.merge(file_config)?;
         }
 
-        debug!("Converting command-line arguments to configuration.");
-        let args_config = config.from_args(self)?;
-        config.merge(args_config);
-        debug!("Merged configuration from command-line.");
+        *config.get_global_scope_mut().get_executable_mut() = self.executable;
+
+        if let Some(args) = self.args {
+            *config.get_global_scope_mut().get_args_mut() = args;
+        }
+
+        if let Some(env_vars) = self.env_vars {
+            for var in env_vars {
+                let parts: Vec<&str> = var.splitn(2, '=').collect();
+                if parts.len() != 2 {
+                    anyhow::bail!(
+                        "Invalid environment variable: '{}'. Must be KEY=VALUE.",
+                        var
+                    );
+                }
+                config
+                    .get_global_scope_mut()
+                    .get_env_vars_mut()
+                    .insert(parts[0].to_string(), parts[1].to_string());
+            }
+        }
+
+        *config.get_global_scope_mut().get_working_dir_mut() = self.working_dir;
+
+        if let Some(steps) = self.workflow_step {
+            *config.get_global_scope_mut().get_workflow_steps_mut() = steps;
+        }
+
+        *config.get_global_scope_mut().get_timeout_mut() = self.timeout;
+
+        if self.verbose > *config.get_global_scope().get_verbose() {
+            *config.get_global_scope_mut().get_verbose_mut() = self.verbose;
+        }
 
         config.validate()?;
-        debug!("Configuration validated successfully.");
-
         Ok(config)
     }
 }
-
-//----------------------------------------------------------------------
-// Functions
-//----------------------------------------------------------------------
 
 fn get_logging(verbosity: u8) -> env_logger::Builder {
     use log::LevelFilter;
@@ -281,15 +245,91 @@ fn get_logging(verbosity: u8) -> env_logger::Builder {
     };
 
     let mut builder = env_logger::Builder::new();
-
     builder.filter(None, level);
     builder.format_module_path(false);
-    if level == log::LevelFilter::Trace || level == log::LevelFilter::Debug {
+
+    if level == LevelFilter::Trace || level == LevelFilter::Debug {
         builder.format_timestamp_secs();
     } else {
         builder.format_target(false);
         builder.format_timestamp(None);
     }
-
     builder
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::MAX_TIMEOUT;
+
+    use super::*;
+    use clap::Parser;
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_cli_parse_new() {
+        let args = ["cn", "new", "my_project"];
+        let cli = Cli::parse_from(args);
+        match cli.workflow {
+            Some(Workflow::New { name }) => assert_eq!(name, PathBuf::from("my_project")),
+            _ => panic!("invalid workflow"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parse_init() {
+        let args = ["cn", "init"];
+        let cli = Cli::parse_from(args);
+        match cli.workflow {
+            Some(Workflow::Init) => {}
+            _ => panic!("invalid workflow"),
+        }
+    }
+
+    #[test]
+    fn test_cli_parse_none() {
+        let args = ["cn"];
+        let cli = Cli::parse_from(args);
+        assert!(cli.workflow.is_none());
+    }
+
+    #[test]
+    fn test_config_with_file_not_found() {
+        let config = WorkflowConfig {
+            config_file: Some(PathBuf::from("no_such_file.json")),
+            ..Default::default()
+        };
+        let result = config.from_args();
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("Failed to canonicalize config file path: no_such_file.json"));
+    }
+
+    #[test]
+    fn test_config_with_too_high_timeout() {
+        let config = WorkflowConfig {
+            executable: Some(PathBuf::from("test")),
+            timeout: MAX_TIMEOUT + 100,
+            ..Default::default()
+        };
+        let result = config.from_args();
+        let err = result.unwrap_err();
+        dbg!(&err);
+        assert!(err.to_string().contains(
+            "Failed to validate global scope: Timeout 160 exceeds the maximum of 60 seconds."
+        ));
+    }
+
+    #[test]
+    fn test_config_env_var_format_error() {
+        let config = WorkflowConfig {
+            env_vars: Some(vec!["NOTVALID".into()]),
+            ..Default::default()
+        };
+        let result = config.from_args();
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err.to_string().contains("Invalid environment variable"));
+    }
 }

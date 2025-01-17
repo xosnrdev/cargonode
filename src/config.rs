@@ -1,277 +1,380 @@
 use std::{
     collections::HashMap,
+    fmt,
+    fs::File,
     io::{BufReader, Read},
     path::{Path, PathBuf},
 };
 
 use anyhow::Context;
-use log::{debug, trace, warn};
+use getset::{Getters, MutGetters};
+use log::{trace, warn};
 use serde::{Deserialize, Serialize};
+use which::which;
 
-use crate::{error::AppResult, ops::parser::ConfigArgs};
-
-//----------------------------------------------------------------------
-// Exports
-//----------------------------------------------------------------------
+use crate::error::AppResult;
 
 pub mod source;
 
-//----------------------------------------------------------------------
-// Constants
-//----------------------------------------------------------------------
+pub const MAX_TIMEOUT: u64 = 60;
+const MAX_ARGS_LEN: usize = 1024;
 
-/// Default configuration file name.
-pub const DEFAULT_CONFIG_FILE: &str = "package.json";
-
-/// Default configuration key, typically the package name.
-pub const DEFAULT_CONFIG_KEY: &str = env!("CARGO_PKG_NAME");
-
-//--------------------------------------------------------------------------------------------------
-// Types
-//--------------------------------------------------------------------------------------------------
-
-/// Represents the executable command and its parameters.
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[serde(deny_unknown_fields, default)]
-#[serde(rename_all = "kebab-case")]
-pub struct Command {
-    /// Path to the executable.
-    pub executable: String,
-    /// Arguments to pass to the executable.
-    pub args: Vec<String>,
-    /// Environment variables to set for the executable.
-    pub env_vars: HashMap<String, String>,
-    /// Working directory for the executable.
-    pub working_dir: Option<PathBuf>,
+#[derive(Debug, Serialize, Deserialize)]
+struct ConfigKey {
+    cargonode: Config,
 }
 
-/// Represents the overall configuration.
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize, Getters, MutGetters, PartialEq)]
+#[getset(get = "pub with_prefix", get_mut = "pub with_prefix")]
 #[serde(deny_unknown_fields, default)]
-#[serde(rename_all = "kebab-case")]
 pub struct Config {
-    /// Command configuration.
-    #[serde(flatten)]
-    pub command: Command,
-
-    /// Pre-execution checks or commands.
-    pub pre_checks: Option<Vec<String>>,
-
-    /// Timeout in seconds for the command execution.
-    pub timeout: Option<u64>,
-
-    /// Verbosity level for logging.
-    pub verbose: u8,
+    global_scope: StepCommand,
+    local_scope: HashMap<WorkflowSteps, StepCommand>,
 }
-
-//--------------------------------------------------------------------------------------------------
-// Implementations
-//--------------------------------------------------------------------------------------------------
 
 impl Config {
-    /// Merges another config into self, giving precedence to the other Config's fields if they are set.
-    pub fn merge(&mut self, other: Config) {
-        trace!("Merging {:?} into {:?}", other, self);
-
-        if !other.command.executable.is_empty() {
-            trace!(
-                "Overriding executable: '{}' -> '{}'",
-                self.command.executable,
-                other.command.executable
-            );
-            self.command.executable = other.command.executable;
+    pub fn merge(&mut self, other: Config) -> AppResult<()> {
+        trace!("Merging configurations");
+        self.global_scope.merge(other.global_scope)?;
+        for (k, v) in other.local_scope {
+            self.local_scope.insert(k, v);
         }
-
-        if !other.command.args.is_empty() {
-            trace!(
-                "Overriding args: {:?} -> {:?}",
-                self.command.args,
-                other.command.args
-            );
-            self.command.args = other.command.args;
-        }
-
-        if !other.command.env_vars.is_empty() {
-            trace!(
-                "Overriding env_vars: {:?} -> {:?}",
-                self.command.env_vars,
-                other.command.env_vars
-            );
-            self.command.env_vars = other.command.env_vars;
-        }
-
-        if let Some(dir) = other.command.working_dir {
-            trace!(
-                "Overriding working_dir: {:?} -> {:?}",
-                self.command.working_dir,
-                dir
-            );
-            self.command.working_dir = Some(dir);
-        }
-
-        if let Some(pre_checks) = other.pre_checks {
-            trace!(
-                "Overriding pre_checks: {:?} -> {:?}",
-                self.pre_checks,
-                pre_checks
-            );
-            self.pre_checks = Some(pre_checks);
-        }
-
-        if let Some(timeout) = other.timeout {
-            trace!("Overriding timeout: {:?} -> {:?}", self.timeout, timeout);
-            self.timeout = Some(timeout);
-        }
-
-        if other.verbose > 0 {
-            trace!(
-                "Overriding verbosity: {} -> {}",
-                self.verbose,
-                other.verbose
-            );
-            self.verbose = other.verbose;
-        }
-    }
-
-    /// Validates the configuration fields.
-    pub fn validate(&self) -> AppResult<()> {
-        // Validate timeout
-        if let Some(timeout) = self.timeout {
-            if timeout == 0 {
-                anyhow::bail!("Timeout must be greater than zero.");
-            }
-            if timeout > 3600 {
-                warn!("Timeout value {} exceeds recommended limits.", timeout);
-            }
-        }
-
-        if self.command.executable.trim().is_empty() {
-            anyhow::bail!("Executable path cannot be empty.");
-        }
-
-        // Check if executable exists in PATH
-        if which::which(&self.command.executable).is_err() {
-            anyhow::bail!(
-                "Executable '{}' not found in PATH.",
-                self.command.executable
-            );
-        }
-
-        if let Some(ref dir) = self.command.working_dir {
-            if !dir.exists() || !dir.is_dir() {
-                anyhow::bail!(
-                    "Working directory '{:?}' does not exist or is not a directory.",
-                    dir
-                );
-            }
-        }
-
         Ok(())
     }
 
-    /// Converts config from command-line args to what our `Config` can work with.
-    pub fn from_args(&self, args: &ConfigArgs) -> AppResult<Config> {
-        trace!("Converting {:?} to {:?}.", args, self.command);
-
-        // Help convert env_vars from Vec<String> to HashMap
-        fn parse_env_vars(env_vars: &[String]) -> AppResult<HashMap<String, String>> {
-            let mut map = HashMap::new();
-            for (index, var) in env_vars.iter().enumerate() {
-                let parts: Vec<&str> = var.splitn(2, '=').collect();
-                if parts.len() != 2 {
-                    anyhow::bail!(
-                        "Invalid env_var format at position {}: '{}'. Expected KEY=VALUE.",
-                        index,
-                        var
-                    );
-                }
-                map.insert(parts[0].to_string(), parts[1].to_string());
-            }
-            Ok(map)
+    pub fn validate(&self) -> AppResult<()> {
+        self.global_scope
+            .validate()
+            .map_err(|err| anyhow::format_err!("Failed to validate global scope: {}", err))?;
+        for (step, cmd) in &self.local_scope {
+            cmd.validate()
+                .with_context(|| format!("Failed to validate local scope: {}", step))?;
         }
+        Ok(())
+    }
 
-        let mut command = Command::default();
-
-        if let Some(ref executable) = args.executable {
-            trace!("Overriding executable with: {}", executable);
-            command.executable = executable.to_owned();
-        }
-
-        if let Some(ref args_vec) = args.args {
-            trace!("Overriding arguments with: {:?}", args);
-            command.args = args_vec.to_owned();
-        }
-
-        if let Some(ref env_vars) = args.env_vars {
-            let parsed_env_vars = parse_env_vars(env_vars)?;
-            trace!(
-                "Overriding environment variables with keys: {:?}",
-                parsed_env_vars.keys()
-            );
-            command.env_vars = parsed_env_vars;
-        }
-
-        if let Some(ref working_dir) = args.working_dir {
-            trace!("Overriding working directory with: {:?}", working_dir);
-            command.working_dir = Some(working_dir.to_path_buf());
-        }
-
-        let pre_checks = &args.pre_checks;
-        if let Some(ref checks) = pre_checks {
-            trace!("Overriding pre-checks with: {:?}", checks);
-        }
-
-        let timeout = args.timeout;
-        if let Some(t) = timeout {
-            trace!("Overriding timeout with: {:?}", t);
-        }
-
-        let verbose = args.verbose;
-        if verbose > 0 {
-            trace!("Overriding verbosity with: {:?}", verbose);
-        }
-
-        Ok(Config {
-            command,
-            pre_checks: pre_checks.clone(),
-            timeout,
-            verbose,
+    pub fn from_file(path: &Path) -> AppResult<Config> {
+        let file = File::open(path)
+            .with_context(|| format!("Failed to open configuration file: {:?}", path))?;
+        let reader = BufReader::new(file);
+        Self::from_reader(reader).with_context(|| {
+            format!(
+                "Failed while reading and parsing configuration file: {:?}",
+                path
+            )
         })
     }
 
-    /// Reads and parses the configuration from a `json` file.
-    pub fn from_config_file(path: &Path, config_key: &str) -> AppResult<Config> {
-        trace!("Attempting to open configuration file: {:?}", path);
-        let file = std::fs::File::open(path)
-            .with_context(|| format!("Failed to open configuration file: {:?}", path))?;
-        let mut reader = BufReader::new(file);
+    pub fn from_reader<R: Read>(mut reader: R) -> AppResult<Config> {
         let mut contents = String::new();
-        reader
-            .read_to_string(&mut contents)
-            .with_context(|| format!("Failed to read configuration file: {:?}", path))?;
-        debug!("Successfully read configuration file.");
+        reader.read_to_string(&mut contents)?;
+        let config_key: ConfigKey = serde_json::from_str(&contents)?;
+        config_key.cargonode.validate()?;
+        Ok(config_key.cargonode)
+    }
+}
 
-        debug!("Parsing JSON content.");
-        let json: serde_json::Value = serde_json::from_str(&contents)
-            .with_context(|| "Failed to parse JSON from configuration file.")?;
+#[derive(Debug, Serialize, Deserialize, Getters, MutGetters, PartialEq)]
+#[getset(get = "pub with_prefix", get_mut = "pub with_prefix")]
+#[serde(deny_unknown_fields, default)]
+#[serde(rename_all = "kebab-case")]
+pub struct StepCommand {
+    executable: Option<PathBuf>,
+    args: Vec<String>,
+    env_vars: HashMap<String, String>,
+    working_dir: PathBuf,
+    workflow_steps: Vec<WorkflowSteps>,
+    timeout: u64,
+    verbose: u8,
+}
 
-        trace!("Extracting configuration from key '{}'.", config_key);
-        let config_value = json
-            .get(config_key)
-            .ok_or_else(|| anyhow::anyhow!("Configuration key '{}' not found.", config_key))?;
+impl Default for StepCommand {
+    fn default() -> Self {
+        StepCommand {
+            executable: None,
+            args: Vec::new(),
+            env_vars: HashMap::new(),
+            working_dir: PathBuf::new(),
+            workflow_steps: Vec::new(),
+            timeout: 30,
+            verbose: 0,
+        }
+    }
+}
 
-        trace!("Configuration key value: {:?}", config_value);
-
-        debug!("Deserializing configuration into Config.");
-        let config: Config =
-            serde_json::from_value(config_value.to_owned()).with_context(|| {
+impl StepCommand {
+    pub fn merge(&mut self, other: StepCommand) -> AppResult<()> {
+        self.validate()?;
+        if other.executable.is_some() {
+            self.executable = other.executable;
+        }
+        if !other.args.is_empty() {
+            self.args = other.args;
+        }
+        if !other.env_vars.is_empty() {
+            self.env_vars = other.env_vars;
+        }
+        if !other.working_dir.as_os_str().is_empty() {
+            self.working_dir = other.working_dir.canonicalize().with_context(|| {
                 format!(
-                    "Failed to deserialize configuration for key '{}'.",
-                    config_key
+                    "Failed to canonicalize working directory: {}",
+                    other.working_dir.display()
                 )
             })?;
-        debug!("Successfully deserialized configuration.");
+        }
+        if !other.workflow_steps.is_empty() {
+            self.workflow_steps = other.workflow_steps;
+        }
+        if other.timeout > 0 && other.timeout <= MAX_TIMEOUT {
+            self.timeout = other.timeout;
+        } else if other.timeout > MAX_TIMEOUT {
+            warn!(
+                "Timeout {} exceeds the maximum of {} seconds. Using default {}.",
+                other.timeout, MAX_TIMEOUT, MAX_TIMEOUT
+            );
+            self.timeout = MAX_TIMEOUT;
+        }
+        if other.verbose > self.verbose {
+            self.verbose = other.verbose;
+        }
+        Ok(())
+    }
 
-        Ok(config)
+    pub fn validate(&self) -> AppResult<()> {
+        if let Some(ref binary_name) = self.executable {
+            if which(binary_name).is_err() {
+                anyhow::bail!("Executable '{}' not found in PATH.", binary_name.display());
+            }
+        }
+        if self.args.len() > MAX_ARGS_LEN {
+            anyhow::bail!(
+                "Number of arguments {} exceeds maximum allowed {}.",
+                self.args.len(),
+                MAX_ARGS_LEN
+            );
+        }
+        if self.env_vars.len() > MAX_ARGS_LEN {
+            anyhow::bail!(
+                "Number of environment variables {} exceeds maximum allowed {}.",
+                self.env_vars.len(),
+                MAX_ARGS_LEN
+            );
+        }
+        if self.timeout > MAX_TIMEOUT {
+            anyhow::bail!(
+                "Timeout {} exceeds the maximum of {} seconds.",
+                self.timeout,
+                MAX_TIMEOUT
+            );
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, clap::ValueEnum, Clone)]
+#[serde(rename_all = "lowercase")]
+pub enum WorkflowSteps {
+    Build,
+    Check,
+    Fmt,
+    Release,
+    Run,
+    Test,
+}
+
+impl fmt::Display for WorkflowSteps {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            WorkflowSteps::Build => write!(f, "build"),
+            WorkflowSteps::Check => write!(f, "check"),
+            WorkflowSteps::Fmt => write!(f, "fmt"),
+            WorkflowSteps::Release => write!(f, "release"),
+            WorkflowSteps::Run => write!(f, "run"),
+            WorkflowSteps::Test => write!(f, "test"),
+        }
+    }
+}
+
+macro_rules! default_cfg {
+    ($executable:literal, $args:expr, $working_dir:expr, $workflow_steps:expr) => {{
+        let args: &[&str] = $args;
+        let workflow_steps: &[&str] = $workflow_steps;
+        let working_dir: &str = $working_dir;
+        StepCommand {
+            executable: Some(PathBuf::from($executable)),
+            args: args.iter().map(ToString::to_string).collect(),
+            working_dir: PathBuf::from(working_dir),
+            workflow_steps: workflow_steps
+                .iter()
+                .map(|s| WorkflowSteps::from_str(s))
+                .collect(),
+            ..Default::default()
+        }
+    }};
+}
+
+impl WorkflowSteps {
+    pub fn from_default() -> HashMap<WorkflowSteps, StepCommand> {
+        let mut local_scope = HashMap::with_capacity(6);
+        local_scope.insert(
+            WorkflowSteps::Build,
+            default_cfg!("tsup", &[""], "src", &["check"]),
+        );
+        local_scope.insert(
+            WorkflowSteps::Check,
+            default_cfg!("biome", &["check"], "", &[]),
+        );
+        local_scope.insert(
+            WorkflowSteps::Fmt,
+            default_cfg!("biome", &["format"], "", &[]),
+        );
+        local_scope.insert(
+            WorkflowSteps::Release,
+            default_cfg!("release-it", &[], "", &["build"]),
+        );
+        local_scope.insert(
+            WorkflowSteps::Run,
+            default_cfg!("node", &[], "dist", &["build"]),
+        );
+        local_scope.insert(
+            WorkflowSteps::Test,
+            default_cfg!("vitest", &[""], "", &["check"]),
+        );
+        local_scope
+    }
+
+    fn from_str(s: &str) -> WorkflowSteps {
+        match s {
+            "build" => WorkflowSteps::Build,
+            "check" => WorkflowSteps::Check,
+            "fmt" => WorkflowSteps::Fmt,
+            "release" => WorkflowSteps::Release,
+            "run" => WorkflowSteps::Run,
+            "test" => WorkflowSteps::Test,
+            _ => unreachable!("Invalid workflow step: {}", s),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_stepcommand_merge_overwrites_fields() {
+        let mut cmd1 = StepCommand::default();
+        cmd1.executable = Some(PathBuf::from("node"));
+        cmd1.args = vec!["run".into()];
+        cmd1.timeout = 30;
+        cmd1.verbose = 1;
+
+        let mut cmd2 = StepCommand::default();
+        cmd2.executable = Some(PathBuf::from("npm"));
+        cmd2.args = vec!["install".into()];
+        cmd2.timeout = 60;
+        cmd2.verbose = 2;
+        cmd2.env_vars.insert("KEY".into(), "VALUE".into());
+
+        cmd1.merge(cmd2).expect("Failed to merge StepCommands");
+        assert_eq!(cmd1.executable, Some(PathBuf::from("npm")));
+        assert_eq!(cmd1.args, vec!["install"]);
+        assert_eq!(cmd1.timeout, 60);
+        assert_eq!(cmd1.verbose, 2);
+        assert_eq!(cmd1.env_vars.get("KEY").unwrap(), "VALUE");
+    }
+
+    #[test]
+    fn test_stepcommand_merge_maintains_fields() {
+        let mut cmd1 = StepCommand::default();
+        cmd1.executable = Some(PathBuf::from("echo"));
+        cmd1.args = vec!["check".into()];
+        cmd1.timeout = 15;
+
+        let mut cmd2 = StepCommand::default();
+        cmd2.working_dir = PathBuf::from(".");
+
+        cmd1.merge(cmd2).expect("Failed to merge StepCommands");
+        assert_eq!(cmd1.executable, Some(PathBuf::from("echo")));
+        assert_eq!(cmd1.args, vec!["check"]);
+        assert_eq!(cmd1.timeout, 30);
+        assert_eq!(
+            cmd1.working_dir,
+            PathBuf::from(".")
+                .canonicalize()
+                .expect("Failed to canonicalize working directory")
+        );
+    }
+
+    #[test]
+    fn test_stepcommand_validate_passes() {
+        let mut cmd = StepCommand::default();
+        cmd.executable = Some(PathBuf::from("cargo"));
+        cmd.working_dir = PathBuf::from(".");
+        cmd.timeout = 10;
+        cmd.validate().unwrap();
+    }
+
+    #[test]
+    fn test_stepcommand_validate_timeout_exceeds() {
+        let mut cmd = StepCommand::default();
+        cmd.executable = Some(PathBuf::from("cargo"));
+        cmd.working_dir = PathBuf::from(".");
+        cmd.timeout = MAX_TIMEOUT + 1;
+        let err = cmd.validate().unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("Timeout 61 exceeds the maximum of 60 seconds"));
+    }
+
+    #[test]
+    fn test_config_merge_local_scope() {
+        let mut cfg1 = Config::default();
+        cfg1.global_scope = StepCommand {
+            executable: Some(PathBuf::from("rustc")),
+            timeout: 30,
+            ..Default::default()
+        };
+
+        let mut cfg2 = Config::default();
+        cfg2.global_scope = StepCommand {
+            executable: Some(PathBuf::from("cargo")),
+            timeout: 60,
+            ..Default::default()
+        };
+        cfg2.local_scope.insert(
+            WorkflowSteps::Build,
+            StepCommand {
+                executable: Some(PathBuf::from("tsup")),
+                ..Default::default()
+            },
+        );
+
+        cfg1.merge(cfg2).expect("Failed to merge configurations");
+        assert_eq!(cfg1.global_scope.executable, Some(PathBuf::from("cargo")));
+        assert_eq!(cfg1.global_scope.timeout, 60);
+        let sub = cfg1.local_scope.get(&WorkflowSteps::Build).unwrap();
+        assert_eq!(sub.executable, Some(PathBuf::from("tsup")));
+    }
+
+    #[test]
+    fn test_config_validation_local_scope() {
+        let mut cfg = Config::default();
+        cfg.global_scope = StepCommand {
+            executable: Some(PathBuf::from("cargo")),
+            working_dir: PathBuf::from("."),
+            timeout: 10,
+            ..Default::default()
+        };
+        cfg.local_scope.insert(
+            WorkflowSteps::Check,
+            StepCommand {
+                executable: Some(PathBuf::from("cargo")),
+                working_dir: PathBuf::from("."),
+                timeout: 5,
+                ..Default::default()
+            },
+        );
+        cfg.validate().unwrap();
     }
 }

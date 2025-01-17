@@ -1,20 +1,8 @@
-//----------------------------------------------------------------------
-// Types
-//----------------------------------------------------------------------
-
-/// Centralized Error Struct
 #[derive(Debug)]
 pub struct CliError {
     error: Option<anyhow::Error>,
     code: i32,
 }
-
-/// Alias for Result type
-pub type AppResult<T> = anyhow::Result<T>;
-
-//----------------------------------------------------------------------
-// Implementations
-//----------------------------------------------------------------------
 
 impl CliError {
     pub fn silent_with_code(code: i32) -> Self {
@@ -67,4 +55,21 @@ impl std::fmt::Display for CliError {
     }
 }
 
+/// Report, delegating exiting to the caller.
+pub fn report(result: Result<(), CliError>) -> i32 {
+    match result {
+        Ok(()) => 0,
+        Err(err) => {
+            if let Some(error) = err.error {
+                // At this point, we might be exiting due to a broken pipe, just do our best and
+                // move on.
+                let _ = crate::ops::shell::error(error);
+            }
+            err.code
+        }
+    }
+}
+
 impl std::error::Error for CliError {}
+
+pub type AppResult<T> = anyhow::Result<T>;
