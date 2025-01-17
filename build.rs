@@ -1,59 +1,37 @@
+use flate2::{write::GzEncoder, Compression};
 use std::{
     env,
     fs::{self, File},
-    io::{Read, Write},
+    io::{BufReader, Read, Write},
     path::{Path, PathBuf},
 };
-
-use anyhow::{Context, Result};
-use flate2::{write::GzEncoder, Compression};
 use tar::Builder;
 
-//----------------------------------------------------------------------
-// Constants
-//----------------------------------------------------------------------
+const TEMPLATE_HASH: &str = "template.hash";
+const EMBEDDING_MODULE: &str = "embedding.rs";
+const PATH_PREFIX: &str = "assets/template/";
 
-const TEMPLATE_FILES: &[&str] = &[
+const ASSETS: &[&str] = &[
     "assets/template/package.json",
     "assets/template/src/main.js",
 ];
-const TEMPLATE_HASH_PATH: &str = "template.hash";
-const EMBEDDED_MODULE_PATH: &str = "embedded_template.rs";
-const DESTINATION_PATH: &str = "template.tar.gz";
 
-//----------------------------------------------------------------------
-// Main Function
-//----------------------------------------------------------------------
-
-fn main() -> Result<()> {
+fn main() {
     set_git_revision_hash();
     set_windows_exe_options();
 
-    for file in TEMPLATE_FILES {
+    for file in ASSETS {
         println!("cargo:rerun-if-changed={}", file);
     }
 
-    let out_dir = PathBuf::from(env::var("OUT_DIR")?);
-    let dest_path = out_dir.join(DESTINATION_PATH);
-    let hash_path = out_dir.join(TEMPLATE_HASH_PATH);
-    let embedded_module_path = out_dir.join(EMBEDDED_MODULE_PATH);
+    let out_dir = PathBuf::from(env::var("OUT_DIR").expect("Could not get OUT_DIR"));
+    let hash_file = out_dir.join(TEMPLATE_HASH);
+    let embedding_module = out_dir.join(EMBEDDING_MODULE);
 
-    compress_and_embed_templates(
-        TEMPLATE_FILES,
-        &dest_path,
-        &hash_path,
-        &embedded_module_path,
-    )?;
+    compress_and_embed_templates(ASSETS, &hash_file, &embedding_module);
 
-    // HACK: For debugging purpose print the `out_dir`
     println!("cargo:warning=TEMPLATE_OUT_DIR={}", out_dir.display());
-
-    Ok(())
 }
-
-//----------------------------------------------------------------------
-// Functions
-//----------------------------------------------------------------------
 
 /// Embed a Windows manifest and set some linker options.
 ///
@@ -107,78 +85,101 @@ fn set_git_revision_hash() {
     println!("cargo:rustc-env=CARGONODE_BUILD_GIT_HASH={}", rev);
 }
 
-/// Compresses given template files into a `.tar.gz` archive
-/// and embeds it as a module.
-fn compress_and_embed_templates(
-    files: &[&str],
-    destination: &Path,
-    hash_file: &Path,
-    embedded_module: &Path,
-) -> Result<()> {
-    let current_hash = compute_hash(files)?;
-
-    let previous_hash = if hash_file.exists() {
-        fs::read(hash_file).context("Failed to read previous hash file")?
-    } else {
-        Vec::new()
-    };
-
-    // Compare hashes to decide whether to compress and embed
-    if current_hash != previous_hash {
-        println!("cargo:warning=Template changed. Compressing and embedding.");
-
-        let tar_gz = File::create(destination).context("Could not create tar.gz file")?;
-        let enc = GzEncoder::new(tar_gz, Compression::default());
-        let mut tar = Builder::new(enc);
-
-        for &file in files {
-            tar.append_path(file)
-                .with_context(|| format!("Could not append {}", file))?;
-        }
-
-        tar.finish().context("Could not finish tar.gz")?;
-
-        let mut compressed_data = Vec::new();
-        File::open(destination)
-            .context("Could not open compressed template file")?
-            .read_to_end(&mut compressed_data)
-            .context("Could not read compressed template file")?;
-
-        let mut embedded_file = File::create(embedded_module)
-            .with_context(|| format!("Could not create {} file", EMBEDDED_MODULE_PATH))?;
-
-        writeln!(
-            embedded_file,
-            "pub const EMBEDDED_TEMPLATE: &[u8] = &{:?};\n",
-            compressed_data
-        )
-        .context("Could not write to embedded_template.rs")?;
-
-        let mut f = File::create(hash_file).context("Could not create hash file")?;
-        f.write_all(&current_hash)
-            .context("Could not write hash to file")?;
-    } else {
-        println!("cargo:warning=Template unchanged. Skipping compression and embedding.");
+/// Compresses given template files into a `.tar.gz` archive in memory,
+/// and embeds it as a module. Tracks file changes with a hash file.
+fn compress_and_embed_templates(assets: &[&str], hash_file: &Path, embedding_module: &Path) {
+    for file in assets {
+        println!("cargo:rerun-if-changed={}", file);
     }
 
-    println!("cargo:rerun-if-changed={}", embedded_module.display());
+    // Compute a hash of all file contents.
+    let current_hash = compute_hash(assets);
 
-    Ok(())
+    let previous_hash = if hash_file.exists() {
+        let data = fs::read(hash_file)
+            .unwrap_or_else(|_| panic!("Could not read hash file {}", hash_file.display()));
+        if data.len() != 32 {
+            panic!(
+                "Hash file at {} has incorrect length: expected 32 bytes, found {} bytes",
+                hash_file.display(),
+                data.len()
+            );
+        }
+        let mut hash = [0u8; 32];
+        hash.copy_from_slice(&data);
+        hash
+    } else {
+        [0u8; 32]
+    };
+
+    // If the hash matches, skip the compression and embedding.
+    if current_hash == previous_hash {
+        println!("cargo:warning=No template changes detected. Skipping compression and embedding.");
+        return;
+    }
+    println!("cargo:warning=Detected template changes. Recompressing and embedding.");
+
+    let mut compressed_buffer = Vec::new();
+
+    {
+        // Create a GzEncoder that writes into `compressed_buffer`.
+        let enc = GzEncoder::new(&mut compressed_buffer, Compression::fast());
+
+        // Create a Tar builder using the GzEncoder as the writer.
+        let mut tar_builder = Builder::new(enc);
+
+        // Append each file to the tar archive.
+        for file in assets {
+            tar_builder
+                .append_path_with_name(file, file.strip_prefix(PATH_PREFIX).unwrap_or_default())
+                .unwrap_or_else(|_| panic!("Could not append file {} to archive", file));
+        }
+
+        tar_builder
+            .finish()
+            .expect("Could not finish tar.gz archive");
+    }
+
+    let mut embedded_file = File::create(embedding_module)
+        .unwrap_or_else(|_| panic!("Could not create {}", embedding_module.display()));
+
+    writeln!(
+        embedded_file,
+        "pub const EMBEDDED_TEMPLATE: &[u8] = &{:?};\n",
+        compressed_buffer
+    )
+    .unwrap_or_else(|_| panic!("Could not write to {}", embedding_module.display()));
+
+    let mut f = File::create(hash_file)
+        .unwrap_or_else(|_| panic!("Could not create hash file {}", hash_file.display()));
+    f.write_all(&current_hash)
+        .unwrap_or_else(|_| panic!("Could not write to hash file {}", hash_file.display()));
+
+    println!("cargo:rerun-if-changed={}", embedding_module.display());
 }
 
-/// Computes a SHA-256 hash of the given files.
-fn compute_hash(files: &[&str]) -> Result<Vec<u8>> {
+fn compute_hash(files: &[&str]) -> [u8; 32] {
     use sha2::{Digest, Sha256};
 
     let mut hasher = Sha256::new();
+    const BUFFER_SIZE: usize = 8192;
+    let mut buffer = [0u8; BUFFER_SIZE];
 
-    for &file in files {
-        let mut f = File::open(file).with_context(|| format!("Could not open file {}", file))?;
-        let mut buffer = Vec::new();
-        f.read_to_end(&mut buffer)
-            .with_context(|| format!("Could not read file {}", file))?;
-        hasher.update(&buffer);
+    for file in files {
+        let f = File::open(file).unwrap_or_else(|_| panic!("Could not open file {}", file));
+        let mut reader = BufReader::new(f);
+
+        loop {
+            let bytes_read = reader.read(&mut buffer).expect("Could not read file");
+            if bytes_read == 0 {
+                break;
+            }
+            hasher.update(&buffer[..bytes_read]);
+        }
     }
 
-    Ok(hasher.finalize().to_vec())
+    let result = hasher.finalize();
+    let mut hash = [0u8; 32];
+    hash.copy_from_slice(&result);
+    hash
 }
