@@ -6,7 +6,7 @@ use crate::error::AppResult;
 
 const PKG_NAME_LENGTH: usize = 214;
 
-/// Reference: https://docs.npmjs.com/cli/v7/configuring-npm/package-json#name
+/// Reference: <https://docs.npmjs.com/cli/v7/configuring-npm/package-json#name>
 pub static PKG_NAME_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"^(?:(?:@(?:[a-z0-9-*~][a-z0-9-*._~]*)?/[a-z0-9-._~])|[a-z0-9-~])[a-z0-9-._~]*$")
         .expect("Failed to compile package name regex pattern")
