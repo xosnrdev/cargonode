@@ -1,1 +1,5 @@
-console.log("Hello, world!");
+function main() {
+	console.log("Hello from {{NAME}}!");
+}
+
+main();

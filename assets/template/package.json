@@ -1,8 +1,7 @@
 {
-	"name": "template",
+	"name": "{{NAME}}",
 	"version": "0.1.0",
-	"main": "dist/main.js",
-	"cargonode": {},
+	"main": "dist/main.cjs",
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
 		"@vitest/coverage-v8": "2.1.8",

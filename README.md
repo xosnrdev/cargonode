@@ -60,17 +60,17 @@ cargonode release     # Ship it
 
 Need more control? Every command takes these options:
 
-```
--c, --config-file <FILE>         Point to your config
--x, --executable <EXECUTABLE>     Use a different tool
--a, --args <ARGS>                Pass extra arguments
--e, --env-vars [<KEY=VALUE>...]  Set environment variables
--w, --working-dir <DIR>          Change working directory
--p, --pre-checks [<CHECKS>...]   Run checks first
--t, --timeout <SECONDS>          Set a time limit (default: 60)
--v, --verbose                    Get more details
--h, --help                       See all options
--V, --version                    Check version
+```bash
+  -c, --config-file <CONFIG FILE>        Path to a JSON config file
+  -x, --executable <EXECUTABLE>          Override the configured executable
+  -a, --args <ARGS>                      Additional arguments passed to the executable
+  -e, --env-vars [<ENV_VARS>...]         Environment variables (KEY=VALUE)
+  -w, --working-dir <WORKING DIRECTORY>  Working directory
+      --workflow-step [<STEPS>...]       Extra steps to run before the main executable
+  -t, --timeout <SECONDS>                Time limit in seconds
+  -v, --verbose...                       Increase logging verbosity (use -vv for more)
+  -h, --help                             Print help
+  -V, --version                          Print version
 ```
 
 Want to tweak how things work? Add your settings to `package.json`:
@@ -78,11 +78,11 @@ Want to tweak how things work? Add your settings to `package.json`:
 ```json
 {
   "cargonode": {
-    "global": {
+    "global-scope": {
       "executable": "npx",
       "timeout": 300
     },
-    "subcommands": {
+    "local-scope": {
       "build": {
         "args": ["tsup", "src/main.js"],
         "pre-checks": ["check"]
@@ -96,14 +96,14 @@ Here's how we use it day-to-day:
 
 ```bash
 # Quick development cycle
-cargonode run app.js           # Test specific file
+cargonode run app.js           # Run a script
 cargonode fmt                 # Tidy up code
 cargonode check              # Spot issues
 cargonode test -v           # Run tests with details
 cargonode build            # Package it up
 
 # Need something special?
-cargonode build --timeout 300          # Take your time
+cargonode build --timeout 30           # Take your time
 cargonode test -e NODE_ENV=test       # Test environment
 cargonode fmt -w src/                # Format specific files
 ```
@@ -114,4 +114,6 @@ Want to learn more? Check out:
 - [Under the hood](https://docs.rs/cargonode)
 - [Report issues](https://github.com/xosnrdev/cargonode/issues)
 
-Use it under [MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE) - whichever works for you.
+## License
+
+[MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE) - whichever works for you.
