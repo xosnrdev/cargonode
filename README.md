@@ -5,6 +5,8 @@
 
   <h1 align="center">cargonode</h1>
 
+  <p>Unified tooling for Node.js development</p>
+
   <p>
     <a href="https://github.com/xosnrdev/cargonode/actions?query=">
       <img src="https://github.com/xosnrdev/cargonode/actions/workflows/ci.yml/badge.svg" alt="Build Status">
@@ -22,166 +24,96 @@
   </p>
 </div>
 
-## Overview
+After years of juggling different tools for Node.js projects, we wanted something simpler - a way to handle all our development tasks through one consistent interface. That's why we built cargonode, bringing the excellent developer experience of Rust's cargo to the Node.js world.
 
-**cargonode** is a Rust-based CLI that simplifies Node.js development by consolidating common tooling under a single
-executable. It serves as a wrapper around key utilities for building, testing, formatting, linting, and releasing your
-projects.
-
-### Why cargonode?
-
-1. **High Performance**  
-   Written in Rust, cargonode offers fast execution and low overhead.
-2. **Centralized Commands**  
-   Replaces multiple shell scripts or separate binary invocations with a single CLI.
-3. **Flexible Customization**  
-   Allows swapping out default commands or adding custom prechecks.
-4. **Cross-Platform Compatibility**  
-   Runs on macOS (Intel and ARM), Linux (x64, ARM), and Windows (x64, ARM).
-
----
-
-## Requirements
-
-- Node.js ≥ 20.11.0  
-  Needed for the underlying tools (Biome, Tsup, Vitest, Release-It).
-- Rust ≥ 1.80  
-  Required for installation from source or cargo. Binary releases do not require a Rust compiler on the end-user
-  machine.
-
-### Supported Platforms
-
-- **macOS** (x64, ARM)
-- **Linux** (x64, ARM)
-- **Windows** (x64, ARM)
-
----
-
-## Installation
-
-Choose the option that fits your environment:
-
-1. **Install prebuilt binaries via shell script**
-
-   ```bash
-
-   curl --proto '=https' --tlsv1.2 -LsSf https://github.com/xosnrdev/cargonode/releases/download/0.1.3/cargonode-installer.sh | sh
-
-   ```
-
-2. **Install prebuilt binaries via powershell script**
-
-    ```bash
-        powershell -ExecutionPolicy ByPass -c "irm https://github.com/xosnrdev/cargonode/releases/download/0.1.3/cargonode-installer.ps1 | iex"
-    ```
-
-3. **Homebrew (macOS)**
-
-   ```bash
-   brew install xosnrdev/cargonode/cargonode
-   ```
-
-   Recommended if you prefer managing software through Homebrew on macOS.
-
-4. **Nix (nixOS)**
-
-   ```bash
-   nix-env -iA nixpkgs.cargonode
-   ```
-
-   See [nixpkgs](https://search.nixos.org/packages?channel=unstable&query=cargonode) for additional details.
-
-5. **Cargo (Rust)**
-   ```bash
-   cargo install cargonode
-   ```
-   Installs the executable from source via the Rust package manager.
-
----
-
-## Usage
-
-Below are common commands. Each command calls an underlying tool with sensible defaults:
+Want to jump right in? Here's how to get started:
 
 ```bash
-# Create a new project
-cargonode new my-app
+# On macOS or Linux
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/xosnrdev/cargonode/releases/download/0.1.3/cargonode-installer.sh | sh
 
-# Convert an existing Node.js project
-cargonode init
+# Using Windows PowerShell
+powershell -ExecutionPolicy ByPass -c "irm https://github.com/xosnrdev/cargonode/releases/download/0.1.3/cargonode-installer.ps1 | iex"
 
-# Build using tsup by default
-cargonode build
+# If you're on macOS and use Homebrew
+brew install xosnrdev/cargonode/cargonode
 
-# Test using vitest
-cargonode test
+# For NixOS users
+nix-env -iA nixpkgs.cargonode
 
-# Format code with biome
-cargonode fmt
-
-# Lint/check code with biome
-cargonode check
-
-# Release with release-it
-cargonode release
+# If you're familiar with Rust
+cargo install cargonode
 ```
 
-### Passing Tool Arguments
-
-Any extra flags provided after the subcommand go directly to the underlying tool:
+Once installed, you've got a powerful set of commands at your fingertips:
 
 ```bash
-# Calls 'vitest run'
-cargonode test run
-# Calls 'biome check --fix'
-cargonode check --fix
+cargonode new my-project     # Start fresh
+cargonode init              # Set up existing project
+cargonode run              # Launch your app (or r for short)
+cargonode fmt             # Clean up code formatting
+cargonode check          # Catch problems (c works too)
+cargonode build         # Bundle it up (b for short)
+cargonode test         # Run your tests (t if you're busy)
+cargonode release     # Ship it
 ```
 
-To see available flags, run:
+Need more control? Every command takes these options:
 
 ```bash
-cargonode --help
-cargonode build --help
+  -c, --config-file <CONFIG FILE>        Path to a JSON config file
+  -x, --executable <EXECUTABLE>          Override the configured executable
+  -a, --args <ARGS>                      Additional arguments passed to the executable
+  -e, --env-vars [<ENV_VARS>...]         Environment variables (KEY=VALUE)
+  -w, --working-dir <WORKING DIRECTORY>  Working directory
+      --workflow-step [<STEPS>...]       Extra steps to run before the main executable
+  -t, --timeout <SECONDS>                Time limit in seconds
+  -v, --verbose...                       Increase logging verbosity (use -vv for more)
+  -h, --help                             Print help
+  -V, --version                          Print version
 ```
 
----
+Want to tweak how things work? Add your settings to `package.json`:
 
-## Configuration
-
-By default, cargonode uses several best-practice settings, but it can be customized through a `cargonode.toml` in your
-project root. For instance:
-
-```toml
-[commands.format]
-command = "eslint"
-args = ["--fix"]
-
-[commands.release]
-prechecks = ["test", "build"]
+```json
+{
+  "cargonode": {
+    "global-scope": {
+      "executable": "npx",
+      "timeout": 300
+    },
+    "local-scope": {
+      "build": {
+        "args": ["tsup", "src/main.js"],
+        "pre-checks": ["check"]
+      }
+    }
+  }
+}
 ```
 
-In this example, `eslint` replaces biome for the `format` command, and `prechecks` ensures tests and builds run before
-any release process.
+Here's how we use it day-to-day:
 
-### Configuration Precedence
+```bash
+# Quick development cycle
+cargonode run app.js           # Run a script
+cargonode fmt                 # Tidy up code
+cargonode check              # Spot issues
+cargonode test -v           # Run tests with details
+cargonode build            # Package it up
 
-1. Command-line arguments
-2. Project configuration in `cargonode.toml`
-3. Built-in defaults
+# Need something special?
+cargonode build --timeout 30           # Take your time
+cargonode test -e NODE_ENV=test       # Test environment
+cargonode fmt -w src/                # Format specific files
+```
 
-See the [Template Reference](./templates/node_typescript/cargonode.toml) for additional examples.
+Want to learn more? Check out:
 
----
-
-## Support
-
-For issues, feature requests, or general feedback, visit
-the [GitHub Issues](https://github.com/xosnrdev/cargonode/issues) page. Contributions are welcome, whether in the form
-of bug reports, pull requests, or suggestions.
-
----
+- [How we designed it](https://hackmd.io/@xosnrdev/ryUXVLXPye)
+- [Under the hood](https://docs.rs/cargonode)
+- [Report issues](https://github.com/xosnrdev/cargonode/issues)
 
 ## License
 
-This project is available under a dual license: [MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE). Choose whichever
-license works best for your project or organization.
+[MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE) - whichever works for you.

@@ -69,8 +69,7 @@
 
         <Package Id='*'
             Keywords='Installer'
-            Description='Unified tooling for Node.js.
-'
+            Description='Unified tooling for Node.js development'
             Manufacturer='Success Kingsley'
             InstallerVersion='450'
             Languages='1033'

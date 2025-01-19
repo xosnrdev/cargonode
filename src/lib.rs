@@ -1,12 +1,6 @@
-mod integration;
+mod cmd;
+mod config;
 
-//--------------------------------------------------------------------------------------------------
-// Exports
-//--------------------------------------------------------------------------------------------------
-
-pub mod exec;
-pub mod package;
-
-pub use integration::*;
 pub mod error;
-pub mod ui;
+pub use config::*;
+pub mod ops;

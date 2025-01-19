@@ -1,0 +1,13 @@
+{
+	"name": "{{NAME}}",
+	"version": "0.1.0",
+	"main": "dist/main.cjs",
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"@vitest/coverage-v8": "2.1.8",
+		"release-it": "18.1.1",
+		"tsup": "8.3.5",
+		"typescript": "5.7.3",
+		"vitest": "2.1.8"
+	}
+}
