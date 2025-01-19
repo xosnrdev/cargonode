@@ -1,6 +1,6 @@
 use std::{
     borrow::Cow,
-    fs,
+    env, fs,
     io::{BufReader, Cursor, Read},
     path::{Path, PathBuf},
 };
@@ -19,16 +19,18 @@ use crate::{
     source::{EmbeddedTemplateSource, TemplateSource},
 };
 
-struct Project {
-    name: PathBuf,
+struct NewProject<'s> {
+    name: &'s Path,
 }
 
-impl Runner for Project {
+impl Runner for NewProject<'_> {
     fn run(&self) -> Result<(), CliError> {
-        validate_project_path(&self.name)?;
-        create_project_dir(&self.name)?;
+        log::debug!("Creating `{}` package", self.name.display());
+        println!("Creating `{}` package", self.name.display());
+        validate_project_name(self.name)?;
+        create_project_dir(self.name)?;
 
-        let placeholders = prepare_placeholders(&self.name);
+        let placeholders = prepare_placeholders(self.name);
         let data = load_embedded_template().context("Failed to load embedded template")?;
 
         let gz = GzDecoder::new(Cursor::new(data));
@@ -42,26 +44,32 @@ impl Runner for Project {
 
             match header_type {
                 EntryType::Directory => {
-                    fs::create_dir_all(&out_path)
-                        .with_context(|| format!("Could not create dir: {}", out_path.display()))?;
+                    log::debug!("Creating `{}` directory", out_path.display());
+                    fs::create_dir_all(&out_path).with_context(|| {
+                        format!("Failed to create directory: {}", out_path.display())
+                    })?;
                 }
                 EntryType::Regular => {
                     let mut content = String::with_capacity(entry.size() as usize);
                     let mut buf_reader = BufReader::new(entry);
+                    log::debug!("Creating `{}` file", out_path.display());
                     buf_reader.read_to_string(&mut content)?;
+                    log::debug!("Replacing placeholders in `{}`", out_path.display());
                     let replaced = replace_placeholders(&content, &placeholders);
 
                     if let Some(parent) = out_path.parent() {
+                        log::debug!("Creating `{}` directory", parent.display());
                         fs::create_dir_all(parent).with_context(|| {
-                            format!("Could not create dir: {}", parent.display())
+                            format!("Failed to create directory: {}", parent.display())
                         })?;
                     }
 
+                    log::debug!("Writing `{}` file", out_path.display());
                     fs::write(&out_path, replaced.as_bytes())
-                        .with_context(|| format!("Could not write file: {}", out_path.display()))?;
+                        .with_context(|| format!("Failed to write file: {}", out_path.display()))?;
                 }
                 _ => {
-                    log::warn!("Skipping unsupported entry type: {}", out_path.display());
+                    log::warn!("Unsupported entry type; skipping: {}", out_path.display());
                 }
             }
         }
@@ -69,25 +77,105 @@ impl Runner for Project {
     }
 }
 
-fn validate_project_path(path: &Path) -> Result<(), CliError> {
-    let text_path = path
-        .to_str()
-        .ok_or_else(|| CliError::message(anyhow::anyhow!("Invalid UTF-8 path")))?;
-    validate_pkg_name(text_path).map_err(CliError::from)
+struct InitProject {
+    path: PathBuf,
+}
+
+impl Runner for InitProject {
+    fn run(&self) -> Result<(), CliError> {
+        log::debug!("Initializing `{}` package", self.path.display());
+        println!("Initializing `{}` package", self.path.display());
+        validate_project_name(&self.path)?;
+        validate_dir_state(&self.path)?;
+
+        let placeholders = prepare_placeholders(&self.path);
+        let data = load_embedded_template().context("Failed to load embedded template")?;
+
+        let gz = GzDecoder::new(Cursor::new(data));
+        let mut archive = Archive::new(gz);
+
+        for entry_res in archive.entries().context("Failed to read tar entries")? {
+            let entry = entry_res?;
+            let header_type = entry.header().entry_type();
+            let path_in_archive = entry.path().context("No entry path")?;
+            let out_path = self.path.join(path_in_archive);
+
+            match header_type {
+                EntryType::Directory => {
+                    log::debug!("Creating `{}` directory", out_path.display());
+                    fs::create_dir_all(&out_path).with_context(|| {
+                        format!("Failed to create directory: {}", out_path.display())
+                    })?;
+                }
+                EntryType::Regular => {
+                    let mut content = String::with_capacity(entry.size() as usize);
+                    let mut buf_reader = BufReader::new(entry);
+                    buf_reader.read_to_string(&mut content)?;
+                    log::debug!("Replacing placeholders in `{}`", out_path.display());
+                    let replaced = replace_placeholders(&content, &placeholders);
+
+                    if let Some(parent) = out_path.parent() {
+                        log::debug!("Creating `{}` directory", parent.display());
+                        fs::create_dir_all(parent).with_context(|| {
+                            format!("Failed to create directory: {}", parent.display())
+                        })?;
+                    }
+
+                    if !out_path.exists() {
+                        log::debug!("Writing `{}` file", out_path.display());
+                        fs::write(&out_path, replaced.as_bytes()).with_context(|| {
+                            format!("Failed to write file: {}", out_path.display())
+                        })?;
+                    } else {
+                        log::warn!("File already exists; skipping: {}", out_path.display());
+                    }
+                }
+                _ => {
+                    log::warn!("Unsupported entry type; skipping: {}", out_path.display());
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+fn validate_project_name(path: &Path) -> Result<(), CliError> {
+    let dir_name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| CliError::message(anyhow::anyhow!("Invalid directory name")))?;
+
+    log::debug!("Validating `{}` package name", dir_name);
+
+    validate_pkg_name(dir_name).map_err(CliError::from)
+}
+
+fn validate_dir_state(path: &Path) -> Result<(), CliError> {
+    log::debug!("Validating `{}` directory state", path.display());
+    const MANIFEST: &str = "package.json";
+    if path.read_dir()?.next().is_some() {
+        log::warn!("Directory is not empty; existing files will be preserved.");
+    }
+    if path.join(MANIFEST).exists() {
+        return Err(CliError::message(anyhow::anyhow!(
+            "package.json manifest already exists in the current directory"
+        )));
+    }
+    Ok(())
 }
 
 fn create_project_dir(path: &Path) -> Result<(), CliError> {
+    log::debug!("Creating `{}` directory", path.display());
     fs::create_dir(path)
-        .with_context(|| {
-            format!(
-                "Path already exists or cannot be created: {}",
-                path.display()
-            )
-        })
-        .map_err(CliError::from)
+        .map_err(|err| CliError::message(anyhow::format_err!(
+            "destination `{}` already exists: {}\n\nUse `cargonode init` to initialize in the current directory",
+            path.display(),
+            err
+        )))
 }
 
 fn prepare_placeholders(path: &Path) -> Replacements<'_> {
+    log::debug!("Preparing placeholders for `{}`", path.display());
     let mut rep = Replacements::new();
     let base = path.file_name().unwrap_or(path.as_os_str());
     let final_name = base.to_string_lossy();
@@ -96,11 +184,20 @@ fn prepare_placeholders(path: &Path) -> Replacements<'_> {
 }
 
 fn load_embedded_template() -> Result<Cow<'static, [u8]>, CliError> {
+    log::debug!("Loading embedded template");
     let source = EmbeddedTemplateSource;
     source.load_template()
 }
 
-pub fn with_name(name: PathBuf) -> Result<(), CliError> {
-    let project = Project { name };
+pub fn with_name(name: &Path) -> Result<(), CliError> {
+    let project = NewProject { name };
+    project.run()
+}
+
+pub fn as_init() -> Result<(), CliError> {
+    let current_dir = env::current_dir().context("Failed to get current directory")?;
+
+    let project = InitProject { path: current_dir };
+
     project.run()
 }

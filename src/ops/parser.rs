@@ -35,8 +35,20 @@ impl Cli {
 
         #[allow(unused_variables)]
         match self.workflow {
-            Some(Workflow::New { name }) => cmd::project::with_name(name),
-            Some(Workflow::Init) => unimplemented!(),
+            Some(Workflow::New {
+                name,
+                package_manager,
+            }) => {
+                cmd::project::with_name(&name)?;
+                cmd::do_call_with_package_manager(package_manager.unwrap_or_default(), name)
+            }
+            Some(Workflow::Init { package_manager }) => {
+                cmd::project::as_init()?;
+                cmd::do_call_with_package_manager(
+                    package_manager.unwrap_or_default(),
+                    PathBuf::from("."),
+                )
+            }
             Some(Workflow::Run { executable }) => unimplemented!(),
             Some(Workflow::Fmt { args }) => unimplemented!(),
             Some(Workflow::Check { args }) => unimplemented!(),
@@ -55,9 +67,16 @@ pub enum Workflow {
         /// Name or path for the new project.
         #[arg(value_name = "NAME")]
         name: PathBuf,
+        /// Package manager to use.
+        #[arg(short, long, value_name = "PACKAGE MANAGER", default_value = "npm")]
+        package_manager: Option<PathBuf>,
     },
     /// Initialize a project in the current directory.
-    Init,
+    Init {
+        /// Package manager to use.
+        #[arg(short, long, value_name = "PACKAGE MANAGER", default_value = "npm")]
+        package_manager: Option<PathBuf>,
+    },
     /// Run a custom script or command (default: dist/main.cjs).
     #[command(disable_help_flag = true, visible_alias = "r")]
     Run {
@@ -270,7 +289,7 @@ mod tests {
         let args = ["cn", "new", "my_project"];
         let cli = Cli::parse_from(args);
         match cli.workflow {
-            Some(Workflow::New { name }) => assert_eq!(name, PathBuf::from("my_project")),
+            Some(Workflow::New { name, .. }) => assert_eq!(name, PathBuf::from("my_project")),
             _ => panic!("invalid workflow"),
         }
     }
@@ -280,7 +299,7 @@ mod tests {
         let args = ["cn", "init"];
         let cli = Cli::parse_from(args);
         match cli.workflow {
-            Some(Workflow::Init) => {}
+            Some(Workflow::Init { .. }) => {}
             _ => panic!("invalid workflow"),
         }
     }

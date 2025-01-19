@@ -262,22 +262,22 @@ mod tests {
     use std::path::PathBuf;
 
     #[test]
-    fn test_stepcommand_merge_overwrites_fields() {
+    fn test_stepcommand_merge() {
         let mut cmd1 = StepCommand::default();
-        cmd1.executable = Some(PathBuf::from("node"));
+        cmd1.executable = Some(PathBuf::from("echo"));
         cmd1.args = vec!["run".into()];
         cmd1.timeout = 30;
         cmd1.verbose = 1;
 
         let mut cmd2 = StepCommand::default();
-        cmd2.executable = Some(PathBuf::from("npm"));
+        cmd2.executable = Some(PathBuf::from("true"));
         cmd2.args = vec!["install".into()];
         cmd2.timeout = 60;
         cmd2.verbose = 2;
         cmd2.env_vars.insert("KEY".into(), "VALUE".into());
 
         cmd1.merge(cmd2).expect("Failed to merge StepCommands");
-        assert_eq!(cmd1.executable, Some(PathBuf::from("npm")));
+        assert_eq!(cmd1.executable, Some(PathBuf::from("true")));
         assert_eq!(cmd1.args, vec!["install"]);
         assert_eq!(cmd1.timeout, 60);
         assert_eq!(cmd1.verbose, 2);
@@ -307,19 +307,13 @@ mod tests {
     }
 
     #[test]
-    fn test_stepcommand_validate_passes() {
+    fn test_stepcommand_validation() {
         let mut cmd = StepCommand::default();
-        cmd.executable = Some(PathBuf::from("cargo"));
+        cmd.executable = Some(PathBuf::from("true"));
         cmd.working_dir = PathBuf::from(".");
         cmd.timeout = 10;
         cmd.validate().unwrap();
-    }
 
-    #[test]
-    fn test_stepcommand_validate_timeout_exceeds() {
-        let mut cmd = StepCommand::default();
-        cmd.executable = Some(PathBuf::from("cargo"));
-        cmd.working_dir = PathBuf::from(".");
         cmd.timeout = MAX_TIMEOUT + 1;
         let err = cmd.validate().unwrap_err();
         assert!(err
@@ -328,53 +322,34 @@ mod tests {
     }
 
     #[test]
-    fn test_config_merge_local_scope() {
+    fn test_config_merge_and_validation() {
         let mut cfg1 = Config::default();
         cfg1.global_scope = StepCommand {
-            executable: Some(PathBuf::from("rustc")),
+            executable: Some(PathBuf::from("true")),
             timeout: 30,
             ..Default::default()
         };
 
         let mut cfg2 = Config::default();
         cfg2.global_scope = StepCommand {
-            executable: Some(PathBuf::from("cargo")),
+            executable: Some(PathBuf::from("true")),
             timeout: 60,
             ..Default::default()
         };
         cfg2.local_scope.insert(
             WorkflowSteps::Build,
             StepCommand {
-                executable: Some(PathBuf::from("tsup")),
+                executable: Some(PathBuf::from("echo")),
                 ..Default::default()
             },
         );
 
         cfg1.merge(cfg2).expect("Failed to merge configurations");
-        assert_eq!(cfg1.global_scope.executable, Some(PathBuf::from("cargo")));
+        assert_eq!(cfg1.global_scope.executable, Some(PathBuf::from("true")));
         assert_eq!(cfg1.global_scope.timeout, 60);
         let sub = cfg1.local_scope.get(&WorkflowSteps::Build).unwrap();
-        assert_eq!(sub.executable, Some(PathBuf::from("tsup")));
-    }
+        assert_eq!(sub.executable, Some(PathBuf::from("echo")));
 
-    #[test]
-    fn test_config_validation_local_scope() {
-        let mut cfg = Config::default();
-        cfg.global_scope = StepCommand {
-            executable: Some(PathBuf::from("cargo")),
-            working_dir: PathBuf::from("."),
-            timeout: 10,
-            ..Default::default()
-        };
-        cfg.local_scope.insert(
-            WorkflowSteps::Check,
-            StepCommand {
-                executable: Some(PathBuf::from("cargo")),
-                working_dir: PathBuf::from("."),
-                timeout: 5,
-                ..Default::default()
-            },
-        );
-        cfg.validate().unwrap();
+        cfg1.validate().unwrap();
     }
 }
