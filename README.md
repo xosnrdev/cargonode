@@ -24,6 +24,9 @@
   </p>
 </div>
 
+> [!WARNING]
+> This project is still a work in progress and may undergo breaking changes.
+
 After years of juggling different tools for Node.js projects, we wanted something simpler - a way to handle all our development tasks through one consistent interface. That's why we built cargonode, bringing the excellent developer experience of Rust's cargo to the Node.js world.
 
 Want to jump right in? Here's how to get started:
