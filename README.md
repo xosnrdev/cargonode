@@ -67,7 +67,7 @@ Need more control? Every command takes these options:
   -c, --config-file <CONFIG FILE>        Path to a JSON config file
   -x, --executable <EXECUTABLE>          Override the configured executable
   -a, --args <ARGS>                      Additional arguments passed to the executable
-  -e, --env-vars [<ENV_VARS>...]         Environment variables (KEY=VALUE)
+  -e, --envs [<ENVS>...]         Environment variables (KEY=VALUE)
   -w, --working-dir <WORKING DIRECTORY>  Working directory
       --workflow-step [<STEPS>...]       Extra steps to run before the main executable
   -t, --timeout <SECONDS>                Time limit in seconds
@@ -82,9 +82,15 @@ Want to tweak how things work? Add your settings to `package.json`:
 {
   "cargonode": {
     "build": {
+      "executable": "npx",
       "subcommand": "tsup",
       "args": ["src/main.js"],
-      "pre-checks": ["check"]
+      "steps": ["check"],
+      "envs": {
+        "NODE_ENV": "production"
+      },
+      "working-dir": "src",
+      "verbosity": 2
     }
   }
 }
@@ -101,7 +107,6 @@ cargonode test -v           # Run tests with details
 cargonode build            # Package it up
 
 # Need something special?
-cargonode build --timeout 30           # Take your time
 cargonode test -e NODE_ENV=test       # Test environment
 cargonode fmt -w src/                # Format specific files
 ```
