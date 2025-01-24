@@ -8,5 +8,4 @@ pub mod pkgmgr;
 pub mod project;
 pub mod replace;
 pub mod shell;
-pub mod template;
 pub mod workflow;

@@ -1,4 +1,5 @@
 use std::{
+    borrow::Cow,
     env, fs,
     io::{BufReader, Cursor, Read},
     path::{Path, PathBuf},
@@ -15,11 +16,13 @@ use crate::{
     pkgmgr::{call_with_pm, PackageManager},
     replace::Replacer,
     shell,
-    template::load_template,
 };
 
+// Generated at build time by build.rs script
+include!(concat!(env!("OUT_DIR"), "/embedding.rs"));
+
 #[derive(Debug, PartialEq)]
-pub enum ProjectKind {
+enum ProjectKind {
     New,
     Init,
 }
@@ -189,6 +192,10 @@ fn validate_dir_state(path: &Path) -> AppResult<()> {
         );
     }
     Ok(())
+}
+
+fn load_template() -> Cow<'static, [u8]> {
+    Cow::Borrowed(EMBEDDED_TEMPLATE)
 }
 
 fn create_project_dir(path: &Path) -> AppResult<()> {
