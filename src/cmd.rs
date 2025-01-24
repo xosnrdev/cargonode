@@ -20,7 +20,7 @@ pub struct CommandContext {
     pub executable: PathBuf,
     pub subcommand: String,
     pub args: Vec<String>,
-    pub env_vars: HashMap<String, String>,
+    pub envs: HashMap<String, String>,
     pub working_dir: PathBuf,
     pub steps: Vec<Job>,
     pub verbosity: u8,
@@ -37,8 +37,8 @@ impl CommandContext {
         if !other.args.is_empty() {
             self.args = other.args;
         }
-        if !other.env_vars.is_empty() {
-            self.env_vars.extend(other.env_vars);
+        if !other.envs.is_empty() {
+            self.envs.extend(other.envs);
         }
         if !other.working_dir.as_os_str().is_empty() {
             self.working_dir = validate_working_dir(&other.working_dir)?;
@@ -84,7 +84,7 @@ pub(crate) fn do_call(ctx: &CommandContext) -> Result<(), CliError> {
     let mut cmd = Command::new(&ctx.executable);
     cmd.arg(&ctx.subcommand)
         .args(&ctx.args)
-        .envs(&ctx.env_vars)
+        .envs(&ctx.envs)
         .current_dir(&ctx.working_dir);
     let mut child = cmd.spawn().map_err(CliError::from)?;
     let status = child.wait().map_err(CliError::from)?;

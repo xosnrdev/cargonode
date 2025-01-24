@@ -115,10 +115,10 @@ pub struct WorkflowConfig {
     #[arg(
         short,
         long,
-        value_name = "ENV_VARS",
+        value_name = "ENVS",
         num_args = 0..,
     )]
-    pub env_vars: Option<Vec<String>>,
+    pub envs: Option<Vec<String>>,
 
     /// Working directory.
     #[arg(short = 'w', long, value_name = "WORKING DIRECTORY", global = true)]
@@ -157,7 +157,7 @@ impl WorkflowConfig {
         if let Some(args) = self.args {
             ctx.args = args;
         }
-        if let Some(env_vars) = self.env_vars {
+        if let Some(env_vars) = self.envs {
             let vars: Result<HashMap<String, String>, _> = env_vars
                 .into_iter()
                 .map(|var| {
@@ -171,7 +171,7 @@ impl WorkflowConfig {
                     }
                 })
                 .collect();
-            ctx.env_vars = vars?;
+            ctx.envs = vars?;
         }
         if let Some(working_dir) = self.working_dir {
             ctx.working_dir = validate_working_dir(&working_dir)?;
