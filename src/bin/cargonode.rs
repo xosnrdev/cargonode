@@ -1,13 +1,13 @@
+use clap::Parser;
+
 use cargonode::{
     error::{self, CliError},
-    ops::parser::Cli,
+    parser::Cli,
 };
-use clap::Parser;
 
 fn main() -> Result<(), CliError> {
     let cli = Cli::parse();
     let result = cli.run();
-
     exit(result)
 }
 
@@ -17,9 +17,8 @@ fn exit(result: Result<(), error::CliError>) -> ! {
     std::process::exit(code)
 }
 
-// #[test]
-// fn verify_app() {
-//     use clap::CommandFactory;
-
-//     Cli::command().debug_assert();
-// }
+#[test]
+fn verify_app() {
+    use clap::CommandFactory;
+    Cli::command().debug_assert();
+}

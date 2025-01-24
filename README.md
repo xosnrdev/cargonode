@@ -81,15 +81,10 @@ Want to tweak how things work? Add your settings to `package.json`:
 ```json
 {
   "cargonode": {
-    "global-scope": {
-      "executable": "npx",
-      "timeout": 300
-    },
-    "local-scope": {
-      "build": {
-        "args": ["tsup", "src/main.js"],
-        "pre-checks": ["check"]
-      }
+    "build": {
+      "subcommand": "tsup",
+      "args": ["src/main.js"],
+      "pre-checks": ["check"]
     }
   }
 }
@@ -119,4 +114,4 @@ Want to learn more? Check out:
 
 ## License
 
-[MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE) - whichever works for you.
+This project is licensed under either of [MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE) at your option.

@@ -1,7 +1,7 @@
 {
 	"name": "{{NAME}}",
 	"version": "0.1.0",
-	"main": "dist/main.cjs",
+	"main": "dist/main.js",
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
 		"@vitest/coverage-v8": "2.1.8",
