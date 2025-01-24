@@ -67,7 +67,7 @@ pub fn from_default(
         args: args.iter().map(|s| s.to_string()).collect(),
         working_dir: PathBuf::from(working_dir),
         steps,
-        ..CommandContext::default()
+        ..Default::default()
     }
 }
 
@@ -94,7 +94,7 @@ pub(crate) fn do_call(ctx: &CommandContext) -> Result<(), CliError> {
     Ok(())
 }
 
-pub(crate) fn validate_working_dir(path: &Path) -> AppResult<PathBuf> {
+fn validate_working_dir(path: &Path) -> AppResult<PathBuf> {
     let canonical_dir = path.canonicalize()?;
     if !canonical_dir.is_dir() {
         anyhow::bail!("The path {} is not a directory.", canonical_dir.display());

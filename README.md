@@ -100,7 +100,7 @@ Here's how we use it day-to-day:
 
 ```bash
 # Quick development cycle
-cargonode run app.js           # Run a script
+cargonode run                  # Run a script
 cargonode fmt                 # Tidy up code
 cargonode check              # Spot issues
 cargonode test -v           # Run tests with details

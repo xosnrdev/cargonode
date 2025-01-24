@@ -35,7 +35,7 @@ pub fn print(
         write!(stderr, "{style}{status}{style:#}:")?;
     }
 
-    writeln!(stderr, " {message:#}").with_context(|| "Failed to write message")?;
+    writeln!(stderr, " {message:#}").context("Failed to write message")?;
 
     Ok(())
 }
