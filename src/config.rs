@@ -57,8 +57,8 @@ impl Config {
     }
 
     pub fn with_file(path: &Path) -> AppResult<Config> {
-        let file =
-            File::open(path).with_context(|| format!("Failed to open file: {}", path.display()))?;
+        let file = File::open(path)
+            .with_context(|| format!("Failed to open configuration file: {}", path.display()))?;
         let reader = BufReader::new(file);
         Self::with_reader(reader)
     }
@@ -67,9 +67,9 @@ impl Config {
         let mut contents = String::new();
         reader
             .read_to_string(&mut contents)
-            .context("Failed to read file")?;
-        let config = serde_json::from_str(&contents)
-            .with_context(|| format!("Failed to parse JSON: {}", contents))?;
+            .context("Failed to read configuraton file")?;
+        let config =
+            serde_json::from_str(&contents).context("Failed to parse configuration file")?;
         Ok(config)
     }
 }

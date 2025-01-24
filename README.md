@@ -67,7 +67,7 @@ Need more control? Every command takes these options:
   -c, --config-file <CONFIG FILE>        Path to a JSON config file
   -x, --executable <EXECUTABLE>          Override the configured executable
   -a, --args <ARGS>                      Additional arguments passed to the executable
-  -e, --envs [<ENVS>...]         Environment variables (KEY=VALUE)
+  -e, --envs [<ENVS>...]                 Environment variables (KEY=VALUE)
   -w, --working-dir <WORKING DIRECTORY>  Working directory
       --workflow-step [<STEPS>...]       Extra steps to run before the main executable
   -t, --timeout <SECONDS>                Time limit in seconds
@@ -100,7 +100,7 @@ Here's how we use it day-to-day:
 
 ```bash
 # Quick development cycle
-cargonode run app.js           # Run a script
+cargonode run                  # Run a script
 cargonode fmt                 # Tidy up code
 cargonode check              # Spot issues
 cargonode test -v           # Run tests with details

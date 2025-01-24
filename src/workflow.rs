@@ -3,14 +3,11 @@ use std::{
     path::PathBuf,
 };
 
+use anyhow::Context;
 use clap::{ArgGroup, Args, Subcommand};
 
 use crate::{
-    cmd::{validate_executable, validate_working_dir, CommandContext},
-    config::Config,
-    error::AppResult,
-    job::Job,
-    pkgmgr::PackageManager,
+    cmd::CommandContext, config::Config, error::AppResult, job::Job, pkgmgr::PackageManager,
 };
 
 #[derive(Debug, Subcommand)]
@@ -32,16 +29,7 @@ pub enum Workflow {
     },
     /// Run a custom script or command.
     #[command(disable_help_flag = true, visible_alias = "r")]
-    Run {
-        /// Script or binary to run.
-        #[arg(
-            value_name = "SCRIPT",
-            allow_hyphen_values = true,
-            trailing_var_arg = true
-        )]
-        args: Vec<String>,
-    },
-    /// Format files.
+    Run,
     #[command(disable_help_flag = true)]
     Fmt {
         /// Arguments for the formatter.
@@ -85,7 +73,7 @@ pub enum Workflow {
             .required(false)
             .multiple(false)
             .args(&["config_file"])
-    )
+    ),
 )]
 pub struct WorkflowConfig {
     /// Path to a JSON config file.
@@ -94,21 +82,26 @@ pub struct WorkflowConfig {
         long,
         value_name = "CONFIG FILE",
         global = true,
-        group = "config_source",
-        default_value = "package.json"
+        group = "config_source"
     )]
     pub config_file: Option<PathBuf>,
 
     /// Override the configured executable.
-    #[arg(short = 'x', long, value_name = "EXECUTABLE")]
+    #[arg(short = 'x', long, value_name = "EXECUTABLE", global = true)]
     pub executable: Option<PathBuf>,
 
     /// Single argument to pass to the executable.
-    #[arg(short, long, value_name = "SUBCOMMAND")]
+    #[arg(short, long, value_name = "SUBCOMMAND", global = true)]
     pub subcommand: Option<String>,
 
     /// Additional arguments passed to the executable.
-    #[arg(short, long, value_name = "ARGS", allow_hyphen_values = true)]
+    #[arg(
+        short,
+        long,
+        value_name = "ARGS",
+        allow_hyphen_values = true,
+        global = true
+    )]
     pub args: Option<Vec<String>>,
 
     /// Environment variables (KEY=VALUE).
@@ -117,6 +110,7 @@ pub struct WorkflowConfig {
         long,
         value_name = "ENVS",
         num_args = 0..,
+        global = true
     )]
     pub envs: Option<Vec<String>>,
 
@@ -144,12 +138,14 @@ impl WorkflowConfig {
         let mut ctx = CommandContext::default();
 
         if let Some(config_path) = self.config_file {
-            let canonical_path = config_path.canonicalize()?;
+            let canonical_path = config_path
+                .canonicalize()
+                .with_context(|| format!("Invalid path `{}`", config_path.display()))?;
             let file_config = Config::with_file(&canonical_path)?;
             config.merge(file_config);
         }
         if let Some(executable) = self.executable {
-            ctx.executable = validate_executable(executable)?;
+            ctx.executable = executable;
         }
         if let Some(subcommand) = self.subcommand {
             ctx.subcommand = subcommand;
@@ -174,7 +170,7 @@ impl WorkflowConfig {
             ctx.envs = vars?;
         }
         if let Some(working_dir) = self.working_dir {
-            ctx.working_dir = validate_working_dir(&working_dir)?;
+            ctx.working_dir = working_dir;
         }
         if let Some(steps) = self.steps {
             ctx.steps = steps;
