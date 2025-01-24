@@ -67,7 +67,7 @@ Need more control? Every command takes these options:
   -c, --config-file <CONFIG FILE>        Path to a JSON config file
   -x, --executable <EXECUTABLE>          Override the configured executable
   -a, --args <ARGS>                      Additional arguments passed to the executable
-  -e, --envs [<ENVS>...]         Environment variables (KEY=VALUE)
+  -e, --envs [<ENVS>...]                 Environment variables (KEY=VALUE)
   -w, --working-dir <WORKING DIRECTORY>  Working directory
       --workflow-step [<STEPS>...]       Extra steps to run before the main executable
   -t, --timeout <SECONDS>                Time limit in seconds
