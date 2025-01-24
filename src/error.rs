@@ -63,7 +63,7 @@ pub fn report(result: Result<(), CliError>) -> i32 {
             if let Some(error) = err.error {
                 // At this point, we might be exiting due to a broken pipe, just do our best and
                 // move on.
-                let _ = crate::ops::shell::error(error);
+                let _ = crate::shell::error(error);
             }
             err.code
         }
