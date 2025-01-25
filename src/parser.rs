@@ -5,7 +5,6 @@ use crate::{
     error::CliError,
     job::{call_with_job, Job},
     logging::get_logging,
-    pkgmgr::PackageManager,
     project,
     workflow::{Workflow, WorkflowConfig},
 };
@@ -35,10 +34,8 @@ impl Cli {
             Workflow::New {
                 name,
                 package_manager,
-            } => project::new_pkg(name, package_manager.unwrap_or(PackageManager::Npm)),
-            Workflow::Init { package_manager } => {
-                project::init_pkg(package_manager.unwrap_or(PackageManager::Npm))
-            }
+            } => project::new_pkg(name, package_manager),
+            Workflow::Init { package_manager } => project::init_pkg(package_manager),
             Workflow::Run => {
                 let job = Job::Run;
                 let config = self.workflow_config.from_args(&job)?;

@@ -70,7 +70,6 @@ Need more control? Every command takes these options:
   -e, --envs [<ENVS>...]                 Environment variables (KEY=VALUE)
   -w, --working-dir <WORKING DIRECTORY>  Working directory
       --workflow-step [<STEPS>...]       Extra steps to run before the main executable
-  -t, --timeout <SECONDS>                Time limit in seconds
   -v, --verbose...                       Increase logging verbosity (use -vv for more)
   -h, --help                             Print help
   -V, --version                          Print version

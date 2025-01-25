@@ -72,10 +72,10 @@ pub fn from_default(
 }
 
 pub(crate) fn do_call(ctx: &CommandContext) -> Result<(), CliError> {
-    shell::log(
-        log::Level::Info,
+    shell::status(
+        "Running",
         format!(
-            "Running command: {} {} {}",
+            "{} {} {}",
             ctx.executable.display(),
             ctx.subcommand,
             ctx.args.join(" ")
