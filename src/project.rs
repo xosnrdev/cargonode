@@ -34,14 +34,7 @@ struct Project<'s> {
 
 impl Project<'_> {
     fn scaffold(&self) -> AppResult<()> {
-        shell::log(
-            log::Level::Info,
-            format!(
-                "Scaffolding a {:?} package in '{}'",
-                self.kind,
-                self.path.display()
-            ),
-        )?;
+        shell::status("Creating", format!("`{}` package", self.path.display()))?;
         validate_dir_name(self.path)?;
         if self.kind == ProjectKind::New {
             create_project_dir(self.path)?;
