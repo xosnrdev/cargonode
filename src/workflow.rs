@@ -18,13 +18,13 @@ pub enum Workflow {
         #[arg(value_name = "NAME")]
         name: PathBuf,
         /// Package manager to use.
-        #[arg(short, long, value_name = "PACKAGE MANAGER", default_value = "npm")]
+        #[arg(short, long, value_name = "PACKAGE MANAGER")]
         package_manager: Option<PackageManager>,
     },
     /// Initialize a project in the current directory.
     Init {
         /// Package manager to use.
-        #[arg(short, long, value_name = "PACKAGE MANAGER", default_value = "npm")]
+        #[arg(short, long, value_name = "PACKAGE MANAGER")]
         package_manager: Option<PackageManager>,
     },
     /// Run a custom script or command.

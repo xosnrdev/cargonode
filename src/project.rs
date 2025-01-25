@@ -211,21 +211,27 @@ fn prepare_replacement(path: &Path) -> Replacer<'_> {
     rep
 }
 
-pub fn new_pkg(dir_name: PathBuf, pm: PackageManager) -> Result<(), CliError> {
+pub fn new_pkg(dir_name: PathBuf, pm: Option<PackageManager>) -> Result<(), CliError> {
     let project = Project {
         path: &dir_name,
         kind: ProjectKind::New,
     };
     project.scaffold()?;
-    call_with_pm(pm, dir_name)
+    if let Some(pm) = pm {
+        call_with_pm(pm, dir_name)?
+    }
+    Ok(())
 }
 
-pub fn init_pkg(pm: PackageManager) -> Result<(), CliError> {
+pub fn init_pkg(pm: Option<PackageManager>) -> Result<(), CliError> {
     let current_dir = env::current_dir().context("Failed to get current directory")?;
     let project = Project {
         path: &current_dir,
         kind: ProjectKind::Init,
     };
     project.scaffold()?;
-    call_with_pm(pm, current_dir)
+    if let Some(pm) = pm {
+        call_with_pm(pm, current_dir)?
+    }
+    Ok(())
 }
