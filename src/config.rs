@@ -37,15 +37,15 @@ impl Config {
         );
         cargonode.insert(
             Job::Release,
-            cmd::from_default("npx", "release-it", &[""], ".", &["build"]),
+            cmd::from_default("npx", "release-it", &[], ".", &["build"]),
         );
         cargonode.insert(
             Job::Run,
-            cmd::from_default("node", "main.js", &[""], "dist", &["build"]),
+            cmd::from_default("node", "main.js", &[], "dist", &["build"]),
         );
         cargonode.insert(
             Job::Test,
-            cmd::from_default("npx", "vitest", &[""], ".", &["check"]),
+            cmd::from_default("npx", "vitest", &[], ".", &["check"]),
         );
         Self { cargonode }
     }
