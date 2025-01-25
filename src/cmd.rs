@@ -2,7 +2,6 @@ use std::{
     collections::HashMap,
     path::{Path, PathBuf},
     process::Command,
-    str::FromStr,
 };
 
 use serde::{Deserialize, Serialize};
@@ -37,9 +36,7 @@ impl CommandContext {
         if !other.args.is_empty() {
             self.args = other.args;
         }
-        if !other.envs.is_empty() {
-            self.envs.extend(other.envs);
-        }
+        self.envs.extend(other.envs);
         if !other.working_dir.as_os_str().is_empty() {
             self.working_dir = validate_working_dir(&other.working_dir)?;
         }
@@ -58,9 +55,8 @@ pub fn from_default(
     subcommand: impl Into<String>,
     args: &[&str],
     working_dir: &str,
-    steps: &[&str],
+    steps: Vec<Job>,
 ) -> CommandContext {
-    let steps = steps.iter().map(|s| Job::from_str(s).unwrap()).collect();
     CommandContext {
         executable: PathBuf::from(executable),
         subcommand: subcommand.into(),

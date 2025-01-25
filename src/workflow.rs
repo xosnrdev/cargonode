@@ -30,6 +30,7 @@ pub enum Workflow {
     /// Run a custom script or command.
     #[command(disable_help_flag = true, visible_alias = "r")]
     Run,
+    /// Format code.
     #[command(disable_help_flag = true)]
     Fmt {
         /// Arguments for the formatter.

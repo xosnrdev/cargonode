@@ -25,27 +25,27 @@ impl Config {
         let mut cargonode = HashMap::with_capacity(6);
         cargonode.insert(
             Job::Build,
-            cmd::from_default("npx", "tsup", &["src/main.js"], ".", &["check"]),
+            cmd::from_default("npx", "tsup", &["src/main.js"], ".", vec![Job::Check]),
         );
         cargonode.insert(
             Job::Check,
-            cmd::from_default("npx", "biome", &["check"], ".", &[]),
+            cmd::from_default("npx", "biome", &["check"], ".", Vec::new()),
         );
         cargonode.insert(
             Job::Fmt,
-            cmd::from_default("npx", "biome", &["format"], ".", &[]),
+            cmd::from_default("npx", "biome", &["format"], ".", Vec::new()),
         );
         cargonode.insert(
             Job::Release,
-            cmd::from_default("npx", "release-it", &[""], ".", &["build"]),
+            cmd::from_default("npx", "release-it", &[], ".", vec![Job::Build]),
         );
         cargonode.insert(
             Job::Run,
-            cmd::from_default("node", "main.js", &[""], "dist", &["build"]),
+            cmd::from_default("node", "main.js", &[], "dist", vec![Job::Build]),
         );
         cargonode.insert(
             Job::Test,
-            cmd::from_default("npx", "vitest", &[""], ".", &["check"]),
+            cmd::from_default("npx", "vitest", &[], ".", vec![Job::Check]),
         );
         Self { cargonode }
     }
@@ -115,7 +115,7 @@ mod tests {
         other.cargonode.remove(&Job::Build);
         other.cargonode.insert(
             Job::Build,
-            cmd::from_default("npx", "tsup", &["src/main.ts"], ".", &["check"]),
+            cmd::from_default("npx", "tsup", &["src/main.ts"], ".", vec![Job::Check]),
         );
 
         config.merge(other);
