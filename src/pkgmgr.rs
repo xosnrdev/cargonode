@@ -46,18 +46,13 @@ impl TryFrom<&Path> for PackageManager {
 }
 
 impl PackageManager {
-    fn with_context(&self, ctx: &mut CommandContext, executable_path: PathBuf) {
-        ctx.executable = executable_path;
-        ctx.subcommand = "install".to_string();
+    pub fn call(&self, dir_name: PathBuf) -> Result<(), CliError> {
+        let ctx = CommandContext {
+            executable: validate_executable(self.as_ref())?,
+            subcommand: "install".to_string(),
+            working_dir: dir_name,
+            ..Default::default()
+        };
+        do_call(&ctx)
     }
-}
-
-pub fn call_with_pm(pm: PackageManager, dir_name: PathBuf) -> Result<(), CliError> {
-    let mut ctx = CommandContext {
-        working_dir: dir_name,
-        ..Default::default()
-    };
-    let executable_path = validate_executable(pm.as_ref())?;
-    pm.with_context(&mut ctx, executable_path);
-    do_call(&ctx)
 }

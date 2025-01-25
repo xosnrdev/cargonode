@@ -13,7 +13,7 @@ use tar::{Archive, EntryType};
 
 use crate::{
     error::{AppResult, CliError},
-    pkgmgr::{call_with_pm, PackageManager},
+    pkgmgr::PackageManager,
     replace::Replacer,
     shell,
 };
@@ -227,7 +227,7 @@ pub fn new_pkg(dir_name: PathBuf, pm: Option<PackageManager>) -> Result<(), CliE
     };
     project.scaffold()?;
     if let Some(pm) = pm {
-        call_with_pm(pm, dir_name)?
+        pm.call(dir_name)?
     }
     Ok(())
 }
@@ -240,7 +240,7 @@ pub fn init_pkg(pm: Option<PackageManager>) -> Result<(), CliError> {
     };
     project.scaffold()?;
     if let Some(pm) = pm {
-        call_with_pm(pm, current_dir)?
+        pm.call(current_dir)?
     }
     Ok(())
 }
