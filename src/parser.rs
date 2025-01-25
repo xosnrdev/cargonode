@@ -3,7 +3,7 @@ use clap::Parser;
 use crate::{
     cmd::{do_call, CommandContext},
     error::CliError,
-    job::{call_with_job, Job},
+    job::Job,
     logging::get_logging,
     project,
     workflow::{Workflow, WorkflowConfig},
@@ -46,27 +46,27 @@ impl Cli {
             Workflow::Fmt { args } => {
                 let job = Job::Fmt;
                 self.workflow_config.from_args(&job)?;
-                call_with_job(&job, args)
+                job.call(args)
             }
             Workflow::Check { args } => {
                 let job = Job::Check;
                 self.workflow_config.from_args(&job)?;
-                call_with_job(&job, args)
+                job.call(args)
             }
             Workflow::Build { args } => {
                 let job = Job::Build;
                 self.workflow_config.from_args(&job)?;
-                call_with_job(&job, args)
+                job.call(args)
             }
             Workflow::Test { args } => {
                 let job = Job::Test;
                 self.workflow_config.from_args(&job)?;
-                call_with_job(&job, args)
+                job.call(args)
             }
             Workflow::Release { args } => {
                 let job = Job::Release;
                 self.workflow_config.from_args(&job)?;
-                call_with_job(&job, args)
+                job.call(args)
             }
         }
     }

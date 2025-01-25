@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 use crate::{
     cmd::{do_call, validate_executable, CommandContext},
     error::CliError,
-    job::ParseError,
 };
 
 #[derive(Debug, clap::ValueEnum, Clone, PartialEq)]
@@ -26,7 +25,7 @@ impl AsRef<str> for PackageManager {
 }
 
 impl TryFrom<&Path> for PackageManager {
-    type Error = ParseError;
+    type Error = anyhow::Error;
 
     fn try_from(path: &Path) -> Result<Self, Self::Error> {
         if path.join("package-lock.json").exists() {
@@ -38,10 +37,10 @@ impl TryFrom<&Path> for PackageManager {
         } else if path.join("bun.lock").exists() {
             Ok(PackageManager::Bun)
         } else {
-            Err(ParseError(format!(
+            Err(anyhow::format_err!(
                 "Unsupported package manager: {}",
                 path.display()
-            )))
+            ))
         }
     }
 }

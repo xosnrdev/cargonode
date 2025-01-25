@@ -2,7 +2,6 @@ use std::{
     collections::HashMap,
     path::{Path, PathBuf},
     process::Command,
-    str::FromStr,
 };
 
 use serde::{Deserialize, Serialize};
@@ -56,9 +55,8 @@ pub fn from_default(
     subcommand: impl Into<String>,
     args: &[&str],
     working_dir: &str,
-    steps: &[&str],
+    steps: Vec<Job>,
 ) -> CommandContext {
-    let steps = steps.iter().map(|s| Job::from_str(s).unwrap()).collect();
     CommandContext {
         executable: PathBuf::from(executable),
         subcommand: subcommand.into(),
