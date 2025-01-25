@@ -57,7 +57,7 @@ impl Project<'_> {
                 EntryType::Directory => {
                     shell::log(
                         log::Level::Debug,
-                        format!("Creating directory: {}", out_path.display()),
+                        format!("Creating {:?} directory", out_path.display()),
                     )?;
                     fs::create_dir_all(&out_path).with_context(|| {
                         format!("Failed to create directory: {}", out_path.display())
@@ -68,14 +68,20 @@ impl Project<'_> {
                     let mut buf_reader = BufReader::new(entry);
                     shell::log(
                         log::Level::Debug,
-                        format!("Processing file: {}", out_path.display()),
+                        format!("Processing file: {:?}", out_path.display()),
                     )?;
                     buf_reader.read_to_string(&mut content)?;
-                    log::debug!("Replacing placeholders in {:?}", out_path.display());
+                    shell::log(
+                        log::Level::Debug,
+                        format!("Replacing placeholders in {:?}", out_path.display()),
+                    )?;
                     let replaced = replacer.with_haystack(&content);
 
                     if let Some(parent) = out_path.parent() {
-                        log::debug!("Creating {:?} directory", parent.display());
+                        shell::log(
+                            log::Level::Debug,
+                            format!("Creating {:?} directory", parent.display()),
+                        )?;
                         fs::create_dir_all(parent).with_context(|| {
                             format!("Failed to create directory: {}", parent.display())
                         })?;
@@ -85,7 +91,7 @@ impl Project<'_> {
                         ProjectKind::New => {
                             shell::log(
                                 log::Level::Debug,
-                                format!("Writing new file: {}", out_path.display()),
+                                format!("Writing new file: {:?}", out_path.display()),
                             )?;
                             fs::write(&out_path, replaced.as_bytes()).with_context(|| {
                                 format!("Failed to write file: {}", out_path.display())
@@ -95,7 +101,7 @@ impl Project<'_> {
                             if !out_path.exists() {
                                 shell::log(
                                     log::Level::Debug,
-                                    format!("Writing new file: {}", out_path.display()),
+                                    format!("Writing new file: {:?}", out_path.display()),
                                 )?;
                                 fs::write(&out_path, replaced.as_bytes()).with_context(|| {
                                     format!("Failed to write file: {}", out_path.display())
@@ -127,7 +133,7 @@ fn validate_dir_name(path: &Path) -> AppResult<()> {
         .and_then(|name| name.to_str())
         .ok_or_else(|| {
             anyhow::anyhow!(
-                "Invalid directory name (could not extract a valid UTF-8 name from path '{}')",
+                "Invalid directory name (could not extract a valid UTF-8 name from path {:?})",
                 path.display()
             )
         })?;
@@ -192,7 +198,10 @@ fn load_template() -> Cow<'static, [u8]> {
 }
 
 fn create_project_dir(path: &Path) -> AppResult<()> {
-    log::debug!("Attempting to create directory: '{}'", path.display());
+    shell::log(
+        log::Level::Debug,
+        format!("Creating {:?} directory", path.display()),
+    )?;
     fs::create_dir(path).map_err(|err| {
         anyhow::format_err!(
             "Destination '{}' already exists or cannot be created: {}\n\
