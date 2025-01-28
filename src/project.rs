@@ -226,10 +226,7 @@ pub fn new_pkg(dir_name: PathBuf, pm: Option<PackageManager>) -> Result<(), CliE
         kind: ProjectKind::New,
     };
     project.scaffold()?;
-    if let Some(pm) = pm {
-        pm.call(dir_name)?
-    }
-    Ok(())
+    install_deps(dir_name, pm)
 }
 
 pub fn init_pkg(pm: Option<PackageManager>) -> Result<(), CliError> {
@@ -239,8 +236,17 @@ pub fn init_pkg(pm: Option<PackageManager>) -> Result<(), CliError> {
         kind: ProjectKind::Init,
     };
     project.scaffold()?;
-    if let Some(pm) = pm {
-        pm.call(current_dir)?
+    install_deps(current_dir, pm)
+}
+
+fn install_deps(dir_name: PathBuf, pm: Option<PackageManager>) -> Result<(), CliError> {
+    match pm {
+        Some(pm) => {
+            pm.call(dir_name)?;
+        }
+        None => {
+            shell::note("No package manager was specified. If you don't have a preferred manager, run `npm install` to install dependencies.")?;
+        }
     }
     Ok(())
 }
