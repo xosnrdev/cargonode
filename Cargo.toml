@@ -62,7 +62,7 @@ inherits = "release"
 lto = "thin"
 
 [dev-dependencies]
-tempfile = "3.15.0"
+tempfile = "3.16.0"
 
 [package.metadata.wix]
 upgrade-guid = "B753834A-440E-42E6-A3B5-D5C5DCDE0BF0"
