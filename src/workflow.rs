@@ -29,7 +29,11 @@ pub enum Workflow {
     },
     /// Run a custom script or command.
     #[command(disable_help_flag = true, visible_alias = "r")]
-    Run,
+    Run {
+        /// Arguments for the runner.
+        #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
+        args: Vec<String>,
+    },
     /// Format code.
     #[command(disable_help_flag = true)]
     Fmt {

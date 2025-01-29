@@ -67,19 +67,21 @@ pub fn from_default(
     }
 }
 
-pub(crate) fn do_call(ctx: &CommandContext) -> Result<(), CliError> {
+pub(crate) fn do_call(ctx: &CommandContext, extra_args: &[String]) -> Result<(), CliError> {
     shell::status(
         "Running",
         format!(
-            "{} {} {}",
+            "{} {} {} {}",
             ctx.executable.display(),
             ctx.subcommand,
-            ctx.args.join(" ")
+            ctx.args.join(" "),
+            extra_args.join(" ")
         ),
     )?;
     let mut cmd = Command::new(&ctx.executable);
     cmd.arg(&ctx.subcommand)
         .args(&ctx.args)
+        .args(extra_args)
         .envs(&ctx.envs)
         .current_dir(&ctx.working_dir);
     let mut child = cmd.spawn().map_err(CliError::from)?;

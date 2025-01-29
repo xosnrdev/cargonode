@@ -53,6 +53,6 @@ impl PackageManager {
             working_dir: dir_name,
             ..Default::default()
         };
-        do_call(&ctx)
+        do_call(&ctx, &[])
     }
 }

@@ -1,7 +1,6 @@
 use clap::Parser;
 
 use crate::{
-    cmd::{do_call, CommandContext},
     error::CliError,
     job::Job,
     logging::get_logging,
@@ -36,12 +35,10 @@ impl Cli {
                 package_manager,
             } => project::new_pkg(name, package_manager),
             Workflow::Init { package_manager } => project::init_pkg(package_manager),
-            Workflow::Run => {
+            Workflow::Run { args } => {
                 let job = Job::Run;
-                let config = self.workflow_config.from_args(&job)?;
-                let default_ctx = CommandContext::default();
-                let ctx = config.cargonode.get(&job).unwrap_or(&default_ctx);
-                do_call(ctx)
+                self.workflow_config.from_args(&job)?;
+                job.call(args)
             }
             Workflow::Fmt { args } => {
                 let job = Job::Fmt;
