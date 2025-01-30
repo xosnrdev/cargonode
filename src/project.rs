@@ -250,3 +250,173 @@ fn install_deps(dir_name: PathBuf, pm: Option<PackageManager>) -> Result<(), Cli
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{fs::File, io::Write};
+    use tempfile::TempDir;
+
+    use super::*;
+
+    fn create_temp_dir() -> TempDir {
+        tempfile::tempdir().expect("Failed to create temporary directory")
+    }
+
+    fn create_temp_file(dir: &Path, name: &str, content: &str) -> PathBuf {
+        let file_path = dir.join(name);
+        let mut file = File::create(&file_path).expect("Failed to create temporary file");
+        writeln!(file, "{}", content).expect("Failed to write to temporary file");
+        file_path
+    }
+
+    // #[test]
+    // fn test_project_scaffold_new() {
+    //     // Arrange
+    //     let temp_dir = create_temp_dir();
+    //     let project = Project {
+    //         path: temp_dir.path(),
+    //         kind: ProjectKind::New,
+    //     };
+    //     // Act
+    //     let result = project.scaffold();
+    //     // Assert
+    //     assert!(result.is_ok());
+    //     // Act
+    //     let package_json = temp_dir.path().join("package.json");
+    //     // Assert
+    //     assert!(package_json.exists());
+    // }
+
+    // #[test]
+    // fn test_project_scaffold_init() {
+    //     // Arrange
+    //     let temp_dir = create_temp_dir();
+    //     let project = Project {
+    //         path: temp_dir.path(),
+    //         kind: ProjectKind::Init,
+    //     };
+    //     // Act
+    //     let result = project.scaffold();
+    //     if let Err(ref err) = result {
+    //         dbg!(err);
+    //     }
+    //     // Assert
+    //     assert!(result.is_ok());
+    //     // Act
+    //     let package_json = temp_dir.path().join("package.json");
+    //     // Assert
+    //     assert!(package_json.exists());
+    // }
+
+    #[test]
+    fn test_project_scaffold_init_existing_file() {
+        // Arrange
+        let temp_dir = create_temp_dir();
+        create_temp_file(temp_dir.path(), "package.json", "{}");
+        let project = Project {
+            path: temp_dir.path(),
+            kind: ProjectKind::Init,
+        };
+        // Act
+        let result = project.scaffold();
+        // Assert
+        assert!(result.is_err());
+    }
+
+    // #[test]
+    // fn test_validate_dir_name_valid() {
+    //     // Arrange
+    //     let temp_dir = create_temp_dir();
+    //     // Act
+    //     let result = validate_dir_name(temp_dir.path());
+    //     if let Err(ref err) = result {
+    //         dbg!(err);
+    //     }
+    //     // Assert
+    //     assert!(result.is_ok());
+    // }
+
+    #[test]
+    fn test_validate_dir_name_invalid() {
+        // Arrange
+        let invalid_path = Path::new("");
+        // Act
+        let result = validate_dir_name(invalid_path);
+        // Assert
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_pkg_name_valid() {
+        // Arrange
+        let valid_name = "valid-package-name";
+        // Act
+        let result = validate_pkg_name(valid_name);
+        // Assert
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_pkg_name_invalid() {
+        // Arrange
+        let invalid_name = "invalid/package/name";
+        // Act
+        let result = validate_pkg_name(invalid_name);
+        // Assert
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_dir_state_empty() {
+        // Arrange
+        let temp_dir = create_temp_dir();
+        // Act
+        let result = validate_dir_state(temp_dir.path());
+        // Assert
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_dir_state_non_empty() {
+        // Arrange
+        let temp_dir = create_temp_dir();
+        create_temp_file(temp_dir.path(), "test.txt", "content");
+        // Act
+        let result = validate_dir_state(temp_dir.path());
+        // Assert
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_dir_state_existing_package_json() {
+        // Arrange
+        let temp_dir = create_temp_dir();
+        create_temp_file(temp_dir.path(), "package.json", "{}");
+        // Act
+        let result = validate_dir_state(temp_dir.path());
+        // Assert
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_create_project_dir_valid() {
+        // Arrange
+        let temp_dir = create_temp_dir();
+        let new_dir = temp_dir.path().join("new_dir");
+        // Act
+        let result = create_project_dir(&new_dir);
+        // Assert
+        assert!(result.is_ok());
+        assert!(new_dir.exists());
+    }
+
+    #[test]
+    fn test_create_project_dir_existing() {
+        // Arrange
+        let temp_dir = create_temp_dir();
+        // Act
+        let result = create_project_dir(temp_dir.path());
+        // Assert
+        assert!(result.is_err());
+    }
+}
