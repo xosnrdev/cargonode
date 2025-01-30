@@ -133,12 +133,12 @@ mod tests {
         let json_content = r#"
         {
             "cargonode": {
-                "build": {
+                "Build": {
                     "executable": "npx",
                     "subcommand": "tsup",
                     "args": ["src/main.js"],
                     "working-dir": ".",
-                    "steps": ["check"]
+                    "steps": ["Check"]
                 }
             }
         }"#;
@@ -164,20 +164,21 @@ mod tests {
     }
 
     #[test]
-    fn test_config_with_file_malformed_json() {
+    fn test_config_with_file_malformed_config() {
         // Arrange
         let malformed_json = r#"
         {
             "cargonode": {
-                "build": {
+                "Build": {
                     "executable": "npx",
                     "subcommand": "tsup",
                     "args": ["src/main.js"],
-                    "working-dir": ".",
+                    "working_dir": ".",
                     "steps": ["check"]
                 }
             }
-        "#; // Missing closing brace
+        }
+        "#;
         let file = create_temp_json_file(malformed_json);
         // Act
         let result = Config::with_file(file.path());
@@ -212,7 +213,7 @@ mod tests {
     }
 
     #[test]
-    fn test_config_with_reader_malformed_json() {
+    fn test_config_with_reader_malformed_config() {
         // Arrange
         let malformed_json = r#"
         {
@@ -221,11 +222,12 @@ mod tests {
                     "executable": "npx",
                     "subcommand": "tsup",
                     "args": ["src/main.js"],
-                    "working-dir": ".",
+                    "working_dir": ".",
                     "steps": ["check"]
                 }
             }
-        "#; // Missing closing brace
+        }
+        "#;
         let reader = Cursor::new(malformed_json);
         // Act
         let result = Config::with_reader(reader);
