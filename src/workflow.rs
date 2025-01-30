@@ -194,3 +194,193 @@ impl WorkflowConfig {
         Ok(config)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use super::*;
+    use crate::job::Job;
+
+    fn default_job() -> Job {
+        Job::Build
+    }
+
+    // Test Workflow::New
+    #[test]
+    fn test_workflow_new() {
+        // Arrange
+        let workflow = Workflow::New {
+            name: PathBuf::from("test_project"),
+            package_manager: Some(PackageManager::Npm),
+        };
+        // Act
+        match workflow {
+            Workflow::New {
+                name,
+                package_manager,
+            } => {
+                // Assert
+                assert_eq!(name, PathBuf::from("test_project"));
+                assert_eq!(package_manager, Some(PackageManager::Npm));
+            }
+            _ => panic!("Unexpected workflow variant"),
+        }
+    }
+
+    // Test Workflow::Init
+    #[test]
+    fn test_workflow_init() {
+        // Arrange
+        let workflow = Workflow::Init {
+            package_manager: Some(PackageManager::Yarn),
+        };
+        // Act
+        match workflow {
+            Workflow::Init { package_manager } => {
+                // Assert
+                assert_eq!(package_manager, Some(PackageManager::Yarn));
+            }
+            _ => panic!("Unexpected workflow variant"),
+        }
+    }
+
+    // Test Workflow::Run
+    #[test]
+    fn test_workflow_run() {
+        // Arrange
+        let workflow = Workflow::Run {
+            args: vec!["arg1".to_string(), "arg2".to_string()],
+        };
+        // Act
+        match workflow {
+            Workflow::Run { args } => {
+                // Assert
+                assert_eq!(args, vec!["arg1".to_string(), "arg2".to_string()]);
+            }
+            _ => panic!("Unexpected workflow variant"),
+        }
+    }
+
+    // Test WorkflowConfig::from_args with all fields populated
+    #[test]
+    fn test_workflow_config_from_args_full() {
+        use std::io::Write;
+        use tempfile::NamedTempFile;
+
+        // Arrange
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(file, r#"{{"key": "value"}}"#).unwrap();
+        let config = WorkflowConfig {
+            config_file: Some(file.path().to_path_buf()),
+            executable: Some(PathBuf::from("echo")),
+            subcommand: Some("hello".to_string()),
+            args: Some(vec!["arg1".to_string(), "arg2".to_string()]),
+            envs: Some(vec!["KEY1=value1".to_string(), "KEY2=value2".to_string()]),
+            working_dir: Some(PathBuf::from("/tmp")),
+            steps: Some(vec![default_job()]),
+            verbosity: 2,
+        };
+        // Act
+        let job = default_job();
+        let result = config.from_args(&job);
+        // Assert
+        assert!(result.is_ok());
+    }
+
+    // Test WorkflowConfig::from_args with only required fields
+    #[test]
+    fn test_workflow_config_from_args_minimal() {
+        // Arrange
+        let config = WorkflowConfig {
+            config_file: None,
+            executable: None,
+            subcommand: None,
+            args: None,
+            envs: None,
+            working_dir: None,
+            steps: None,
+            verbosity: 0,
+        };
+        // Act
+        let job = default_job();
+        let result = config.from_args(&job);
+        // Assert
+        assert!(result.is_ok());
+    }
+
+    // Test WorkflowConfig::from_args with invalid config file path
+    #[test]
+    fn test_workflow_config_from_args_invalid_config_file() {
+        // Arrange
+        let config = WorkflowConfig {
+            config_file: Some(PathBuf::from("nonexistent_config.json")),
+            ..Default::default()
+        };
+        // Act
+        let job = default_job();
+        let result = config.from_args(&job);
+        // Assert
+        assert!(result.is_err());
+    }
+
+    // Test WorkflowConfig::from_args with malformed environment variables
+    #[test]
+    fn test_workflow_config_from_args_malformed_envs() {
+        // Arrange
+        let config = WorkflowConfig {
+            envs: Some(vec!["MALFORMED_ENV".to_string()]),
+            ..Default::default()
+        };
+        // Act
+        let job = default_job();
+        let result = config.from_args(&job);
+        // Assert
+        assert!(result.is_err());
+    }
+
+    // Test WorkflowConfig::from_args with verbosity
+    #[test]
+    fn test_workflow_config_from_args_verbosity() {
+        // Arrange
+        let config = WorkflowConfig {
+            verbosity: 3,
+            ..Default::default()
+        };
+        // Act
+        let job = default_job();
+        let result = config.from_args(&job);
+        // Assert
+        assert!(result.is_ok());
+    }
+
+    // Test WorkflowConfig::from_args with steps
+    #[test]
+    fn test_workflow_config_from_args_steps() {
+        // Arrange
+        let config = WorkflowConfig {
+            steps: Some(vec![default_job()]),
+            ..Default::default()
+        };
+        // Act
+        let job = default_job();
+        let result = config.from_args(&job);
+        // Assert
+        assert!(result.is_ok());
+    }
+
+    // Test WorkflowConfig::from_args with empty steps
+    #[test]
+    fn test_workflow_config_from_args_empty_steps() {
+        // Arrange
+        let config = WorkflowConfig {
+            steps: Some(vec![]),
+            ..Default::default()
+        };
+        // Act
+        let job = default_job();
+        let result = config.from_args(&job);
+        // Assert
+        assert!(result.is_ok());
+    }
+}

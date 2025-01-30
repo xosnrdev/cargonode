@@ -76,53 +76,162 @@ impl Config {
 
 #[cfg(test)]
 mod tests {
+    use std::{
+        io::{Cursor, Write},
+        path::PathBuf,
+    };
+    use tempfile::NamedTempFile;
+
     use super::*;
-    use std::fs;
-    use tempfile::tempdir;
 
-    #[test]
-    fn test_with_default_config() {
-        let config = Config::from_default();
-        assert_eq!(config.cargonode.len(), 6);
+    fn create_temp_json_file(content: &str) -> NamedTempFile {
+        let mut file = NamedTempFile::new().expect("Failed to create temporary file");
+        write!(file, "{}", content).expect("Failed to write to temporary file");
+        file
     }
 
     #[test]
-    fn test_with_file() {
-        let dir = tempdir().unwrap();
-        let file_path = dir.path().join("cargonode.json");
+    fn test_config_from_default() {
+        // Arrange
         let config = Config::from_default();
-        let json = serde_json::to_string_pretty(&config).unwrap();
-        fs::write(&file_path, json).unwrap();
-
-        let loaded_config = Config::with_file(&file_path).unwrap();
-        assert_eq!(loaded_config.cargonode.len(), 6);
+        // Assert
+        assert!(config.cargonode.contains_key(&Job::Build));
+        assert!(config.cargonode.contains_key(&Job::Check));
+        assert!(config.cargonode.contains_key(&Job::Fmt));
+        assert!(config.cargonode.contains_key(&Job::Release));
+        assert!(config.cargonode.contains_key(&Job::Run));
+        assert!(config.cargonode.contains_key(&Job::Test));
+        // Arrange
+        let build_context = config.cargonode.get(&Job::Build).unwrap();
+        // Assert
+        assert_eq!(build_context.executable, PathBuf::from("npx"));
+        assert_eq!(build_context.subcommand, "tsup");
+        assert_eq!(build_context.args, vec!["src/main.js"]);
+        assert_eq!(build_context.working_dir, PathBuf::from("."));
+        assert_eq!(build_context.steps, vec![Job::Check]);
     }
 
     #[test]
-    fn test_with_invalid_file() {
-        let dir = tempdir().unwrap();
-        let file_path = dir.path().join("cargonode.json");
-        fs::write(&file_path, "invalid json").unwrap();
+    fn test_config_merge() {
+        // Arrange
+        let mut config1 = Config::from_default();
+        let mut config2 = Config::default();
+        config2.cargonode.insert(
+            Job::Check,
+            cmd::from_default("npx", "eslint", &["src"], ".", Vec::new()),
+        );
+        // Act
+        config1.merge(config2);
+        // Assert
+        assert!(config1.cargonode.contains_key(&Job::Check));
+        assert!(config1.cargonode.contains_key(&Job::Build));
+    }
 
-        let result = Config::with_file(&file_path);
+    #[test]
+    fn test_config_with_file_valid() {
+        // Arrange
+        let json_content = r#"
+        {
+            "cargonode": {
+                "Build": {
+                    "executable": "npx",
+                    "subcommand": "tsup",
+                    "args": ["src/main.js"],
+                    "working-dir": ".",
+                    "steps": ["Check"]
+                }
+            }
+        }"#;
+        let file = create_temp_json_file(json_content);
+        // Act
+        let config = Config::with_file(file.path()).expect("Failed to load config from file");
+        // Assert
+        assert!(config.cargonode.contains_key(&Job::Build));
+        let build_context = config.cargonode.get(&Job::Build).unwrap();
+        assert_eq!(build_context.executable, PathBuf::from("npx"));
+        assert_eq!(build_context.subcommand, "tsup");
+        assert_eq!(build_context.args, vec!["src/main.js"]);
+    }
+
+    #[test]
+    fn test_config_with_file_invalid_path() {
+        // Arrange
+        let invalid_path = Path::new("nonexistent_file.json");
+        // Act
+        let result = Config::with_file(invalid_path);
+        // Assert
         assert!(result.is_err());
     }
 
     #[test]
-    fn test_merge() {
-        let mut config = Config::from_default();
-        let mut other = Config::from_default();
-        other.cargonode.remove(&Job::Build);
-        other.cargonode.insert(
-            Job::Build,
-            cmd::from_default("npx", "tsup", &["src/main.ts"], ".", vec![Job::Check]),
-        );
+    fn test_config_with_file_malformed_config() {
+        // Arrange
+        let malformed_json = r#"
+        {
+            "cargonode": {
+                "Build": {
+                    "executable": "npx",
+                    "subcommand": "tsup",
+                    "args": ["src/main.js"],
+                    "working_dir": ".",
+                    "steps": ["check"]
+                }
+            }
+        }
+        "#;
+        let file = create_temp_json_file(malformed_json);
+        // Act
+        let result = Config::with_file(file.path());
+        // Assert
+        assert!(result.is_err());
+    }
 
-        config.merge(other);
-        assert_eq!(config.cargonode.len(), 6);
-        assert_eq!(
-            config.cargonode.get(&Job::Build).unwrap().args,
-            vec!["src/main.ts"]
-        );
+    #[test]
+    fn test_config_with_reader_valid() {
+        // Arrange
+        let json_content = r#"
+        {
+            "cargonode": {
+                "build": {
+                    "executable": "npx",
+                    "subcommand": "tsup",
+                    "args": ["src/main.js"],
+                    "working-dir": ".",
+                    "steps": ["check"]
+                }
+            }
+        }"#;
+        let reader = Cursor::new(json_content);
+        // Act
+        let config = Config::with_reader(reader).expect("Failed to load config from reader");
+        // Assert
+        assert!(config.cargonode.contains_key(&Job::Build));
+        let build_context = config.cargonode.get(&Job::Build).unwrap();
+        assert_eq!(build_context.executable, PathBuf::from("npx"));
+        assert_eq!(build_context.subcommand, "tsup");
+        assert_eq!(build_context.args, vec!["src/main.js"]);
+    }
+
+    #[test]
+    fn test_config_with_reader_malformed_config() {
+        // Arrange
+        let malformed_json = r#"
+        {
+            "cargonode": {
+                "Build": {
+                    "executable": "npx",
+                    "subcommand": "tsup",
+                    "args": ["src/main.js"],
+                    "working_dir": ".",
+                    "steps": ["check"]
+                }
+            }
+        }
+        "#;
+        let reader = Cursor::new(malformed_json);
+        // Act
+        let result = Config::with_reader(reader);
+        // Assert
+        assert!(result.is_err());
     }
 }

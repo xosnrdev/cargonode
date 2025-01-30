@@ -9,7 +9,7 @@ use crate::{
     error::{AppResult, CliError},
 };
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, clap::ValueEnum, Clone, Copy)]
+#[derive(Debug, Serialize, PartialEq, Eq, Hash, clap::ValueEnum, Clone, Copy)]
 #[serde(rename_all = "lowercase", deny_unknown_fields)]
 pub enum Job {
     Build,
@@ -18,6 +18,24 @@ pub enum Job {
     Release,
     Run,
     Test,
+}
+
+impl<'de> Deserialize<'de> for Job {
+    fn deserialize<D>(deserializer: D) -> Result<Job, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        match s.to_lowercase().as_str() {
+            "build" => Ok(Job::Build),
+            "check" => Ok(Job::Check),
+            "fmt" => Ok(Job::Fmt),
+            "release" => Ok(Job::Release),
+            "run" => Ok(Job::Run),
+            "test" => Ok(Job::Test),
+            _ => Err(serde::de::Error::custom(format!("Unknown job: {}", s))),
+        }
+    }
 }
 
 impl Job {
