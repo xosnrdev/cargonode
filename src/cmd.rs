@@ -113,28 +113,92 @@ pub(crate) fn validate_executable<P: AsRef<Path>>(executable: P) -> AppResult<Pa
 
 #[cfg(test)]
 mod tests {
+    use tempfile::TempDir;
+
     use super::*;
-    use std::fs;
-    use tempfile::tempdir;
+
+    fn create_temp_dir() -> TempDir {
+        tempfile::tempdir().expect("Failed to create temporary directory")
+    }
 
     #[test]
-    fn test_validate_working_dir() {
-        let dir = tempdir().unwrap();
-        let result = validate_working_dir(dir.path());
-        assert!(result.is_ok());
+    fn test_from_default() {
+        // Act
+        let ctx = from_default("npx", "tsup", &["src/main.js"], ".", vec![Job::Check]);
+        // Assert
+        assert_eq!(ctx.executable, PathBuf::from("npx"));
+        assert_eq!(ctx.subcommand, "tsup");
+        assert_eq!(ctx.args, vec!["src/main.js"]);
+        assert_eq!(ctx.working_dir, PathBuf::from("."));
+        assert_eq!(ctx.steps, vec![Job::Check]);
+    }
 
-        let file = dir.path().join("file");
-        fs::write(&file, "content").unwrap();
-        let result = validate_working_dir(&file);
+    #[test]
+    fn test_validate_working_dir_valid() {
+        // Arrange
+        let temp_dir = create_temp_dir();
+        // Act
+        let result = validate_working_dir(temp_dir.path());
+        // Assert
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), temp_dir.path().canonicalize().unwrap());
+    }
+
+    #[test]
+    fn test_validate_working_dir_invalid() {
+        // Arrange
+        let invalid_path = Path::new("nonexistent_dir");
+        // Act
+        let result = validate_working_dir(invalid_path);
+        // Assert
         assert!(result.is_err());
     }
 
     #[test]
-    fn test_validate_executable() {
-        let result = validate_executable("echo");
+    fn test_validate_executable_valid() {
+        // Act
+        let result = validate_executable("cargo");
+        // Assert
         assert!(result.is_ok());
+    }
 
-        let result = validate_executable("unknown");
+    #[test]
+    fn test_validate_executable_invalid() {
+        // Act
+        let result = validate_executable("nonexistent_executable");
+        // Assert
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_do_call_success() {
+        // Arrange
+        let ctx = CommandContext {
+            executable: PathBuf::from("echo"),
+            subcommand: "hello".to_string(),
+            args: vec![],
+            working_dir: PathBuf::from("."),
+            ..Default::default()
+        };
+        // Act
+        let result = do_call(&ctx, &[]);
+        // Assert
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_do_call_failure() {
+        // Arrange
+        let ctx = CommandContext {
+            executable: PathBuf::from("false"),
+            subcommand: "".to_string(),
+            args: vec![],
+            working_dir: PathBuf::from("."),
+            ..Default::default()
+        };
+        // Act
+        let result = do_call(&ctx, &[]);
+        // Assert
         assert!(result.is_err());
     }
 }
