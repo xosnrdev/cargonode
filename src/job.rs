@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use anyhow::Context;
+use anyhow::{bail, Context};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -26,39 +26,51 @@ impl<'de> Deserialize<'de> for Job {
         D: serde::Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        match s.to_lowercase().as_str() {
-            "build" => Ok(Job::Build),
-            "check" => Ok(Job::Check),
-            "fmt" => Ok(Job::Fmt),
-            "release" => Ok(Job::Release),
-            "run" => Ok(Job::Run),
-            "test" => Ok(Job::Test),
-            _ => Err(serde::de::Error::custom(format!("Unknown job: {}", s))),
+        if s.eq_ignore_ascii_case("build") {
+            Ok(Job::Build)
+        } else if s.eq_ignore_ascii_case("check") {
+            Ok(Job::Check)
+        } else if s.eq_ignore_ascii_case("fmt") {
+            Ok(Job::Fmt)
+        } else if s.eq_ignore_ascii_case("release") {
+            Ok(Job::Release)
+        } else if s.eq_ignore_ascii_case("run") {
+            Ok(Job::Run)
+        } else if s.eq_ignore_ascii_case("test") {
+            Ok(Job::Test)
+        } else {
+            Err(serde::de::Error::custom(format!("Unknown job: {}", s)))
         }
     }
 }
 
 impl Job {
-    pub fn call(&self, args: Vec<String>) -> Result<(), CliError> {
+    pub fn call(&self, args: &[String], config: &Config) -> Result<(), CliError> {
         let mut visited = HashSet::new();
-        self.call_with_visited(args, &mut visited)?;
+        self.call_with_visited(args, &mut visited, config)?;
         Ok(())
     }
 
-    fn call_with_visited(&self, args: Vec<String>, visited: &mut HashSet<Job>) -> AppResult<()> {
+    fn call_with_visited(
+        &self,
+        args: &[String],
+        visited: &mut HashSet<Job>,
+        config: &Config,
+    ) -> AppResult<()> {
         if !visited.insert(*self) {
-            anyhow::bail!("Circular dependency detected involving job: {:?}", self);
+            bail!("Cyclic dependency detected: {:?}", visited);
         }
-        let config = Config::from_default();
         let ctx = config
             .cargonode
             .get(self)
             .with_context(|| format!("Missing configuration for job: {:?}", self))?;
+        let mut ctx = ctx.clone();
+        ctx.args.extend_from_slice(args);
         for step in &ctx.steps {
-            step.call_with_visited(Vec::new(), visited)
+            step.call_with_visited(args, visited, config)
                 .with_context(|| format!("Failed in step {:?} for job {:?}", step, self))?;
         }
-        do_call(ctx, &args).with_context(|| format!("Failed to execute job: {:?}", self))?;
+        do_call(&ctx).with_context(|| format!("Failed to execute job: {:?}", self))?;
         visited.remove(self);
         Ok(())
     }
