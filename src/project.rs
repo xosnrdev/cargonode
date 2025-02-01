@@ -279,6 +279,9 @@ mod tests {
     //     };
     //     // Act
     //     let result = project.scaffold();
+    //     if let Err(ref err) = result {
+    //         dbg!(err);
+    //     }
     //     // Assert
     //     assert!(result.is_ok());
     //     // Act
