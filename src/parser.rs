@@ -36,34 +36,28 @@ impl Cli {
             } => project::new_pkg(name, package_manager),
             Workflow::Init { package_manager } => project::init_pkg(package_manager),
             Workflow::Run { args } => {
-                let job = Job::Run;
-                self.workflow_config.from_args(&job)?;
-                job.call(args)
+                let config = self.workflow_config.from_args(&Job::Run)?;
+                Job::Run.call(&args, &config)
             }
             Workflow::Fmt { args } => {
-                let job = Job::Fmt;
-                self.workflow_config.from_args(&job)?;
-                job.call(args)
+                let config = self.workflow_config.from_args(&Job::Fmt)?;
+                Job::Fmt.call(&args, &config)
             }
             Workflow::Check { args } => {
-                let job = Job::Check;
-                self.workflow_config.from_args(&job)?;
-                job.call(args)
+                let config = self.workflow_config.from_args(&Job::Check)?;
+                Job::Check.call(&args, &config)
             }
             Workflow::Build { args } => {
-                let job = Job::Build;
-                self.workflow_config.from_args(&job)?;
-                job.call(args)
+                let config = self.workflow_config.from_args(&Job::Build)?;
+                Job::Build.call(&args, &config)
             }
             Workflow::Test { args } => {
-                let job = Job::Test;
-                self.workflow_config.from_args(&job)?;
-                job.call(args)
+                let config = self.workflow_config.from_args(&Job::Test)?;
+                Job::Test.call(&args, &config)
             }
             Workflow::Release { args } => {
-                let job = Job::Release;
-                self.workflow_config.from_args(&job)?;
-                job.call(args)
+                let config = self.workflow_config.from_args(&Job::Release)?;
+                Job::Release.call(&args, &config)
             }
         }
     }

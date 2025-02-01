@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    env,
     path::{Path, PathBuf},
     process::Command,
 };
@@ -12,7 +13,7 @@ use crate::{
     shell,
 };
 
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Clone)]
 #[serde(deny_unknown_fields, default)]
 #[serde(rename_all = "kebab-case")]
 pub struct CommandContext {
@@ -34,7 +35,7 @@ impl CommandContext {
             self.subcommand = other.subcommand;
         }
         if !other.args.is_empty() {
-            self.args = other.args;
+            self.args.extend(other.args);
         }
         self.envs.extend(other.envs);
         if !other.working_dir.as_os_str().is_empty() {
@@ -54,34 +55,36 @@ pub fn from_default(
     executable: &str,
     subcommand: impl Into<String>,
     args: &[&str],
-    working_dir: &str,
+    working_dir: Option<&str>,
     steps: Vec<Job>,
 ) -> CommandContext {
     CommandContext {
         executable: PathBuf::from(executable),
         subcommand: subcommand.into(),
         args: args.iter().map(|s| s.to_string()).collect(),
-        working_dir: PathBuf::from(working_dir),
+        working_dir: if let Some(dir) = working_dir {
+            PathBuf::from(dir)
+        } else {
+            env::current_dir().expect("Failed to get current directory")
+        },
         steps,
         ..Default::default()
     }
 }
 
-pub(crate) fn do_call(ctx: &CommandContext, extra_args: &[String]) -> Result<(), CliError> {
+pub(crate) fn do_call(ctx: &CommandContext) -> Result<(), CliError> {
     shell::status(
         "Running",
         format!(
-            "{} {} {} {}",
+            "{} {} {}",
             ctx.executable.display(),
             ctx.subcommand,
-            ctx.args.join(" "),
-            extra_args.join(" ")
+            ctx.args.join(" ")
         ),
     )?;
     let mut cmd = Command::new(&ctx.executable);
     cmd.arg(&ctx.subcommand)
         .args(&ctx.args)
-        .args(extra_args)
         .envs(&ctx.envs)
         .current_dir(&ctx.working_dir);
     let mut child = cmd.spawn().map_err(CliError::from)?;
@@ -124,12 +127,12 @@ mod tests {
     #[test]
     fn test_from_default() {
         // Act
-        let ctx = from_default("npx", "tsup", &["src/main.js"], ".", vec![Job::Check]);
+        let ctx = from_default("npx", "tsup", &["src/main.js"], None, vec![Job::Check]);
         // Assert
         assert_eq!(ctx.executable, PathBuf::from("npx"));
         assert_eq!(ctx.subcommand, "tsup");
         assert_eq!(ctx.args, vec!["src/main.js"]);
-        assert_eq!(ctx.working_dir, PathBuf::from("."));
+        assert_eq!(ctx.working_dir, env::current_dir().unwrap());
         assert_eq!(ctx.steps, vec![Job::Check]);
     }
 
@@ -181,7 +184,7 @@ mod tests {
             ..Default::default()
         };
         // Act
-        let result = do_call(&ctx, &[]);
+        let result = do_call(&ctx);
         // Assert
         assert!(result.is_ok());
     }
@@ -197,7 +200,7 @@ mod tests {
             ..Default::default()
         };
         // Act
-        let result = do_call(&ctx, &[]);
+        let result = do_call(&ctx);
         // Assert
         assert!(result.is_err());
     }

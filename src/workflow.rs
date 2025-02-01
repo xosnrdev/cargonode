@@ -28,7 +28,7 @@ pub enum Workflow {
         package_manager: Option<PackageManager>,
     },
     /// Run a custom script or command.
-    #[command(disable_help_flag = true, visible_alias = "r")]
+    #[command(visible_alias = "r")]
     Run {
         /// Arguments for the runner.
         #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
