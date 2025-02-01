@@ -25,27 +25,27 @@ impl Config {
         let mut cargonode = HashMap::with_capacity(6);
         cargonode.insert(
             Job::Build,
-            cmd::from_default("npx", "tsup", &["src/main.js"], ".", vec![Job::Check]),
+            cmd::from_default("npx", "tsup", &["src/main.js"], None, vec![Job::Check]),
         );
         cargonode.insert(
             Job::Check,
-            cmd::from_default("npx", "biome", &["check"], ".", Vec::new()),
+            cmd::from_default("npx", "biome", &["check"], None, Vec::new()),
         );
         cargonode.insert(
             Job::Fmt,
-            cmd::from_default("npx", "biome", &["format"], ".", Vec::new()),
+            cmd::from_default("npx", "biome", &["format"], None, Vec::new()),
         );
         cargonode.insert(
             Job::Release,
-            cmd::from_default("npx", "release-it", &[], ".", vec![Job::Build]),
+            cmd::from_default("npx", "release-it", &[], None, vec![Job::Build]),
         );
         cargonode.insert(
             Job::Run,
-            cmd::from_default("node", "main.js", &[], "dist", vec![Job::Build]),
+            cmd::from_default("node", "main.js", &[], Some("dist"), vec![Job::Build]),
         );
         cargonode.insert(
             Job::Test,
-            cmd::from_default("npx", "vitest", &[], ".", vec![Job::Check]),
+            cmd::from_default("npx", "vitest", &[], None, vec![Job::Check]),
         );
         Self { cargonode }
     }
@@ -64,7 +64,7 @@ impl Config {
     }
 
     fn with_reader<R: Read>(mut reader: R) -> AppResult<Config> {
-        let mut contents = String::new();
+        let mut contents = String::with_capacity(1024);
         reader
             .read_to_string(&mut contents)
             .context("Failed to read configuraton file")?;
@@ -77,6 +77,7 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use std::{
+        env,
         io::{Cursor, Write},
         path::PathBuf,
     };
@@ -107,7 +108,7 @@ mod tests {
         assert_eq!(build_context.executable, PathBuf::from("npx"));
         assert_eq!(build_context.subcommand, "tsup");
         assert_eq!(build_context.args, vec!["src/main.js"]);
-        assert_eq!(build_context.working_dir, PathBuf::from("."));
+        assert_eq!(build_context.working_dir, env::current_dir().unwrap());
         assert_eq!(build_context.steps, vec![Job::Check]);
     }
 
@@ -118,7 +119,7 @@ mod tests {
         let mut config2 = Config::default();
         config2.cargonode.insert(
             Job::Check,
-            cmd::from_default("npx", "eslint", &["src"], ".", Vec::new()),
+            cmd::from_default("npx", "eslint", &["src"], None, Vec::new()),
         );
         // Act
         config1.merge(config2);
