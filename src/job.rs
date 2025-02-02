@@ -45,18 +45,13 @@ impl<'de> Deserialize<'de> for Job {
 }
 
 impl Job {
-    pub fn call(&self, args: &[String], config: &Config) -> Result<(), CliError> {
+    pub fn call(&self, config: &Config) -> Result<(), CliError> {
         let mut visited = HashSet::new();
-        self.call_with_visited(args, &mut visited, config)?;
+        self.call_with_visited(&mut visited, config)?;
         Ok(())
     }
 
-    fn call_with_visited(
-        &self,
-        args: &[String],
-        visited: &mut HashSet<Job>,
-        config: &Config,
-    ) -> AppResult<()> {
+    fn call_with_visited(&self, visited: &mut HashSet<Job>, config: &Config) -> AppResult<()> {
         if !visited.insert(*self) {
             bail!("Cyclic dependency detected: {:?}", visited);
         }
@@ -64,13 +59,11 @@ impl Job {
             .cargonode
             .get(self)
             .with_context(|| format!("Missing configuration for job: {:?}", self))?;
-        let mut ctx = ctx.clone();
-        ctx.args.extend_from_slice(args);
         for step in &ctx.steps {
-            step.call_with_visited(args, visited, config)
+            step.call_with_visited(visited, config)
                 .with_context(|| format!("Failed in step {:?} for job {:?}", step, self))?;
         }
-        do_call(&ctx).with_context(|| format!("Failed to execute job: {:?}", self))?;
+        do_call(ctx).with_context(|| format!("Failed to execute job: {:?}", self))?;
         visited.remove(self);
         Ok(())
     }
