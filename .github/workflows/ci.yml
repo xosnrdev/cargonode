@@ -134,7 +134,7 @@ jobs:
 
       - name: Run tests with cross
         if: matrix.target != ''
-        run: TRYCMD=overwrite ${{ env.CARGO }} test --verbose ${{ env.TARGET_FLAGS }}
+        run: ${{ env.CARGO }} test --verbose ${{ env.TARGET_FLAGS }}
 
   # Setup and compile on the wasm32-wasi target
   wasm:
