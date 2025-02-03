@@ -1,4 +1,5 @@
-name: 🧪 ci
+name: CI
+
 on:
   pull_request:
     branches: ["**"]
@@ -8,25 +9,13 @@ on:
   schedule:
     - cron: "00 01 * * *"
 
-# The section is needed to drop write-all permissions that are granted on
-# `schedule` event. By specifying any permission explicitly all others are set
-# to none. By using the principle of the least privilege the damage a compromised
-# workflow can do (because of an injection or compromised third party tool or
-# action) is restricted. Currently, the workflow doesn't need any additional
-# permission except for pulling the code. Adding labels to issues, commenting
-# on pull-requests, etc. may need additional permissions:
-#
-# Syntax for this section:
-# https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#permissions
-#
-# Reference for how to assign permissions on a job-by-job basis:
-# https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
-#
-# Reference for available permissions that we can enable if needed:
-# https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
 permissions:
-  # to fetch code (actions/checkout)
   contents: read
+
+env:
+  RUST_BACKTRACE: 1
+  CARGO_TERM_COLOR: always
+  CLICOLOR: 1
 
 jobs:
   test:
@@ -119,6 +108,8 @@ jobs:
         with:
           toolchain: ${{ matrix.rust }}
 
+      - uses: Swatinem/rust-cache@v2
+
       - name: Use Cross
         if: matrix.os == 'ubuntu-latest' && matrix.target != ''
         run: |
@@ -138,7 +129,7 @@ jobs:
           echo "target flag is: ${{ env.TARGET_FLAGS }}"
           echo "target dir is: ${{ env.TARGET_DIR }}"
 
-      - name: Build cargonode and all crates
+      - name: Build cargonode
         run: ${{ env.CARGO }} build --verbose ${{ env.TARGET_FLAGS }}
 
       - name: Run tests with cross
@@ -155,6 +146,7 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+      - uses: Swatinem/rust-cache@v2
       - name: Add wasm32-wasip1 target
         run: rustup target add wasm32-wasip1
       - name: Basic build
@@ -170,6 +162,7 @@ jobs:
         with:
           toolchain: stable
           components: rustfmt
+      - uses: Swatinem/rust-cache@v2
       - name: Check formatting
         run: cargo fmt --all --check
 
@@ -182,7 +175,28 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+      - uses: Swatinem/rust-cache@v2
       - name: Check documentation
         env:
           RUSTDOCFLAGS: -D warnings
         run: cargo doc --no-deps --document-private-items
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin
+      - name: Gather coverage
+        run: cargo tarpaulin --output-dir coverage --out lcov
+      - name: Publish to Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}

@@ -72,7 +72,7 @@ pub fn from_default(
     }
 }
 
-pub(crate) fn do_call(ctx: &CommandContext) -> Result<(), CliError> {
+pub fn do_call(ctx: &CommandContext) -> Result<(), CliError> {
     shell::status(
         "Running",
         format!(
