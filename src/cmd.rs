@@ -13,7 +13,7 @@ use crate::{
     shell,
 };
 
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Clone)]
 #[serde(deny_unknown_fields, default)]
 #[serde(rename_all = "kebab-case")]
 pub struct CommandContext {
@@ -72,7 +72,7 @@ pub fn from_default(
     }
 }
 
-pub(crate) fn do_call(ctx: &CommandContext) -> Result<(), CliError> {
+pub fn do_call(ctx: &CommandContext) -> Result<(), CliError> {
     shell::status(
         "Running",
         format!(

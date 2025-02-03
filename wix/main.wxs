@@ -69,7 +69,7 @@
 
         <Package Id='*'
             Keywords='Installer'
-            Description='Unified tooling for Node.js development'
+            Description='A unified CLI tool that brings Cargo&#39;s developer experience to Node.js'
             Manufacturer='Success Kingsley'
             InstallerVersion='450'
             Languages='1033'
