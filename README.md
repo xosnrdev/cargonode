@@ -1,81 +1,133 @@
 <div align="center">
-  <a href="https://github.com/xosnrdev/cargonode" target="_blank">
-    <img src="https://raw.githubusercontent.com/xosnrdev/cargonode/master/assets/logo.svg" alt="cargonode logo" width="100"></img>
+  <a href="https://github.com/xosnrdev/cargonode">
+    <img src="https://raw.githubusercontent.com/xosnrdev/cargonode/master/assets/logo.svg" alt="cargonode logo" width="100">
   </a>
 
-  <h1 align="center">cargonode</h1>
+  <h1>cargonode</h1>
+  
+  <p>A unified CLI tool that brings Cargo's developer experience to Node.js</p>
 
-  <p>Unified tooling for Node.js development</p>
+[![Build Status](https://github.com/xosnrdev/cargonode/actions/workflows/ci.yml/badge.svg)](https://github.com/xosnrdev/cargonode/actions?query=)
+[![Crate](https://img.shields.io/crates/v/cargonode?label=crates)](https://crates.io/crates/cargonode)
+[![Documentation](https://img.shields.io/static/v1?label=Docs&message=docs.rs&color=blue)](https://docs.rs/cargonode)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE-APACHE)
+[![License](https://img.shields.io/badge/License-MIT%20-blue.svg)](LICENSE-MIT)
 
-  <p>
-    <a href="https://github.com/xosnrdev/cargonode/actions?query=">
-      <img src="https://github.com/xosnrdev/cargonode/actions/workflows/ci.yml/badge.svg" alt="Build Status">
-    </a>
-    <a href="https://crates.io/crates/cargonode">
-      <img src="https://img.shields.io/crates/v/cargonode?label=crates" alt="cargonode Crate">
-    </a>
-    <a href="https://docs.rs/cargonode">
-      <img src="https://img.shields.io/static/v1?label=Docs&message=docs.rs&color=blue" alt="cargonode Docs">
-    </a>
-    <a href="https://github.com/xosnrdev/cargonode/blob/master/LICENSE">
-      <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License">
-      <img src="https://img.shields.io/badge/License-MIT%20-blue.svg" alt="License">
-    </a>
-  </p>
 </div>
 
-> [!WARNING]
-> This project is still a work in progress and may undergo breaking changes.
+## Why cargonode?
 
-After years of juggling different tools for Node.js projects, we wanted something simpler - a way to handle all our development tasks through one consistent interface. That's why we built cargonode, bringing the excellent developer experience of Rust's cargo to the Node.js world.
+If you've ever worked with Rust's Cargo, you know how pleasant it is to have a single, consistent interface for all your development tasks. cargonode brings that same experience to Node.js development by:
 
-Want to jump right in? Here's how to get started:
+- Eliminating the need to remember different commands for different tools
+- Providing sensible defaults while remaining fully configurable
+- Working seamlessly with your existing Node.js toolchain
+- Offering a consistent experience across all your projects
+
+> ⚠️ **Note:** This project is in active development. While we maintain stability, some features may change.
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 16.x or later
+- npm, yarn, pnpm, or bun
+- Git (optional, but recommended)
+
+### Installation
+
+Choose your preferred installation method:
+
+<details>
+<summary><b>Shell Script (macOS/Linux)</b></summary>
 
 ```bash
-# On macOS or Linux
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/xosnrdev/cargonode/releases/download/0.1.3/cargonode-installer.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf \
+  https://github.com/xosnrdev/cargonode/releases/download/0.1.3/cargonode-installer.sh | sh
+```
 
-# Using Windows PowerShell
-powershell -ExecutionPolicy ByPass -c "irm https://github.com/xosnrdev/cargonode/releases/download/0.1.3/cargonode-installer.ps1 | iex"
+</details>
 
-# If you're on macOS and use Homebrew
+<details>
+<summary><b>PowerShell (Windows)</b></summary>
+
+```powershell
+irm https://github.com/xosnrdev/cargonode/releases/download/0.1.3/cargonode-installer.ps1 | iex
+```
+
+</details>
+
+<details>
+<summary><b>Package Managers</b></summary>
+
+```bash
+# Homebrew (macOS)
 brew install xosnrdev/cargonode/cargonode
 
-# For NixOS users
+# NixOS
 nix-env -iA nixpkgs.cargonode
 
-# If you're familiar with Rust
+# Cargo (Rust)
 cargo install cargonode
 ```
 
-Once installed, you've got a powerful set of commands at your fingertips:
+</details>
+
+Verify your installation:
 
 ```bash
-cargonode new my-project     # Start fresh
-cargonode init              # Set up existing project
-cargonode run              # Launch your app (or r for short)
-cargonode fmt             # Clean up code formatting
-cargonode check          # Catch problems (c works too)
-cargonode build         # Bundle it up (b for short)
-cargonode test         # Run your tests (t if you're busy)
-cargonode release     # Ship it
+cargonode --version
 ```
 
-Need more control? Every command takes these options:
+### Creating Your First Project
+
+1. Create a new project:
+
+   ```bash
+   cargonode new my-app
+   cd my-app
+   ```
+
+2. Start development:
+   ```bash
+   cargonode run
+   ```
+
+That's it! Your project is set up with modern Node.js best practices.
+
+## Command Reference
+
+### Core Commands
+
+| Command   | Alias | Description                 | Common Usage        |
+| --------- | ----- | --------------------------- | ------------------- |
+| `run`     | `r`   | Execute your application    | `cargonode r`       |
+| `fmt`     | -     | Format your code            | `cargonode fmt`     |
+| `check`   | `c`   | Run linting and type checks | `cargonode c`       |
+| `build`   | `b`   | Bundle your application     | `cargonode b`       |
+| `test`    | `t`   | Run test suites             | `cargonode t`       |
+| `release` | -     | Create a new release        | `cargonode release` |
+
+### Command Options
+
+Every command supports these options:
 
 ```bash
-  -c, --config-file <CONFIG FILE>        Path to a JSON config file
-  -x, --executable <EXECUTABLE>          Override the configured executable
-  -a, --args <ARGS>                      Additional arguments passed to the executable
-  -e, --envs [<ENVS>...]                 Environment variables (KEY=VALUE)
-  -w, --working-dir <WORKING DIRECTORY>  Working directory
-      --workflow-step [<STEPS>...]       Extra steps to run before the main executable
-  -v, --verbose...                       Increase logging verbosity (use -vv for more)
-  -h, --help                             Print help
-  -V, --version                          Print version
+Options:
+  -c, --config-file <PATH>     Use a custom config file
+  -x, --executable <PATH>      Override the default executable
+  -a, --args <ARGS>           Pass additional arguments
+  -e, --envs <KEY=VALUE>      Set environment variables
+  -w, --working-dir <PATH>    Change working directory
+  -v, --verbose              Enable verbose output (-vv for more)
+  -h, --help                 Show help information
 ```
 
-Want to tweak how things work? Add your settings to `package.json`:
+## Configuration Guide
+
+### Basic Configuration
+
+Add your settings to `package.json`:
 
 ```json
 {
@@ -84,38 +136,133 @@ Want to tweak how things work? Add your settings to `package.json`:
       "executable": "npx",
       "subcommand": "tsup",
       "args": ["src/main.js"],
-      "steps": ["check"],
-      "envs": {
-        "NODE_ENV": "production"
-      },
-      "working-dir": "src",
-      "verbosity": 2
+      "steps": ["check"]
     }
   }
 }
 ```
 
-Here's how we use it day-to-day:
+### Advanced Configuration Examples
 
-```bash
-# Quick development cycle
-cargonode run                  # Run a script
-cargonode fmt                 # Tidy up code
-cargonode check              # Spot issues
-cargonode test -v           # Run tests with details
-cargonode build            # Package it up
+<details>
+<summary><b>TypeScript Project</b></summary>
 
-# Need something special?
-cargonode test -e NODE_ENV=test       # Test environment
-cargonode fmt -w src/                # Format specific files
+```json
+{
+  "cargonode": {
+    "build": {
+      "executable": "npx",
+      "subcommand": "tsc",
+      "args": ["--project", "tsconfig.json"],
+      "steps": ["check"]
+    },
+    "check": {
+      "executable": "npx",
+      "subcommand": "eslint",
+      "args": ["src/**/*.ts"]
+    }
+  }
+}
 ```
 
-Want to learn more? Check out:
+</details>
 
-- [How we designed it](https://hackmd.io/@xosnrdev/ryUXVLXPye)
-- [Under the hood](https://docs.rs/cargonode)
-- [Report issues](https://github.com/xosnrdev/cargonode/issues)
+<details>
+<summary><b>Next.js Project</b></summary>
+
+```json
+{
+  "cargonode": {
+    "run": {
+      "executable": "npx",
+      "subcommand": "next",
+      "args": ["dev"],
+      "envs": {
+        "NODE_ENV": "development"
+      }
+    },
+    "build": {
+      "executable": "npx",
+      "subcommand": "next",
+      "args": ["build"],
+      "steps": ["check"]
+    }
+  }
+}
+```
+
+</details>
+
+## Common Workflows
+
+### Development Workflow
+
+```bash
+# Start development server
+cargonode run
+
+# Format code and run checks in watch mode
+cargonode fmt -a --watch
+cargonode check -a --watch
+
+# Run tests with coverage
+cargonode test -a --coverage
+```
+
+### Production Workflow
+
+```bash
+# Build for production
+cargonode build -e NODE_ENV=production
+
+# Run type checking and tests
+cargonode check
+cargonode test -e NODE_ENV=test
+
+# Create a new release
+cargonode release
+```
+
+## Troubleshooting
+
+### Common Issues
+
+<details>
+<summary><b>Command not found after installation</b></summary>
+
+Add cargonode to your PATH:
+
+```bash
+# For bash/zsh
+echo 'export PATH="$HOME/.cargonode/bin:$PATH"' >> ~/.bashrc
+
+# For fish
+echo 'set -x PATH $HOME/.cargonode/bin $PATH' >> ~/.config/fish/config.fish
+```
+
+</details>
+
+<details>
+<summary><b>Permission errors on Linux/macOS</b></summary>
+
+Fix permissions:
+
+```bash
+chmod +x ~/.cargonode/bin/cargonode
+```
+
+</details>
+
+## Learn More
+
+- 📖 [Design Philosophy](https://hackmd.io/@xosnrdev/ryUXVLXPye)
+- 📚 [API Documentation](https://docs.rs/cargonode)
+- 🐛 [Issue Tracker](https://github.com/xosnrdev/cargonode/issues)
+
+## Contributing
+
+We welcome contributions from everyone! Feel free to open an issue or submit a pull request.
 
 ## License
 
-This project is licensed under either of [MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE) at your option.
+Licensed under either of [MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE) at your option.
