@@ -21,7 +21,7 @@ path = "src/bin/cargonode.rs"
 [dependencies]
 anstream = "0.6.18"
 anyhow = "1.0.95"
-clap = { version = "4.5.27", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.28", features = ["derive", "wrap_help"] }
 clap-cargo = "0.15.2"
 env_logger = "0.11.6"
 flate2 = "1.0.35"
