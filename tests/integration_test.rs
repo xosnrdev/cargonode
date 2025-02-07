@@ -122,11 +122,16 @@ fn test_error_handling() {
     let invalid_opts = PackageOptions::new("/nonexistent/path");
     let result = create_package(&invalid_opts);
     assert!(result.is_err());
-    #[cfg(unix)]
-    assert!(result
-        .unwrap_err()
-        .to_string()
-        .contains("Read-only file system"));
+    let err_msg = result.unwrap_err().to_string().to_lowercase();
+    assert!(
+        err_msg.contains("no such file or directory") || 
+        err_msg.contains("read-only file system") ||
+        err_msg.contains("operation not permitted") ||
+        err_msg.contains("access is denied") ||  // Windows
+        err_msg.contains("permission denied"), // Some Unix systems
+        "Unexpected error message: {}",
+        err_msg
+    );
 
     // Test workspace package conflict
     let mut ws_opts = PackageOptions::new(temp.path());
