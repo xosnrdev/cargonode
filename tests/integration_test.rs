@@ -122,6 +122,7 @@ fn test_error_handling() {
     let invalid_opts = PackageOptions::new("/nonexistent/path");
     let result = create_package(&invalid_opts);
     assert!(result.is_err());
+    #[cfg(unix)]
     assert!(result
         .unwrap_err()
         .to_string()
