@@ -146,8 +146,8 @@ pub fn find_workspace_packages(root: &Path) -> Result<Vec<PackageInfo>> {
 
 #[must_use]
 pub fn get_package_name(path: &Path) -> String {
-    path.file_name().and_then(|name| name.to_str()).map_or_else(
-        || "package".to_string(),
-        |name| name.replace(['-', ' '], "_"),
-    )
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .map(|name| name.replace(['-', ' '], "_"))
+        .unwrap_or_else(|| "package".to_string())
 }

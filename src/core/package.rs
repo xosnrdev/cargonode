@@ -131,7 +131,8 @@ impl PackageOptions {
             self.path
                 .file_name()
                 .and_then(|name| name.to_str())
-                .map_or_else(|| "package".to_string(), ToString::to_string)
+                .map(ToString::to_string)
+                .unwrap_or_else(|| "package".to_string())
         })
     }
 

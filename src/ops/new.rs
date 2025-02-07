@@ -1,6 +1,7 @@
+use std::{fs as std_fs, path::Path};
+
 use anyhow::{anyhow, Result};
 use serde_json::json;
-use std::{fs as std_fs, path::Path};
 
 use crate::{
     core::package::PackageOptions,
@@ -13,7 +14,6 @@ use crate::{
 
 const PACKAGE_MANIFEST: &str = "package.json";
 
-/// Template type for zero-cost template selection
 #[derive(Debug, Copy, Clone)]
 pub enum TemplateType {
     Binary,
@@ -22,13 +22,11 @@ pub enum TemplateType {
     TypeScriptLibrary,
 }
 
-// Compile-time template constants
 const BIN_TEMPLATE: &str = "#!/usr/bin/env node\n'use strict';\n\nconsole.log('Hello, world!');";
 const BIN_TS_TEMPLATE: &str = "#!/usr/bin/env node\n'use strict';\n\nconsole.log('Hello, world!');";
 const LIB_TEMPLATE: &str = "'use strict';\n\n/**\n * @module my-package\n */\n\nexport default {};\n\n// Basic test included\nimport { test } from 'node:test';\nimport assert from 'node:assert';\n\ntest('my-package', (t) => {\n    assert.ok(true, 'should pass');\n});";
 const LIB_TS_TEMPLATE: &str = "/**\n * @module my-package\n */\n\nexport interface PackageOptions {\n    name: string;\n    version: string;\n}\n\nexport default class Package {\n    constructor(options: PackageOptions) {\n        // Implementation\n    }\n}\n\n// Basic test included\nimport { test } from 'node:test';\nimport assert from 'node:assert';\n\ntest('my-package', async (t) => {\n    assert.ok(true, 'should pass');\n});";
 
-/// Get template at compile time
 const fn get_template(template_type: TemplateType) -> &'static str {
     match template_type {
         TemplateType::Binary => BIN_TEMPLATE,
@@ -38,7 +36,6 @@ const fn get_template(template_type: TemplateType) -> &'static str {
     }
 }
 
-/// Get the appropriate template for the package type
 const fn get_package_template(is_typescript: bool, is_lib: bool) -> TemplateType {
     match (is_typescript, is_lib) {
         (true, true) => TemplateType::TypeScriptLibrary,
@@ -185,7 +182,7 @@ pub fn create_package(opts: &PackageOptions) -> Result<()> {
 
     // Create directory if it doesn't exist
     if !opts.path.exists() {
-        std::fs::create_dir_all(&opts.path)?;
+        std_fs::create_dir_all(&opts.path)?;
     } else if std_fs::read_dir(&opts.path)?.next().is_some() {
         return Err(anyhow!(
             "Destination `{}` already exists and is not empty",

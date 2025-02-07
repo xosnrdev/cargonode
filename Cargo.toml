@@ -61,3 +61,11 @@ upgrade-guid = "B753834A-440E-42E6-A3B5-D5C5DCDE0BF0"
 path-guid = "7B2FC1F5-FF2E-45F3-A62B-C35866B43452"
 license = false
 eula = false
+
+[[bench]]
+name = "platform_benchmarks"
+harness = false
+
+[[bench]]
+name = "operations_benchmarks"
+harness = false
