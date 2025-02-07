@@ -118,8 +118,7 @@ Options:
   -x, --executable <PATH>      Override the default executable
   -a, --args <ARGS>           Pass additional arguments
   -e, --envs <KEY=VALUE>      Set environment variables
-  -w, --working-dir <PATH>    Change working directory
-  -v, --verbose              Enable verbose output (-vv for more)
+      --working-dir <PATH>    Change working directory
   -h, --help                 Show help information
 ```
 

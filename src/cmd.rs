@@ -13,7 +13,7 @@ use crate::{
     shell,
 };
 
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields, default)]
 #[serde(rename_all = "kebab-case")]
 pub struct CommandContext {
@@ -23,7 +23,6 @@ pub struct CommandContext {
     pub envs: HashMap<String, String>,
     pub working_dir: PathBuf,
     pub steps: Vec<Job>,
-    pub verbosity: u8,
 }
 
 impl CommandContext {
@@ -43,9 +42,6 @@ impl CommandContext {
         }
         if !other.steps.is_empty() {
             self.steps = other.steps;
-        }
-        if other.verbosity > self.verbosity {
-            self.verbosity = other.verbosity;
         }
         Ok(())
     }
