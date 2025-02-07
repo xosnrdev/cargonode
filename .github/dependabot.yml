@@ -27,28 +27,6 @@ updates:
           - patch
           - minor
 
-  - package-ecosystem: npm
-    directory: "/assets/template/"
-    schedule:
-      interval: daily
-      time: "20:00"
-    assignees:
-      - xosnrdev
-    commit-message:
-      prefix: "chore"
-      include: "scope"
-    groups:
-      dev-deps:
-        dependency-type: development
-        update-types:
-          - patch
-          - minor
-      deps:
-        dependency-type: production
-        update-types:
-          - patch
-          - minor
-
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
