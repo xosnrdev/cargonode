@@ -91,40 +91,6 @@ impl Client {
     }
 }
 
-/// Checks if a package name is available on the npm registry
-///
-/// # Arguments
-/// * `name` - The package name to check
-///
-/// # Returns
-/// Ok(true) if the name is available, Ok(false) if taken,
-/// or Error if the check failed
-pub async fn is_name_available(name: &str) -> Result<bool> {
-    let client = ReqwestClient::builder()
-        .timeout(REQUEST_TIMEOUT)
-        .build()
-        .map_err(|e| Error::Network(format!("Failed to create HTTP client: {}", e)))?;
-
-    let url = format!("{}/{}", NPM_REGISTRY_API, name);
-
-    match client.get(&url).send().await {
-        Ok(response) => {
-            match response.status() {
-                reqwest::StatusCode::NOT_FOUND => Ok(true), // Name is available
-                reqwest::StatusCode::OK => Ok(false),       // Name is taken
-                status => Err(Error::Registry(format!(
-                    "Unexpected registry response: {} - {}",
-                    status.as_u16(),
-                    status.as_str()
-                ))),
-            }
-        }
-        Err(e) if e.is_timeout() => Err(Error::Network("Registry request timed out".into())),
-        Err(e) if e.is_connect() => Err(Error::Network("Failed to connect to registry".into())),
-        Err(e) => Err(Error::Network(format!("Registry request failed: {}", e))),
-    }
-}
-
 /// Gets detailed information about a package from the registry
 ///
 /// # Arguments
