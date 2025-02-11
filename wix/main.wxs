@@ -61,7 +61,7 @@
     <Product
         Id='*'
         Name='cargonode'
-        UpgradeCode='B753834A-440E-42E6-A3B5-D5C5DCDE0BF0'
+        UpgradeCode='D9F96E7C-692A-496B-9940-DBA1E89332F4'
         Manufacturer='Success Kingsley'
         Language='1033'
         Codepage='1252'
@@ -110,7 +110,7 @@
                     -->
 
                     <Directory Id='Bin' Name='bin'>
-                        <Component Id='Path' Guid='7B2FC1F5-FF2E-45F3-A62B-C35866B43452' KeyPath='yes'>
+                        <Component Id='Path' Guid='A4082DF7-7A47-4E31-BDC2-AC5804E2BEF7' KeyPath='yes'>
                             <Environment
                                 Id='PATH'
                                 Name='PATH'
@@ -123,9 +123,9 @@
                         <Component Id='binary0' Guid='*'>
                             <File
                                 Id='exe0'
-                                Name='cargonode.exe'
+                                Name='cn.exe'
                                 DiskId='1'
-                                Source='$(var.CargoTargetBinDir)\cargonode.exe'
+                                Source='$(var.CargoTargetBinDir)\cn.exe'
                                 KeyPath='yes'/>
                         </Component>
                     </Directory>

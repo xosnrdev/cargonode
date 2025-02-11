@@ -14,19 +14,19 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/xosnrdev/cargonode"
 homepage = "https://github.com/xosnrdev/cargonode?tab=readme-ov-file#readme"
 
+[package.metadata.wix]
+upgrade-guid = "D9F96E7C-692A-496B-9940-DBA1E89332F4"
+path-guid = "A4082DF7-7A47-4E31-BDC2-AC5804E2BEF7"
+license = false
+eula = false
+
 [dependencies]
-anstream = "0.6.18"
-anyhow = "1.0.95"
-clap = { version = "4.5.28", features = ["derive", "wrap_help"] }
+clap = { version = "4.5.28", features = ["derive"] }
 clap-cargo = "0.15.2"
-console = "0.15.10"
-dirs = "6.0.0"
-env_logger = "0.11.6"
-indicatif = "0.17.11"
-log = "0.4.25"
+regex = "1.10.3"
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.138"
-which = "7.0.2"
+thiserror = "2.0.11"
 
 [profile.release]
 opt-level = 3
@@ -38,11 +38,6 @@ debug = false
 incremental = false
 overflow-checks = false
 
-[profile.bench]
-inherits = "release"
-debug = true
-strip = false
-
 [profile.dev]
 opt-level = 0
 debug = true
@@ -53,19 +48,4 @@ inherits = "release"
 lto = "thin"
 
 [dev-dependencies]
-criterion = "0.5.1"
 tempfile = "3.16.0"
-
-[package.metadata.wix]
-upgrade-guid = "B753834A-440E-42E6-A3B5-D5C5DCDE0BF0"
-path-guid = "7B2FC1F5-FF2E-45F3-A62B-C35866B43452"
-license = false
-eula = false
-
-[[bench]]
-name = "platform_benchmarks"
-harness = false
-
-[[bench]]
-name = "operations_benchmarks"
-harness = false
