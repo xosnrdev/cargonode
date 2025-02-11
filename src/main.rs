@@ -29,7 +29,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Create a new Node.js project at <path>
+    /// Create a new Node.js project at PATH
     New {
         /// The path to create the project in
         path: PathBuf,
