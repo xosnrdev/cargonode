@@ -14,6 +14,12 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/xosnrdev/cargonode"
 homepage = "https://github.com/xosnrdev/cargonode?tab=readme-ov-file#readme"
 
+[package.metadata.wix]
+upgrade-guid = "D9F96E7C-692A-496B-9940-DBA1E89332F4"
+path-guid = "A4082DF7-7A47-4E31-BDC2-AC5804E2BEF7"
+license = false
+eula = false
+
 [[bin]]
 name = "cn"
 path = "src/main.rs"
@@ -39,6 +45,11 @@ overflow-checks = false
 [profile.dev]
 opt-level = 0
 debug = true
+
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
 
 [dev-dependencies]
 tempfile = "3.16.0"
