@@ -125,7 +125,15 @@ fn init_git_repo(path: &Path) -> Result<()> {
 }
 
 fn write_ignore_file(path: &Path, content: &str) -> Result<()> {
-    fs::write(path.join(".gitignore"), content)?;
+    let gitignore = path.join(".gitignore");
+    let should_write = if !gitignore.exists() {
+        true
+    } else {
+        fs::read_to_string(&gitignore)?.is_empty()
+    };
+    if should_write {
+        fs::write(&gitignore, content)?;
+    }
     Ok(())
 }
 
