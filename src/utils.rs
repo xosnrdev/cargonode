@@ -125,7 +125,15 @@ fn init_git_repo(path: &Path) -> Result<()> {
 }
 
 fn write_ignore_file(path: &Path, content: &str) -> Result<()> {
-    fs::write(path.join(".gitignore"), content)?;
+    let gitignore = path.join(".gitignore");
+    let should_write = if !gitignore.exists() {
+        true
+    } else {
+        fs::read_to_string(&gitignore)?.is_empty()
+    };
+    if should_write {
+        fs::write(&gitignore, content)?;
+    }
     Ok(())
 }
 
@@ -191,25 +199,27 @@ pub fn create_project_config(path: &Path, is_binary: bool) -> ProjectStructure {
 
 pub fn create_project_structure(config: &ProjectStructure) -> Result<()> {
     fs::create_dir_all(&config.path)?;
-    fs::create_dir_all(config.path.join("src"))?;
-
+    let src_path = config.path.join("src");
+    fs::create_dir_all(&src_path)?;
     let source_file = if config.is_binary {
         "main.js"
     } else {
         "lib.js"
     };
-    fs::write(
-        config.path.join("src").join(source_file),
-        &config.source_content,
-    )?;
+    let file_path = src_path.join(source_file);
+    if file_path.exists() {
+        return Ok(());
+    }
+    fs::write(file_path, &config.source_content)?;
 
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::path::PathBuf;
+
+    use super::*;
 
     #[test]
     fn test_validate_package_name_valid() {
@@ -304,5 +314,44 @@ mod tests {
         let config = VcsConfig::default();
         assert_eq!(config.vcs_type, VcsType::Git);
         assert_eq!(config.ignore_content, crate::template::GITIGNORE_CONTENT);
+    }
+
+    #[test]
+    fn test_create_project_structure() -> Result<()> {
+        let temp_dir = tempfile::TempDir::new()?;
+        let config = ProjectStructure {
+            path: temp_dir.path().to_path_buf(),
+            is_binary: true,
+            source_content: "test content".to_string(),
+        };
+
+        create_project_structure(&config)?;
+
+        assert!(temp_dir.path().exists());
+        assert!(temp_dir.path().is_dir());
+
+        let src_path = temp_dir.path().join("src");
+        assert!(src_path.exists());
+        assert!(src_path.is_dir());
+
+        let main_file = src_path.join("main.js");
+        assert!(main_file.exists());
+        assert!(main_file.is_file());
+        assert_eq!(fs::read_to_string(main_file)?, "test content");
+        assert!(create_project_structure(&config).is_ok());
+
+        let lib_config = ProjectStructure {
+            path: temp_dir.path().to_path_buf(),
+            is_binary: false,
+            source_content: "lib content".to_string(),
+        };
+        create_project_structure(&lib_config)?;
+
+        let lib_file = src_path.join("lib.js");
+        assert!(lib_file.exists());
+        assert!(lib_file.is_file());
+        assert_eq!(fs::read_to_string(lib_file)?, "lib content");
+
+        Ok(())
     }
 }
