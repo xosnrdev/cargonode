@@ -123,9 +123,9 @@
                         <Component Id='binary0' Guid='*'>
                             <File
                                 Id='exe0'
-                                Name='cn.exe'
+                                Name='cargonode.exe'
                                 DiskId='1'
-                                Source='$(var.CargoTargetBinDir)\cn.exe'
+                                Source='$(var.CargoTargetBinDir)\cargonode.exe'
                                 KeyPath='yes'/>
                         </Component>
                     </Directory>
