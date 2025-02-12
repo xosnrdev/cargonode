@@ -11,7 +11,7 @@ use super::config;
 
 fn create_package_config(config: &config::ProjectConfig) -> template::PackageConfig {
     template::PackageConfig {
-        name: config.name.clone(),
+        name: config.name.to_owned(),
         project_type: if config.is_binary {
             ProjectType::Binary
         } else {
