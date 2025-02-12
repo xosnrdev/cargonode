@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, process};
 
 use clap::{Parser, Subcommand, ValueEnum};
 use clap_cargo::style::CLAP_STYLING;
@@ -56,13 +56,6 @@ fn main() {
 
     if let Err(err) = match cli.command {
         Commands::New { path, lib, vcs } => {
-            let msg = format!(
-                "Creating new {} project at: {}",
-                if lib { "library" } else { "binary" },
-                path.display()
-            );
-            progress::write_message(&msg).ok();
-
             let config = utils::VcsConfig {
                 vcs_type: vcs.into(),
                 ..Default::default()
@@ -70,12 +63,6 @@ fn main() {
             commands::create_new_project(&path, lib, Some(config))
         }
         Commands::Init { lib, vcs } => {
-            let msg = format!(
-                "Initializing new {} project in current directory",
-                if lib { "library" } else { "binary" }
-            );
-            progress::write_message(&msg).ok();
-
             let config = utils::VcsConfig {
                 vcs_type: vcs.into(),
                 ..Default::default()
@@ -83,8 +70,8 @@ fn main() {
             commands::init_project(lib, Some(config))
         }
     } {
-        let error_msg = progress::format_error("Command failed", &err.to_string());
-        eprintln!("{}", error_msg);
-        std::process::exit(1);
+        let error_msg = progress::format_error_with_details(&err.to_string(), "");
+        eprintln!("\n{}", error_msg);
+        process::exit(1);
     }
 }
