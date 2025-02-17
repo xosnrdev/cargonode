@@ -21,7 +21,7 @@ license = false
 eula = false
 
 [dependencies]
-clap = { version = "4.5.29", features = ["derive"] }
+clap = { version = "4.5.30", features = ["derive"] }
 clap-cargo = "0.15.2"
 regex = "1.10.3"
 serde = { version = "1.0.217", features = ["derive"] }
@@ -48,4 +48,4 @@ inherits = "release"
 lto = "thin"
 
 [dev-dependencies]
-tempfile = "3.16.0"
+tempfile = "3.17.1"
