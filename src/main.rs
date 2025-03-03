@@ -97,6 +97,27 @@ enum Commands {
         #[arg(short, long)]
         verbose: bool,
     },
+    /// Show command execution history
+    History {
+        /// Filter by tool name
+        #[arg(long)]
+        tool: Option<String>,
+        /// Maximum number of entries to show
+        #[arg(long, default_value_t = 10)]
+        limit: usize,
+        /// Show detailed information
+        #[arg(short, long)]
+        verbose: bool,
+    },
+    /// Clear the cache
+    ClearCache {
+        /// Clear cache for a specific tool
+        #[arg(long)]
+        tool: Option<String>,
+        /// Print verbose output
+        #[arg(short, long)]
+        verbose: bool,
+    },
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -238,6 +259,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 force,
                 verbose,
             )?;
+
+            Ok(())
+        }
+        Commands::History {
+            tool,
+            limit,
+            verbose,
+        } => {
+            // Get current directory
+            let current_dir = std::env::current_dir().map_err(cargonode::Error::Io)?;
+
+            // Create journal directory
+            let journal_dir = current_dir.join(".cargonode").join("journal");
+            std::fs::create_dir_all(&journal_dir).map_err(cargonode::Error::Io)?;
+
+            // Show history
+            commands::show_history(tool.as_deref(), limit, &journal_dir, verbose)?;
+
+            Ok(())
+        }
+        Commands::ClearCache { tool, verbose } => {
+            // Get current directory
+            let current_dir = std::env::current_dir().map_err(cargonode::Error::Io)?;
+
+            // Create cache directory
+            let cache_dir = current_dir.join(".cargonode").join("cache");
+            std::fs::create_dir_all(&cache_dir).map_err(cargonode::Error::Io)?;
+
+            // Clear cache
+            commands::clear_cache(tool.as_deref(), &cache_dir, verbose)?;
 
             Ok(())
         }

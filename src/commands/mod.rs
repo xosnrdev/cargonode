@@ -4,11 +4,13 @@ use crate::{utils, Result};
 
 mod config;
 mod generic;
+mod journal;
 mod project;
 mod run;
 
 pub use config::{validate_init_config, validate_project_config, ProjectConfig};
 pub use generic::{build, check, run_generic_command, test};
+pub use journal::{clear_cache, show_history};
 pub use project::{create_new_project, create_project, init_project};
 pub use run::{run_tool, RunOptions, RunResult};
 

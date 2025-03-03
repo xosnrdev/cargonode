@@ -183,8 +183,8 @@ impl Cache {
     ///
     /// # Returns
     ///
-    /// * `Result<()>` - Whether the operation succeeded
-    pub fn clear(&self) -> Result<()> {
+    /// * `Result<usize>` - Number of entries cleared
+    pub fn clear(&self) -> Result<usize> {
         // Maximum number of entries to delete
         const MAX_ENTRIES: usize = 10000;
 
@@ -207,7 +207,50 @@ impl Cache {
             }
         }
 
-        Ok(())
+        Ok(count)
+    }
+
+    /// Invalidate cache entries for a specific tool
+    ///
+    /// # Arguments
+    ///
+    /// * `tool_name` - Name of the tool
+    ///
+    /// # Returns
+    ///
+    /// * `Result<usize>` - Number of entries invalidated
+    pub fn invalidate(&mut self, tool_name: &str) -> Result<usize> {
+        // Maximum number of entries to delete
+        const MAX_ENTRIES: usize = 10000;
+
+        let mut count = 0;
+        let prefix = format!("{}_", tool_name);
+
+        for entry in fs::read_dir(&self.cache_dir)? {
+            // Check if we've reached the maximum entry limit
+            if count >= MAX_ENTRIES {
+                return Err(Error::Cache {
+                    message: format!(
+                        "Too many cache entries to invalidate (limit: {})",
+                        MAX_ENTRIES
+                    ),
+                });
+            }
+
+            let entry = entry?;
+            let path = entry.path();
+
+            if path.is_file() && path.extension().is_some_and(|ext| ext == "json") {
+                if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
+                    if file_name.starts_with(&prefix) {
+                        fs::remove_file(path)?;
+                        count += 1;
+                    }
+                }
+            }
+        }
+
+        Ok(count)
     }
 }
 
