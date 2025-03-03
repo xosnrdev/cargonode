@@ -1,4 +1,4 @@
-use std::{io, path::PathBuf};
+use std::{io, path::PathBuf, process::ExitStatus};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -35,4 +35,7 @@ pub enum Error {
 
     #[error("Cache error: {message}")]
     Cache { message: String },
+
+    #[error("Command '{command}' failed with status: {status}")]
+    CommandFailed { command: String, status: ExitStatus },
 }
