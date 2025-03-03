@@ -165,8 +165,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             };
 
             // Load configuration
-            let config_path = current_dir.join("package.json");
-            let config = cargonode::config::load_config(&config_path)?;
+            let config = cargonode::config::load_config(&current_dir)?;
 
             // Run the tool
             let result = commands::run_tool(&tool, &config, &options)?;
