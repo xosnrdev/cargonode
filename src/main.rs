@@ -49,12 +49,60 @@ enum Commands {
         #[arg(long, value_enum, default_value_t = Vcs::Git)]
         vcs: Vcs,
     },
+    /// Run a specific tool
+    Run {
+        /// The tool to run
+        tool: String,
+        /// Arguments to pass to the tool
+        _args: Vec<String>,
+        /// Force execution even if cached
+        #[arg(long)]
+        force: bool,
+        /// Print verbose output
+        #[arg(short, long)]
+        verbose: bool,
+    },
+    /// Check files for errors
+    Check {
+        /// Paths to check (defaults to all files)
+        paths: Vec<PathBuf>,
+        /// Force execution even if cached
+        #[arg(long)]
+        force: bool,
+        /// Print verbose output
+        #[arg(short, long)]
+        verbose: bool,
+    },
+    /// Build the project
+    Build {
+        /// Build in release mode
+        #[arg(long)]
+        release: bool,
+        /// Force execution even if cached
+        #[arg(long)]
+        force: bool,
+        /// Print verbose output
+        #[arg(short, long)]
+        verbose: bool,
+    },
+    /// Run tests
+    Test {
+        /// Test pattern to run
+        #[arg(default_value = "")]
+        pattern: String,
+        /// Force execution even if cached
+        #[arg(long)]
+        force: bool,
+        /// Print verbose output
+        #[arg(short, long)]
+        verbose: bool,
+    },
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
-    if let Err(err) = match cli.command {
+    let result = match cli.command {
         Commands::New { path, lib, vcs } => {
             let config = utils::VcsConfig {
                 vcs_type: vcs.into(),
@@ -69,9 +117,136 @@ fn main() {
             };
             commands::init_project(lib, Some(config))
         }
-    } {
-        let error_msg = progress::format_error_with_details(&err.to_string(), "");
-        eprintln!("\n{}", error_msg);
+        Commands::Run {
+            tool,
+            _args,
+            force,
+            verbose,
+        } => {
+            // Get current directory
+            let current_dir = std::env::current_dir().map_err(cargonode::Error::Io)?;
+
+            // Create cache and journal directories
+            let cache_dir = current_dir.join(".cargonode").join("cache");
+            std::fs::create_dir_all(&cache_dir).map_err(cargonode::Error::Io)?;
+
+            let journal_dir = current_dir.join(".cargonode").join("journal");
+            std::fs::create_dir_all(&journal_dir).map_err(cargonode::Error::Io)?;
+
+            // Create run options
+            let options = commands::RunOptions {
+                project_dir: current_dir.clone(),
+                cache_dir,
+                journal_dir,
+                force,
+                verbose,
+                max_journal_entries: 100,
+            };
+
+            // Load configuration
+            let config_path = current_dir.join("package.json");
+            let config = cargonode::config::load_config(&config_path)?;
+
+            // Run the tool
+            let result = commands::run_tool(&tool, &config, &options)?;
+
+            // Check if the command was successful
+            if !result.status.success() {
+                return Err(Box::new(cargonode::Error::CommandFailed {
+                    command: tool,
+                    status: result.status,
+                }));
+            }
+
+            Ok(())
+        }
+        Commands::Check {
+            paths,
+            force,
+            verbose,
+        } => {
+            // Get current directory
+            let current_dir = std::env::current_dir().map_err(cargonode::Error::Io)?;
+
+            // Create cache and journal directories
+            let cache_dir = current_dir.join(".cargonode").join("cache");
+            std::fs::create_dir_all(&cache_dir).map_err(cargonode::Error::Io)?;
+
+            let journal_dir = current_dir.join(".cargonode").join("journal");
+            std::fs::create_dir_all(&journal_dir).map_err(cargonode::Error::Io)?;
+
+            // Run check command
+            let _result = commands::check(
+                &paths,
+                &current_dir,
+                &cache_dir,
+                &journal_dir,
+                force,
+                verbose,
+            )?;
+
+            Ok(())
+        }
+        Commands::Build {
+            release,
+            force,
+            verbose,
+        } => {
+            // Get current directory
+            let current_dir = std::env::current_dir().map_err(cargonode::Error::Io)?;
+
+            // Create cache and journal directories
+            let cache_dir = current_dir.join(".cargonode").join("cache");
+            std::fs::create_dir_all(&cache_dir).map_err(cargonode::Error::Io)?;
+
+            let journal_dir = current_dir.join(".cargonode").join("journal");
+            std::fs::create_dir_all(&journal_dir).map_err(cargonode::Error::Io)?;
+
+            // Run build command
+            let _result = commands::build(
+                release,
+                &current_dir,
+                &cache_dir,
+                &journal_dir,
+                force,
+                verbose,
+            )?;
+
+            Ok(())
+        }
+        Commands::Test {
+            pattern,
+            force,
+            verbose,
+        } => {
+            // Get current directory
+            let current_dir = std::env::current_dir().map_err(cargonode::Error::Io)?;
+
+            // Create cache and journal directories
+            let cache_dir = current_dir.join(".cargonode").join("cache");
+            std::fs::create_dir_all(&cache_dir).map_err(cargonode::Error::Io)?;
+
+            let journal_dir = current_dir.join(".cargonode").join("journal");
+            std::fs::create_dir_all(&journal_dir).map_err(cargonode::Error::Io)?;
+
+            // Run test command
+            let _result = commands::test(
+                &pattern,
+                &current_dir,
+                &cache_dir,
+                &journal_dir,
+                force,
+                verbose,
+            )?;
+
+            Ok(())
+        }
+    };
+
+    if let Err(err) = result {
+        eprintln!("{}", progress::format_error(&err.to_string()));
         process::exit(1);
     }
+
+    Ok(())
 }
