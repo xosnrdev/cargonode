@@ -45,4 +45,4 @@ cargo build --release
 
 ## License
 
-Licensed under either of [MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE) at your option.
+[MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE)
