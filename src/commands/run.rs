@@ -1,6 +1,10 @@
-use std::os::unix::process::ExitStatusExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus};
+
+#[cfg(unix)]
+use std::os::unix::process::ExitStatusExt;
+#[cfg(windows)]
+use std::os::windows::process::ExitStatusExt;
 
 use crate::cache::{Cache, CacheEntry};
 use crate::config::{get_tool_config, ToolConfig};
@@ -84,7 +88,12 @@ pub fn run_tool(
             }
 
             from_cache = true;
-            ExitStatus::from_raw(result.exit_code)
+            #[cfg(unix)]
+            let status = ExitStatus::from_raw(result.exit_code);
+            #[cfg(windows)]
+            let status = ExitStatus::from(result.exit_code);
+
+            status
         } else {
             // Execute command
             execute_command(
