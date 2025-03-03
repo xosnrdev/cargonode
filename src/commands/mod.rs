@@ -4,9 +4,11 @@ use crate::{utils, Result};
 
 mod config;
 mod project;
+mod run;
 
 pub use config::{validate_init_config, validate_project_config, ProjectConfig};
 pub use project::{create_new_project, create_project, init_project};
+pub use run::{run_tool, RunOptions, RunResult};
 
 pub(crate) fn extract_package_name(path: &Path) -> Result<String> {
     // Get the base name
