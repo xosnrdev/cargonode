@@ -3,6 +3,7 @@ pub mod commands;
 pub mod config;
 pub mod error;
 pub mod inputs;
+pub mod journal;
 pub mod progress;
 pub mod template;
 pub mod utils;
