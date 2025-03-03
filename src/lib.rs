@@ -4,6 +4,7 @@ pub mod config;
 pub mod error;
 pub mod inputs;
 pub mod journal;
+pub mod outputs;
 pub mod progress;
 pub mod template;
 pub mod utils;

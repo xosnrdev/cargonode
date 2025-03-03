@@ -36,6 +36,15 @@ pub enum Error {
     #[error("Cache error: {message}")]
     Cache { message: String },
 
-    #[error("Command '{command}' failed with status: {status}")]
+    #[error("Command '{command}' failed with status: {status}\n\nTry running the command manually to see detailed error messages.")]
     CommandFailed { command: String, status: ExitStatus },
+
+    #[error("Output error: {message}")]
+    Output { message: String },
+
+    #[error("Expected output files not found: {}\n\nCheck that the command generated all expected outputs.", patterns.join(", "))]
+    OutputNotFound { patterns: Vec<String> },
+
+    #[error("Output verification failed: {message}\n\n{suggestion}")]
+    OutputVerificationFailed { message: String, suggestion: String },
 }

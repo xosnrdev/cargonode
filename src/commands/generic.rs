@@ -255,6 +255,9 @@ mod tests {
         // Create test files
         create_test_file(dir_path, "test.txt", b"test content")?;
 
+        // Create expected output file
+        create_test_file(dir_path, "test.out", b"test output")?;
+
         // Create cache and journal directories
         let cache_dir = dir_path.join(".cache");
         fs::create_dir_all(&cache_dir)?;
@@ -280,6 +283,9 @@ mod tests {
         // Create test files
         create_test_file(dir_path, "test.txt", b"test content")?;
 
+        // Create expected output file
+        create_test_file(dir_path, "test.out", b"test output")?;
+
         // Create cache and journal directories
         let cache_dir = dir_path.join(".cache");
         fs::create_dir_all(&cache_dir)?;
@@ -304,6 +310,9 @@ mod tests {
         // Create test files
         create_test_file(dir_path, "test.txt", b"test content")?;
 
+        // Create expected output file
+        create_test_file(dir_path, "test.out", b"test output")?;
+
         // Create cache and journal directories
         let cache_dir = dir_path.join(".cache");
         fs::create_dir_all(&cache_dir)?;
@@ -311,7 +320,7 @@ mod tests {
         let journal_dir = dir_path.join(".journal");
         fs::create_dir_all(&journal_dir)?;
 
-        let result = test("", dir_path, &cache_dir, &journal_dir, false, false)?;
+        let result = test("*", dir_path, &cache_dir, &journal_dir, false, false)?;
 
         // Verify result
         assert!(result.status.success());

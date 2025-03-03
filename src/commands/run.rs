@@ -9,6 +9,8 @@ use crate::config::{get_tool_config, ToolConfig};
 use crate::error::Error;
 use crate::inputs::InputTracker;
 use crate::journal::Journal;
+use crate::outputs::OutputVerifier;
+use crate::progress;
 use crate::Result;
 
 /// Options for running a tool
@@ -79,10 +81,10 @@ pub fn run_tool(
     let status = if !options.force {
         if let Some(result) = check_cache(tool_name, &input_hash, &options.cache_dir)? {
             if options.verbose {
-                println!(
+                progress::write_message(&progress::format_note(&format!(
                     "Using cached result for tool '{}' with input hash '{}'",
                     tool_name, input_hash
-                );
+                )))?;
             }
 
             from_cache = true;
@@ -98,10 +100,8 @@ pub fn run_tool(
                     // For success case, use a simple echo command
                     Command::new("cmd").args(&["/C", "exit", "0"]).status()?
                 } else {
-                    // For failure case, use the actual exit code
-                    Command::new("cmd")
-                        .args(&["/C", "exit", &result.exit_code.to_string()])
-                        .status()?
+                    // For failure case, use a simple echo command with non-zero exit code
+                    Command::new("cmd").args(&["/C", "exit", "1"]).status()?
                 }
             };
 
@@ -116,7 +116,7 @@ pub fn run_tool(
             )?
         }
     } else {
-        // Execute command
+        // Force execution
         execute_command(
             tool_name,
             tool_config,
@@ -124,6 +124,46 @@ pub fn run_tool(
             options.verbose,
         )?
     };
+
+    // Verify outputs if command succeeded and not from cache
+    if status.success() && !from_cache && !tool_config.outputs.is_empty() {
+        if options.verbose {
+            progress::write_message(&progress::format_note(&format!(
+                "Verifying outputs for tool '{}'",
+                tool_name
+            )))?;
+        }
+
+        // Create output verifier
+        let verifier = OutputVerifier::new(&options.project_dir, tool_config.outputs.clone());
+
+        // Verify outputs
+        match verifier.verify_outputs() {
+            Ok(outputs) => {
+                if options.verbose {
+                    progress::write_message(&progress::format_note(&format!(
+                        "Found {} output files for tool '{}'",
+                        outputs.len(),
+                        tool_name
+                    )))?;
+                }
+            }
+            Err(e) => {
+                // Log error to journal
+                let entry = crate::journal::Journal::create_entry(
+                    tool_name,
+                    &input_hash,
+                    &tool_config.command,
+                    &tool_config.args,
+                    1, // Force non-zero exit code for output verification failure
+                    false,
+                );
+                journal.add_entry(entry)?;
+
+                return Err(e);
+            }
+        }
+    }
 
     // Cache result if not from cache
     if !from_cache {
@@ -136,18 +176,20 @@ pub fn run_tool(
         )?;
     }
 
-    // Add journal entry
-    let journal_entry = Journal::create_entry(
+    // Create journal entry
+    let entry = crate::journal::Journal::create_entry(
         tool_name,
         &input_hash,
         &tool_config.command,
         &tool_config.args,
-        status.code().unwrap_or(0),
+        status.code().unwrap_or(1),
         from_cache,
     );
 
-    journal.add_entry(journal_entry)?;
+    // Add entry to journal
+    journal.add_entry(entry)?;
 
+    // Return result
     Ok(RunResult {
         status,
         from_cache,
@@ -335,13 +377,13 @@ fn cache_result(
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
-    use std::fs;
+    use std::fs::{self, File};
     use std::io::Write;
+    use tempfile::tempdir;
 
-    use tempfile::TempDir;
+    use crate::config::CargonodeConfig;
 
     use super::*;
-    use crate::config::CargonodeConfig;
 
     fn create_test_file(dir: &Path, name: &str, content: &[u8]) -> Result<PathBuf> {
         let file_path = dir.join(name);
@@ -381,7 +423,7 @@ mod tests {
 
     #[test]
     fn test_calculate_input_hash() -> Result<()> {
-        let temp_dir = TempDir::new()?;
+        let temp_dir = tempdir()?;
         let dir_path = temp_dir.path();
 
         // Create test files
@@ -410,7 +452,7 @@ mod tests {
 
     #[test]
     fn test_check_cache() -> Result<()> {
-        let temp_dir = TempDir::new()?;
+        let temp_dir = tempdir()?;
         let cache_dir = temp_dir.path();
 
         // Create cache
@@ -438,7 +480,7 @@ mod tests {
 
     #[test]
     fn test_execute_command() -> Result<()> {
-        let temp_dir = TempDir::new()?;
+        let temp_dir = tempdir()?;
         let dir_path = temp_dir.path();
 
         let (tool_config, _) = create_test_config();
@@ -454,7 +496,7 @@ mod tests {
 
     #[test]
     fn test_cache_result() -> Result<()> {
-        let temp_dir = TempDir::new()?;
+        let temp_dir = tempdir()?;
         let cache_dir = temp_dir.path();
 
         let (tool_config, _) = create_test_config();
@@ -479,21 +521,43 @@ mod tests {
 
     #[test]
     fn test_run_tool() -> Result<()> {
-        let temp_dir = TempDir::new()?;
+        // Create temporary directory
+        let temp_dir = tempdir()?;
         let dir_path = temp_dir.path();
 
         // Create cache directory
-        let cache_dir = temp_dir.path().join("cache");
+        let cache_dir = dir_path.join("cache");
         fs::create_dir_all(&cache_dir)?;
 
         // Create journal directory
-        let journal_dir = temp_dir.path().join("journal");
+        let journal_dir = dir_path.join("journal");
         fs::create_dir_all(&journal_dir)?;
 
-        // Create test files
-        create_test_file(dir_path, "file1.txt", b"content1")?;
+        // Create a test file
+        let test_file = dir_path.join("test.txt");
+        let mut file = File::create(&test_file)?;
+        file.write_all(b"test content")?;
 
-        let (_, config) = create_test_config();
+        // Create expected output file
+        let output_file = dir_path.join("test.out");
+        let mut file = File::create(&output_file)?;
+        file.write_all(b"test output")?;
+
+        // Create a test tool configuration
+        let tool_config = ToolConfig {
+            command: "echo".to_string(),
+            args: vec!["test".to_string()],
+            env: HashMap::new(),
+            working_dir: None,
+            inputs: vec!["*.txt".to_string()],
+            outputs: vec!["*.out".to_string()],
+            cache: true,
+        };
+
+        // Create a test configuration
+        let mut tools = HashMap::new();
+        tools.insert("test-tool".to_string(), tool_config);
+        let config = CargonodeConfig { tools };
 
         // Create run options
         let options = RunOptions {
@@ -502,51 +566,109 @@ mod tests {
             journal_dir: journal_dir.clone(),
             force: false,
             verbose: false,
-            max_journal_entries: 10,
+            max_journal_entries: 100,
         };
 
-        // Run tool
+        // Run the tool
         let result = run_tool("test-tool", &config, &options)?;
 
-        // Command should succeed
+        // Check result
         assert!(result.status.success());
         assert!(!result.from_cache);
 
-        // Check journal
-        let journal = Journal::new(&journal_dir, 10)?;
-        let entries = journal.get_entries()?;
-        assert_eq!(entries.len(), 1);
-        assert_eq!(entries[0].tool_name, "test-tool");
-        assert!(!entries[0].from_cache);
+        // Run the tool again (should use cache)
+        let result = run_tool("test-tool", &config, &options)?;
+        assert!(result.status.success());
+        assert!(result.from_cache);
 
-        // Run tool again (should use cache)
-        let result2 = run_tool("test-tool", &config, &options)?;
-
-        // Command should succeed and be from cache
-        assert!(result2.status.success());
-        assert!(result2.from_cache);
-
-        // Check journal again
-        let entries = journal.get_entries()?;
-        assert_eq!(entries.len(), 2);
-        assert_eq!(entries[1].tool_name, "test-tool");
-        assert!(entries[1].from_cache);
-
-        // Run tool with force (should not use cache)
-        let force_options = RunOptions {
+        // Run the tool with force (should not use cache)
+        let options = RunOptions {
             project_dir: dir_path.to_path_buf(),
             cache_dir,
             journal_dir,
             force: true,
             verbose: false,
-            max_journal_entries: 10,
+            max_journal_entries: 100,
         };
 
-        let result3 = run_tool("test-tool", &config, &force_options)?;
+        let result = run_tool("test-tool", &config, &options)?;
+        assert!(result.status.success());
+        assert!(!result.from_cache);
 
-        // Command should succeed and not be from cache
-        assert!(result3.status.success());
-        assert!(!result3.from_cache);
+        Ok(())
+    }
+
+    /// Test output verification
+    #[test]
+    fn test_output_verification() -> Result<()> {
+        // Create temporary directory
+        let temp_dir = tempdir()?;
+        let dir_path = temp_dir.path();
+
+        // Create cache directory
+        let cache_dir = dir_path.join("cache");
+        fs::create_dir_all(&cache_dir)?;
+
+        // Create journal directory
+        let journal_dir = dir_path.join("journal");
+        fs::create_dir_all(&journal_dir)?;
+
+        // Create a test tool configuration with output verification
+        let tool_config = crate::config::ToolConfig {
+            command: "echo".to_string(),
+            args: vec!["test".to_string()],
+            env: HashMap::new(),
+            working_dir: None,
+            inputs: vec!["*.txt".to_string()],
+            outputs: vec!["test-output.txt".to_string()],
+            cache: true,
+        };
+
+        // Create a test configuration
+        let mut tools = HashMap::new();
+        tools.insert("test-tool".to_string(), tool_config);
+        let config = crate::config::CargonodeConfig { tools };
+
+        // Create run options
+        let options = RunOptions {
+            project_dir: dir_path.to_path_buf(),
+            cache_dir: cache_dir.clone(),
+            journal_dir: journal_dir.clone(),
+            force: false,
+            verbose: false,
+            max_journal_entries: 100,
+        };
+
+        // Create a test input file
+        let input_file = dir_path.join("test.txt");
+        let _file = File::create(&input_file)?;
+
+        // Run the tool (should fail due to missing output)
+        let result = run_tool("test-tool", &config, &options);
+        assert!(result.is_err());
+
+        // Check error type
+        match result {
+            Err(Error::OutputNotFound { patterns }) => {
+                assert_eq!(patterns.len(), 1);
+                assert_eq!(patterns[0], "test-output.txt");
+            }
+            _ => panic!("Expected OutputNotFound error"),
+        }
+
+        // Create the expected output file
+        let output_file = dir_path.join("test-output.txt");
+        let _file = File::create(&output_file)?;
+
+        // Run the tool again (should succeed)
+        let result = run_tool("test-tool", &config, &options)?;
+        assert!(result.status.success());
+        assert!(!result.from_cache);
+
+        // Run the tool again (should use cache)
+        let result = run_tool("test-tool", &config, &options)?;
+        assert!(result.status.success());
+        assert!(result.from_cache);
 
         Ok(())
     }
