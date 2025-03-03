@@ -4,7 +4,7 @@
 
   inputs = {
     nixpkgs.url =
-      "github:NixOS/nixpkgs?rev=de1864217bfa9b5845f465e771e0ecb48b30e02d";
+      "github:NixOS/nixpkgs?rev=a47b881e04af1dd6d414618846407b2d6c759380";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -34,7 +34,6 @@
             pkgs.cargo-release
             pkgs.cargo-edit
             pkgs.cargo-dist
-            pkgs.cargo-tarpaulin
           ];
           shellHook = ''
             export RUST_BACKTRACE=1
