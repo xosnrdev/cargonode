@@ -3,8 +3,6 @@ use std::process::{Command, ExitStatus};
 
 #[cfg(unix)]
 use std::os::unix::process::ExitStatusExt;
-#[cfg(windows)]
-use std::os::windows::process::ExitStatusExt;
 
 use crate::cache::{Cache, CacheEntry};
 use crate::config::{get_tool_config, ToolConfig};
@@ -88,10 +86,24 @@ pub fn run_tool(
             }
 
             from_cache = true;
+
             #[cfg(unix)]
             let status = ExitStatus::from_raw(result.exit_code);
+
             #[cfg(windows)]
-            let status = ExitStatus::from(result.exit_code);
+            let status = {
+                // On Windows, we need to create a fake command to get an ExitStatus
+                // This is a workaround since Windows doesn't have from_raw
+                if result.exit_code == 0 {
+                    // For success case, use a simple echo command
+                    Command::new("cmd").args(&["/C", "exit", "0"]).status()?
+                } else {
+                    // For failure case, use the actual exit code
+                    Command::new("cmd")
+                        .args(&["/C", "exit", &result.exit_code.to_string()])
+                        .status()?
+                }
+            };
 
             status
         } else {
