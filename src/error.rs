@@ -26,4 +26,13 @@ pub enum Error {
 
     #[error("Failed to create package.json\n\n{0}\n\nEnsure you have write permissions in the current directory.")]
     PackageJsonCreation(String),
+
+    #[error("Configuration error: {message}")]
+    Config { message: String },
+
+    #[error("Input error: {message}")]
+    Input { message: String },
+
+    #[error("Cache error: {message}")]
+    Cache { message: String },
 }
