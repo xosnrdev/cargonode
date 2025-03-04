@@ -1,12 +1,11 @@
-use std::{fs, path::Path, process::Command, sync::OnceLock};
-
 use regex::Regex;
+use std::{fs, path::Path, process::Command, sync::OnceLock};
 
 use crate::{Error, Result};
 
 /// Represents the type of version control system to use
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum VcsType {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, clap::ValueEnum)]
+pub enum Vcs {
     /// Git version control (default)
     #[default]
     Git,
@@ -75,7 +74,7 @@ pub fn validate_package_name(name: &str) -> Result<()> {
 #[derive(Debug, Clone)]
 pub struct VcsConfig {
     /// Type of version control system
-    pub vcs_type: VcsType,
+    pub vcs: Vcs,
     /// Content of the ignore file
     pub ignore_content: String,
 }
@@ -83,7 +82,7 @@ pub struct VcsConfig {
 impl Default for VcsConfig {
     fn default() -> Self {
         Self {
-            vcs_type: VcsType::Git,
+            vcs: Vcs::Git,
             ignore_content: crate::template::GITIGNORE_CONTENT.to_string(),
         }
     }
@@ -138,14 +137,14 @@ fn write_ignore_file(path: &Path, content: &str) -> Result<()> {
 }
 
 pub fn init_vcs(path: &Path, config: &VcsConfig) -> Result<()> {
-    match config.vcs_type {
-        VcsType::Git => {
+    match config.vcs {
+        Vcs::Git => {
             if !is_git_repo(path) {
                 init_git_repo(path)?;
             }
             write_ignore_file(path, &config.ignore_content)?;
         }
-        VcsType::None => (),
+        Vcs::None => (),
     }
     Ok(())
 }
@@ -215,9 +214,54 @@ pub fn create_project_structure(config: &ProjectStructure) -> Result<()> {
     Ok(())
 }
 
+pub fn extract_package_name(path: &Path) -> Result<String> {
+    // Get the base name
+    let name = path.file_name().and_then(|n| n.to_str()).ok_or_else(|| {
+        crate::Error::InvalidPackageName {
+            name: path.display().to_string(),
+            reason: "Invalid path name".to_string(),
+        }
+    })?;
+
+    // Count @ occurrences in the path
+    let at_count = path
+        .components()
+        .filter(|c| {
+            c.as_os_str()
+                .to_str()
+                .map(|s| s.starts_with('@'))
+                .unwrap_or(false)
+        })
+        .count();
+
+    // More than one @ in path is invalid
+    if at_count > 1 {
+        return Err(crate::Error::InvalidPackageName {
+            name: path.display().to_string(),
+            reason: "Multiple scopes are not allowed".to_string(),
+        });
+    }
+
+    // Handle scoped packages
+    let package_name = path
+        .parent()
+        .and_then(|parent| parent.file_name())
+        .and_then(|scope| scope.to_str())
+        .filter(|scope| scope.starts_with('@'))
+        .map(|scope| format!("{}/{}", scope, name))
+        .unwrap_or_else(|| name.to_string());
+
+    // Validate the extracted package name
+    validate_package_name(&package_name)?;
+
+    Ok(package_name)
+}
+
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
+
+    use tempfile::TempDir;
 
     use super::*;
 
@@ -312,7 +356,7 @@ mod tests {
     #[test]
     fn test_vcs_config_default() {
         let config = VcsConfig::default();
-        assert_eq!(config.vcs_type, VcsType::Git);
+        assert_eq!(config.vcs, Vcs::Git);
         assert_eq!(config.ignore_content, crate::template::GITIGNORE_CONTENT);
     }
 
@@ -353,5 +397,29 @@ mod tests {
         assert_eq!(fs::read_to_string(lib_file)?, "lib content");
 
         Ok(())
+    }
+
+    #[test]
+    fn test_extract_package_name() {
+        // Test valid package name
+        let temp_dir = TempDir::new().unwrap();
+        let path = temp_dir.path().join("valid-package");
+        fs::create_dir(&path).unwrap();
+
+        let name = extract_package_name(&path).unwrap();
+        assert_eq!(name, "valid-package");
+
+        // Test scoped package name
+        let path = temp_dir.path().join("@scope").join("my-pkg");
+        fs::create_dir_all(&path).unwrap();
+
+        let name = extract_package_name(&path).unwrap();
+        assert_eq!(name, "@scope/my-pkg");
+
+        // Test invalid package name (multiple scopes)
+        let path = temp_dir.path().join("@scope1").join("@scope2").join("pkg");
+        fs::create_dir_all(&path).unwrap();
+
+        assert!(extract_package_name(&path).is_err());
     }
 }

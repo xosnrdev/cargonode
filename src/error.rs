@@ -33,9 +33,6 @@ pub enum Error {
     #[error("Input error: {message}")]
     Input { message: String },
 
-    #[error("Cache error: {message}")]
-    Cache { message: String },
-
     #[error("Command '{command}' failed with status: {status}\n\nTry running the command manually to see detailed error messages.")]
     CommandFailed { command: String, status: ExitStatus },
 
