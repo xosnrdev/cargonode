@@ -1,7 +1,5 @@
 use std::path::{Path, PathBuf};
 
-use glob::glob;
-
 use crate::error::Error;
 use crate::Result;
 
@@ -32,63 +30,42 @@ impl OutputVerifier {
         }
     }
 
-    /// Verify that all expected output files exist
+    /// Verify that all expected output directories exist and create them if needed
     ///
     /// # Returns
     ///
-    /// * `Result<Vec<PathBuf>>` - List of output files that exist
+    /// * `Result<Vec<PathBuf>>` - List of output file paths that were verified
     pub fn verify_outputs(&self) -> Result<Vec<PathBuf>> {
         // Check if patterns is empty
         if self.patterns.is_empty() {
             return Ok(Vec::new());
         }
 
-        let mut output_files = Vec::new();
-        let mut missing_files = Vec::new();
+        let mut output_paths = Vec::new();
 
         // Process each pattern
         for pattern in &self.patterns {
-            let pattern_str = self.base_path.join(pattern).to_string_lossy().to_string();
-            let mut found = false;
+            let pattern_path = self.base_path.join(pattern);
 
-            // Use glob to find matching files
-            match glob(&pattern_str) {
-                Ok(entries) => {
-                    for entry in entries {
-                        match entry {
-                            Ok(path) => {
-                                output_files.push(path);
-                                found = true;
-                            }
-                            Err(e) => {
-                                return Err(Error::Output {
-                                    message: format!("Failed to read glob entry: {}", e),
-                                });
-                            }
-                        }
-                    }
-                }
-                Err(e) => {
-                    return Err(Error::Output {
-                        message: format!("Invalid glob pattern '{}': {}", pattern, e),
-                    });
+            // Get the parent directory of the pattern
+            if let Some(parent) = pattern_path.parent() {
+                // Create parent directories if they don't exist
+                if !parent.exists() {
+                    std::fs::create_dir_all(parent).map_err(|e| Error::Output {
+                        message: format!(
+                            "Failed to create directory '{}': {}",
+                            parent.display(),
+                            e
+                        ),
+                    })?;
                 }
             }
 
-            // If no files were found for this pattern, add it to missing files
-            if !found {
-                missing_files.push(pattern.clone());
-            }
+            // Add the expected output path
+            output_paths.push(pattern_path);
         }
 
-        // If any patterns had no matching files, return an error
-        if !missing_files.is_empty() {
-            return Err(Error::OutputNotFound {
-                patterns: missing_files,
-            });
-        }
-
-        Ok(output_files)
+        Ok(output_paths)
     }
 
     /// Get a list of expected output files
@@ -122,12 +99,15 @@ mod tests {
         let _file2 = File::create(&file2_path)?;
 
         // Create output verifier
-        let verifier = OutputVerifier::new(temp_path, vec!["*.out".to_string()]);
+        let verifier = OutputVerifier::new(
+            temp_path,
+            vec!["test1.out".to_string(), "test2.out".to_string()],
+        );
 
         // Verify outputs
         let outputs = verifier.verify_outputs()?;
 
-        // Check that both files were found
+        // Check that both file paths were returned
         assert_eq!(outputs.len(), 2);
         assert!(outputs.contains(&file1_path));
         assert!(outputs.contains(&file2_path));
@@ -135,7 +115,7 @@ mod tests {
         Ok(())
     }
 
-    /// Test output verification with missing files
+    /// Test output verification with non-existent files (should succeed and create directories)
     #[test]
     fn test_verify_outputs_missing() -> Result<()> {
         // Create temporary directory
@@ -143,20 +123,17 @@ mod tests {
         let temp_path = temp_dir.path();
 
         // Create output verifier with non-existent pattern
-        let verifier = OutputVerifier::new(temp_path, vec!["missing*.out".to_string()]);
+        let verifier = OutputVerifier::new(temp_path, vec!["subdir/missing.out".to_string()]);
 
-        // Verify outputs (should fail)
-        let result = verifier.verify_outputs();
-        assert!(result.is_err());
+        // Verify outputs (should succeed and create directory)
+        let outputs = verifier.verify_outputs()?;
 
-        // Check error type
-        match result {
-            Err(Error::OutputNotFound { patterns }) => {
-                assert_eq!(patterns.len(), 1);
-                assert_eq!(patterns[0], "missing*.out");
-            }
-            _ => panic!("Expected OutputNotFound error"),
-        }
+        // Check that the directory was created
+        assert!(temp_path.join("subdir").exists());
+
+        // Check that the expected path was returned
+        assert_eq!(outputs.len(), 1);
+        assert_eq!(outputs[0], temp_path.join("subdir/missing.out"));
 
         Ok(())
     }
@@ -164,44 +141,92 @@ mod tests {
     /// Test output verification with empty patterns
     #[test]
     fn test_verify_outputs_empty() -> Result<()> {
-        // Create temporary directory
         let temp_dir = tempdir()?;
-        let temp_path = temp_dir.path();
-
-        // Create output verifier with empty patterns
-        let verifier = OutputVerifier::new(temp_path, vec![]);
-
-        // Verify outputs (should succeed with empty list)
+        let verifier = OutputVerifier::new(temp_dir.path(), vec![]);
         let outputs = verifier.verify_outputs()?;
         assert!(outputs.is_empty());
-
         Ok(())
     }
 
     /// Test output verification with subdirectories
     #[test]
     fn test_verify_outputs_subdirectories() -> Result<()> {
-        // Create temporary directory
         let temp_dir = tempdir()?;
         let temp_path = temp_dir.path();
 
-        // Create subdirectory
+        // Create subdirectory and file
         let subdir_path = temp_path.join("subdir");
         fs::create_dir(&subdir_path)?;
-
-        // Create test file in subdirectory
         let file_path = subdir_path.join("test.out");
         let _file = File::create(&file_path)?;
 
         // Create output verifier
-        let verifier = OutputVerifier::new(temp_path, vec!["**/*.out".to_string()]);
+        let verifier = OutputVerifier::new(temp_path, vec!["subdir/test.out".to_string()]);
 
         // Verify outputs
         let outputs = verifier.verify_outputs()?;
 
-        // Check that the file was found
+        // Check that the file path was returned
         assert_eq!(outputs.len(), 1);
-        assert!(outputs.contains(&file_path));
+        assert_eq!(outputs[0], file_path);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_verify_outputs_creates_directories() -> Result<()> {
+        let temp_dir = tempdir()?;
+        let base_path = temp_dir.path();
+
+        // Create patterns with nested directories
+        let patterns = vec![
+            "output/dir1/file1.txt".to_string(),
+            "output/dir2/subdir/file2.txt".to_string(),
+        ];
+
+        let verifier = OutputVerifier::new(base_path, patterns.clone());
+        let output_paths = verifier.verify_outputs()?;
+
+        // Verify directories were created
+        assert!(base_path.join("output/dir1").exists());
+        assert!(base_path.join("output/dir2/subdir").exists());
+
+        // Verify returned paths match expected
+        assert_eq!(output_paths.len(), 2);
+        assert_eq!(output_paths[0], base_path.join("output/dir1/file1.txt"));
+        assert_eq!(
+            output_paths[1],
+            base_path.join("output/dir2/subdir/file2.txt")
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_verify_outputs_existing_directories() -> Result<()> {
+        let temp_dir = tempdir()?;
+        let base_path = temp_dir.path();
+
+        // Create directories first
+        fs::create_dir_all(base_path.join("existing/dir1"))?;
+        fs::create_dir_all(base_path.join("existing/dir2"))?;
+
+        let patterns = vec![
+            "existing/dir1/file1.txt".to_string(),
+            "existing/dir2/file2.txt".to_string(),
+        ];
+
+        let verifier = OutputVerifier::new(base_path, patterns);
+        let output_paths = verifier.verify_outputs()?;
+
+        // Verify directories still exist
+        assert!(base_path.join("existing/dir1").exists());
+        assert!(base_path.join("existing/dir2").exists());
+
+        // Verify returned paths match expected
+        assert_eq!(output_paths.len(), 2);
+        assert_eq!(output_paths[0], base_path.join("existing/dir1/file1.txt"));
+        assert_eq!(output_paths[1], base_path.join("existing/dir2/file2.txt"));
 
         Ok(())
     }

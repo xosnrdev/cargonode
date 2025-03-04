@@ -10,6 +10,7 @@ pub enum Color {
     Blue,
     Yellow,
     Red,
+    Gray,
     Reset,
 }
 
@@ -20,13 +21,17 @@ impl Color {
             Color::Blue => "\x1b[34m",
             Color::Yellow => "\x1b[33m",
             Color::Red => "\x1b[31m",
+            Color::Gray => "\x1b[90m",
             Color::Reset => "\x1b[0m",
         }
     }
 }
 
 fn should_use_colors() -> bool {
-    env::var("TERM").is_ok()
+    if cfg!(test) {
+        return false;
+    }
+    env::var("NO_COLOR").is_err() && env::var("TERM").is_ok()
 }
 
 pub fn style_text(text: &str, color: Color, is_bold: bool) -> String {
@@ -44,33 +49,56 @@ pub fn style_text(text: &str, color: Color, is_bold: bool) -> String {
     )
 }
 
+/// Format an error message with consistent styling
+pub fn format_error(message: &str) -> String {
+    let parts: Vec<&str> = message.split("\n\n").collect();
+    let main_message = parts[0];
+
+    let mut formatted = vec![format!(
+        "{}: {}",
+        style_text("error", Color::Red, true),
+        main_message
+    )];
+
+    for part in parts.iter().skip(1) {
+        let styled = if part.starts_with("Error:") {
+            style_text(part, Color::Red, false)
+        } else if part.starts_with("Details:") {
+            style_text(part, Color::Gray, false)
+        } else if part.starts_with("Suggestion:") {
+            style_text(part, Color::Blue, false)
+        } else {
+            part.to_string()
+        };
+        formatted.push(styled);
+    }
+
+    formatted.join("\n\n")
+}
+
+/// Format a warning message with consistent styling
+pub fn format_warning(message: &str) -> String {
+    format!(
+        "{}: {}",
+        style_text("warning", Color::Yellow, true),
+        message
+    )
+}
+
+/// Format an informational note with consistent styling
+pub fn format_note(message: &str) -> String {
+    format!("{}: {}", style_text("note", Color::Blue, true), message)
+}
+
+/// Format a status message with consistent styling
+pub fn format_status(status: &str, message: &str) -> String {
+    format!("{}: {}", style_text(status, Color::Green, true), message)
+}
+
+/// Write a message to stdout with proper formatting
 pub fn write_message(message: &str) -> io::Result<()> {
     println!("{}", message);
     io::stdout().flush()
-}
-
-pub fn format_status(status: &str, message: &str) -> String {
-    format!("{:>12} {}", style_text(status, Color::Green, true), message)
-}
-
-pub fn format_error(message: &str) -> String {
-    let error_prefix = style_text("error:", Color::Red, true);
-    format!("{} {}", error_prefix, message)
-}
-
-pub fn format_error_with_details(message: &str, details: &str) -> String {
-    let error_prefix = style_text("error:", Color::Red, true);
-    format!("{} {}\n\n{}", error_prefix, message, details)
-}
-
-pub fn format_warning(message: &str) -> String {
-    let warning_prefix = style_text("warning:", Color::Yellow, true);
-    format!("{} {}", warning_prefix, message)
-}
-
-pub fn format_note(message: &str) -> String {
-    let note_prefix = style_text("note:", Color::Blue, true);
-    format!("{} {}", note_prefix, message)
 }
 
 #[cfg(test)]
@@ -78,30 +106,44 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_format_status() {
-        let message = format_status("Creating", "binary package");
-        assert!(message.contains("Creating"));
-        assert!(message.contains("binary package"));
-    }
-
-    #[test]
     fn test_format_error() {
-        let error = format_error("failed to create package");
-        assert!(error.contains("error:"));
-        assert!(error.contains("failed to create package"));
+        let message =
+            "Failed to run command\n\nError: Exit code 1\n\nSuggestion: Check the command exists";
+        let formatted = format_error(message);
+        assert!(formatted.contains("error: Failed to run command"));
+        assert!(formatted.contains("Error: Exit code 1"));
+        assert!(formatted.contains("Suggestion: Check the command exists"));
     }
 
     #[test]
     fn test_format_warning() {
-        let warning = format_warning("package name contains uppercase letters");
-        assert!(warning.contains("warning:"));
-        assert!(warning.contains("package name contains uppercase letters"));
+        let message = "File not found";
+        let formatted = format_warning(message);
+        assert!(formatted.contains("warning: File not found"));
     }
 
     #[test]
     fn test_format_note() {
-        let note = format_note("see cargo.toml for package configuration");
-        assert!(note.contains("note:"));
-        assert!(note.contains("see cargo.toml for package configuration"));
+        let message = "Using cached version";
+        let formatted = format_note(message);
+        assert!(formatted.contains("note: Using cached version"));
+    }
+
+    #[test]
+    fn test_format_status() {
+        let status = "Running";
+        let message = "build command";
+        let formatted = format_status(status, message);
+        assert!(formatted.contains("Running: build command"));
+    }
+
+    #[test]
+    fn test_format_error_sections() {
+        let message = "Command failed\n\nError: Exit code 1\n\nDetails: Process terminated\n\nSuggestion: Check permissions";
+        let formatted = format_error(message);
+        assert!(formatted.contains("error: Command failed"));
+        assert!(formatted.contains("Error: Exit code 1"));
+        assert!(formatted.contains("Details: Process terminated"));
+        assert!(formatted.contains("Suggestion: Check permissions"));
     }
 }
