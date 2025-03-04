@@ -4,18 +4,29 @@ A simple build tool for Node.js projects.
 
 ## Install
 
+### MacOS
+
 ```bash
-# macOS
 brew install xosnrdev/cargonode/cargonode
+```
 
-# Linux
+### Linux
+
+```bash
 curl -LsSf https://github.com/xosnrdev/cargonode/releases/download/0.1.3/cargonode-installer.sh | sh
+```
 
-# Windows
+```bash
 iwr https://github.com/xosnrdev/cargonode/releases/download/0.1.3/cargonode-installer.ps1 | iex
 ```
 
-Checkout the [releases page](https://github.com/xosnrdev/cargonode/releases)
+### Cargo
+
+```bash
+cargo install cargonode
+```
+
+Checkout [releases page](https://github.com/xosnrdev/cargonode/releases) for more information.
 
 ## Use
 
@@ -93,8 +104,8 @@ Cargonode uses a simple protocol in your `package.json` to define build tools:
 ```
 
 ```bash
-cargonode run dev # Make calls to the dev protocol
-cargonode test  # Make calls to the test protocol
+cargonode run dev # Calls the dev protocol
+cargonode test  # Calls the test protocol
 ```
 
 ## Error Handling
