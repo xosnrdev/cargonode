@@ -1,9 +1,7 @@
-pub mod cache;
 pub mod commands;
 pub mod config;
 pub mod error;
 pub mod inputs;
-pub mod journal;
 pub mod outputs;
 pub mod progress;
 pub mod template;
@@ -32,10 +30,5 @@ mod tests {
             message: "invalid input".to_string(),
         };
         assert!(format!("{}", input_err).contains("Input error: invalid input"));
-
-        let cache_err = error::Error::Cache {
-            message: "cache error".to_string(),
-        };
-        assert!(format!("{}", cache_err).contains("Cache error: cache error"));
     }
 }

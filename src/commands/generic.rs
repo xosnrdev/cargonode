@@ -1,7 +1,6 @@
 use std::path::{Path, PathBuf};
 
 use crate::commands::run::{run_tool, RunOptions, RunResult};
-use crate::error::Error;
 use crate::progress;
 use crate::Result;
 
@@ -12,8 +11,6 @@ use crate::Result;
 /// * `command_type` - Type of command to run (check, build, test)
 /// * `args` - Arguments to pass to the command
 /// * `project_dir` - Project directory
-/// * `cache_dir` - Cache directory
-/// * `journal_dir` - Journal directory
 /// * `force` - Whether to force execution even if cached
 /// * `verbose` - Whether to print verbose output
 ///
@@ -24,15 +21,12 @@ pub fn run_generic_command(
     command_type: &str,
     _args: &[String],
     project_dir: &Path,
-    cache_dir: &Path,
-    journal_dir: &Path,
     force: bool,
     verbose: bool,
 ) -> Result<RunResult> {
     // Load configuration
-    let config_path = project_dir.join("package.json");
-    let config = if cfg!(test) && !config_path.exists() {
-        // For tests, create a mock configuration if the file doesn't exist
+    let config = if cfg!(test) && !project_dir.join("package.json").exists() {
+        // For tests, create a mock configuration
         let mut config = crate::config::CargonodeConfig {
             tools: std::collections::HashMap::new(),
         };
@@ -48,31 +42,18 @@ pub fn run_generic_command(
         config.tools.insert(command_type.to_string(), tool_config);
         config
     } else {
-        crate::config::load_config(&config_path)?
+        crate::config::load_config(project_dir)?
     };
 
     // Create run options
     let options = RunOptions {
         project_dir: project_dir.to_path_buf(),
-        cache_dir: cache_dir.to_path_buf(),
-        journal_dir: journal_dir.to_path_buf(),
         force,
         verbose,
-        max_journal_entries: 100,
     };
 
     // Run the tool
-    let result = run_tool(command_type, &config, &options)?;
-
-    // Check if the command was successful
-    if !result.status.success() {
-        return Err(Error::CommandFailed {
-            command: command_type.to_string(),
-            status: result.status,
-        });
-    }
-
-    Ok(result)
+    run_tool(command_type, &config, &options)
 }
 
 /// Run the check command
@@ -81,8 +62,6 @@ pub fn run_generic_command(
 ///
 /// * `paths` - Paths to check
 /// * `project_dir` - Project directory
-/// * `cache_dir` - Cache directory
-/// * `journal_dir` - Journal directory
 /// * `force` - Whether to force execution even if cached
 /// * `verbose` - Whether to print verbose output
 ///
@@ -92,8 +71,6 @@ pub fn run_generic_command(
 pub fn check(
     paths: &[PathBuf],
     project_dir: &Path,
-    cache_dir: &Path,
-    journal_dir: &Path,
     force: bool,
     verbose: bool,
 ) -> Result<RunResult> {
@@ -115,15 +92,7 @@ pub fn check(
     }
 
     // Run the check command
-    run_generic_command(
-        "check",
-        &path_args,
-        project_dir,
-        cache_dir,
-        journal_dir,
-        force,
-        verbose,
-    )
+    run_generic_command("check", &path_args, project_dir, force, verbose)
 }
 
 /// Run the build command
@@ -132,22 +101,13 @@ pub fn check(
 ///
 /// * `release` - Whether to build in release mode
 /// * `project_dir` - Project directory
-/// * `cache_dir` - Cache directory
-/// * `journal_dir` - Journal directory
 /// * `force` - Whether to force execution even if cached
 /// * `verbose` - Whether to print verbose output
 ///
 /// # Returns
 ///
 /// * `Result<RunResult>` - Result of running the build command
-pub fn build(
-    release: bool,
-    project_dir: &Path,
-    cache_dir: &Path,
-    journal_dir: &Path,
-    force: bool,
-    verbose: bool,
-) -> Result<RunResult> {
+pub fn build(release: bool, project_dir: &Path, force: bool, verbose: bool) -> Result<RunResult> {
     // Create arguments
     let mut args = Vec::new();
 
@@ -165,15 +125,7 @@ pub fn build(
     }
 
     // Run the build command
-    run_generic_command(
-        "build",
-        &args,
-        project_dir,
-        cache_dir,
-        journal_dir,
-        force,
-        verbose,
-    )
+    run_generic_command("build", &args, project_dir, force, verbose)
 }
 
 /// Run the test command
@@ -182,22 +134,13 @@ pub fn build(
 ///
 /// * `pattern` - Test pattern to run
 /// * `project_dir` - Project directory
-/// * `cache_dir` - Cache directory
-/// * `journal_dir` - Journal directory
 /// * `force` - Whether to force execution even if cached
 /// * `verbose` - Whether to print verbose output
 ///
 /// # Returns
 ///
 /// * `Result<RunResult>` - Result of running the test command
-pub fn test(
-    pattern: &str,
-    project_dir: &Path,
-    cache_dir: &Path,
-    journal_dir: &Path,
-    force: bool,
-    verbose: bool,
-) -> Result<RunResult> {
+pub fn test(pattern: &str, project_dir: &Path, force: bool, verbose: bool) -> Result<RunResult> {
     // Create arguments
     let mut args = Vec::new();
 
@@ -217,15 +160,7 @@ pub fn test(
     }
 
     // Run the test command
-    run_generic_command(
-        "test",
-        &args,
-        project_dir,
-        cache_dir,
-        journal_dir,
-        force,
-        verbose,
-    )
+    run_generic_command("test", &args, project_dir, force, verbose)
 }
 
 #[cfg(test)]
@@ -254,19 +189,10 @@ mod tests {
 
         // Create test files
         create_test_file(dir_path, "test.txt", b"test content")?;
-
-        // Create expected output file
         create_test_file(dir_path, "test.out", b"test output")?;
 
-        // Create cache and journal directories
-        let cache_dir = dir_path.join(".cache");
-        fs::create_dir_all(&cache_dir)?;
-
-        let journal_dir = dir_path.join(".journal");
-        fs::create_dir_all(&journal_dir)?;
-
         let paths = vec![dir_path.join("test.txt")];
-        let result = check(&paths, dir_path, &cache_dir, &journal_dir, false, false)?;
+        let result = check(&paths, dir_path, false, false)?;
 
         // Verify result
         assert!(result.status.success());
@@ -282,18 +208,9 @@ mod tests {
 
         // Create test files
         create_test_file(dir_path, "test.txt", b"test content")?;
-
-        // Create expected output file
         create_test_file(dir_path, "test.out", b"test output")?;
 
-        // Create cache and journal directories
-        let cache_dir = dir_path.join(".cache");
-        fs::create_dir_all(&cache_dir)?;
-
-        let journal_dir = dir_path.join(".journal");
-        fs::create_dir_all(&journal_dir)?;
-
-        let result = build(false, dir_path, &cache_dir, &journal_dir, false, false)?;
+        let result = build(false, dir_path, false, false)?;
 
         // Verify result
         assert!(result.status.success());
@@ -309,18 +226,9 @@ mod tests {
 
         // Create test files
         create_test_file(dir_path, "test.txt", b"test content")?;
-
-        // Create expected output file
         create_test_file(dir_path, "test.out", b"test output")?;
 
-        // Create cache and journal directories
-        let cache_dir = dir_path.join(".cache");
-        fs::create_dir_all(&cache_dir)?;
-
-        let journal_dir = dir_path.join(".journal");
-        fs::create_dir_all(&journal_dir)?;
-
-        let result = test("*", dir_path, &cache_dir, &journal_dir, false, false)?;
+        let result = test("*", dir_path, false, false)?;
 
         // Verify result
         assert!(result.status.success());

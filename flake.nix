@@ -1,6 +1,5 @@
 {
-  description =
-    "A unified CLI tool that brings Cargo's developer experience to Node.js";
+  description = "A simple build tool for Node.js projects.";
 
   inputs = {
     nixpkgs.url =
@@ -34,6 +33,7 @@
             pkgs.cargo-release
             pkgs.cargo-edit
             pkgs.cargo-dist
+            pkgs.git
           ];
           shellHook = ''
             export RUST_BACKTRACE=1

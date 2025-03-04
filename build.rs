@@ -10,7 +10,7 @@ fn main() {
 /// if that's enabled, then this will let cargonode use C:\... style paths that
 /// are longer than 260 characters.
 fn set_windows_exe_options() {
-    static MANIFEST: &str = "assets/windows/Manifest.xml";
+    static MANIFEST: &str = "windows/Manifest.xml";
 
     let Ok(target_os) = std::env::var("CARGO_CFG_TARGET_OS") else {
         return;

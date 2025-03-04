@@ -1,13 +1,10 @@
 use std::{env, path::Path};
 
 use crate::{
-    progress,
+    config, progress,
     template::{self, ProjectType},
-    utils::{self, VcsConfig, VcsType},
-    Result,
+    utils, Result,
 };
-
-use super::config;
 
 fn create_package_config(config: &config::ProjectConfig) -> template::PackageConfig {
     template::PackageConfig {
@@ -21,17 +18,17 @@ fn create_package_config(config: &config::ProjectConfig) -> template::PackageCon
     }
 }
 
-fn should_use_vcs(vcs_config: &Option<VcsConfig>) -> bool {
+fn should_use_vcs(vcs_config: &Option<utils::VcsConfig>) -> bool {
     vcs_config
         .as_ref()
-        .map(|c| c.vcs_type == VcsType::Git)
+        .map(|c| c.vcs == utils::Vcs::Git)
         .unwrap_or(true)
 }
 
 pub fn create_project(
     path: &Path,
     lib: bool,
-    vcs_config: Option<VcsConfig>,
+    vcs_config: Option<utils::VcsConfig>,
     is_new: bool,
 ) -> Result<()> {
     let has_vcs = should_use_vcs(&vcs_config);
@@ -76,11 +73,15 @@ pub fn create_project(
     Ok(())
 }
 
-pub fn create_new_project(path: &Path, lib: bool, vcs_config: Option<VcsConfig>) -> Result<()> {
+pub fn create_new_project(
+    path: &Path,
+    lib: bool,
+    vcs_config: Option<utils::VcsConfig>,
+) -> Result<()> {
     create_project(path, lib, vcs_config, true)
 }
 
-pub fn init_project(lib: bool, vcs_config: Option<VcsConfig>) -> Result<()> {
+pub fn init_project(lib: bool, vcs_config: Option<utils::VcsConfig>) -> Result<()> {
     let current_dir = env::current_dir()?;
     create_project(&current_dir, lib, vcs_config, false)
 }
@@ -94,9 +95,9 @@ mod tests {
     #[test]
     fn test_should_use_vcs() {
         assert!(should_use_vcs(&None));
-        assert!(should_use_vcs(&Some(VcsConfig::default())));
-        assert!(!should_use_vcs(&Some(VcsConfig {
-            vcs_type: VcsType::None,
+        assert!(should_use_vcs(&Some(utils::VcsConfig::default())));
+        assert!(!should_use_vcs(&Some(utils::VcsConfig {
+            vcs: utils::Vcs::None,
             ..Default::default()
         })));
     }
@@ -123,8 +124,8 @@ mod tests {
         let path = temp_dir.path().join("new-project");
 
         // Create project with VCS disabled
-        let vcs_config = Some(VcsConfig {
-            vcs_type: VcsType::None,
+        let vcs_config = Some(utils::VcsConfig {
+            vcs: utils::Vcs::None,
             ignore_content: String::new(),
         });
 
@@ -141,8 +142,8 @@ mod tests {
         std::fs::create_dir(&path).unwrap();
 
         // Create project with VCS disabled
-        let vcs_config = Some(VcsConfig {
-            vcs_type: VcsType::None,
+        let vcs_config = Some(utils::VcsConfig {
+            vcs: utils::Vcs::None,
             ignore_content: String::new(),
         });
 

@@ -9,7 +9,7 @@ categories = [
     "development-tools::build-utils"
 ]
 keywords = ["productivity", "developer-tools", "cross-platform"]
-description = "A unified CLI tool that brings Cargo's developer experience to Node.js"
+description = "A simple build tool for Node.js projects."
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/xosnrdev/cargonode"
 homepage = "https://github.com/xosnrdev/cargonode?tab=readme-ov-file#readme"
@@ -21,7 +21,6 @@ license = false
 eula = false
 
 [dependencies]
-chrono = "0.4.40"
 clap = { version = "4.5.31", features = ["derive"] }
 clap-cargo = "0.15.2"
 glob = "0.3.2"
