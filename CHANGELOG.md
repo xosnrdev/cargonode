@@ -7,6 +7,186 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+### Documentation
+
+- Update changelog ([`41024c2`](https://github.com/xosnrdev/cargonode/commit/41024c2ed4007173d0cd0b1fd765c0245f4ec56f))
+
+
+### Fixed
+
+- Changelog release version bug ([`ef873b9`](https://github.com/xosnrdev/cargonode/commit/ef873b95bb2f34662fa1362d958c646fecaa0cec))
+
+## [1.0.0] - 2025-03-04
+
+
+### Added
+
+- Add centralized error module with `anyhow` crate ([#27](https://github.com/xosnrdev/cargonode/issues/27)) ([`07af321`](https://github.com/xosnrdev/cargonode/commit/07af321cd476f5aae223302692675e4600ac124a))
+- Implement step execution with cycle detection ([`e4aa6c1`](https://github.com/xosnrdev/cargonode/commit/e4aa6c16184a89a5683087f53092ef85a2475cb4))
+- Add generic command execution and CLI support for run, check, build, and test commands ([#65](https://github.com/xosnrdev/cargonode/issues/65)) ([`c7df096`](https://github.com/xosnrdev/cargonode/commit/c7df096243ce78a5baefc9a4493e8cc011c436c4))
+- Add history and cache management commands ([`4780384`](https://github.com/xosnrdev/cargonode/commit/4780384057fd004e354bd47fb1ddff936da90d65))
+- Add output verification and error handling for command execution ([`74ba6e5`](https://github.com/xosnrdev/cargonode/commit/74ba6e520e2010aecea020eb754317d2b1cdd078))
+
+
+### Changed
+
+- Update README docs ([#35](https://github.com/xosnrdev/cargonode/issues/35)) ([`98a536e`](https://github.com/xosnrdev/cargonode/commit/98a536e4e1245607cc2506166840a94ad2836b44))
+- Simplify command and workflow execution handling ([#47](https://github.com/xosnrdev/cargonode/issues/47)) ([`73c4f05`](https://github.com/xosnrdev/cargonode/commit/73c4f05f105bcfe2c45d916ed8aa13f2f54c9977))
+- Simplify job and workflow execution by delegates argument passing directly ([`e6bda19`](https://github.com/xosnrdev/cargonode/commit/e6bda196a2c5adc2c7db440708ce91e6046dd6cb))
+- Make project functionality even better ([`0e942f2`](https://github.com/xosnrdev/cargonode/commit/0e942f223a949b5407e8265cb3626dcb6e73ebed))
+
+
+### Documentation
+
+- Revamp README with comprehensive project overview and usage guide ([`899e41c`](https://github.com/xosnrdev/cargonode/commit/899e41c626eb76eabacf3d122981fac4d2a02ab6))
+- Update README with development status and build instructions ([`2f94aca`](https://github.com/xosnrdev/cargonode/commit/2f94acadd9da4c811020daf36cd58e9e0992d2b0))
+- Update README with development status and build instructions ([`c1ac927`](https://github.com/xosnrdev/cargonode/commit/c1ac9273a37a5d1ad77a36204fd73ff9365b9926))
+- Update changelog ([#71](https://github.com/xosnrdev/cargonode/issues/71)) ([`4bcd492`](https://github.com/xosnrdev/cargonode/commit/4bcd4926c903fd2331a10a67e343a78906de5dc1))
+- Update changelog ([`ff81d33`](https://github.com/xosnrdev/cargonode/commit/ff81d338575bda09b2cbd6a3faefac011c55fe7e))
+- Update with detailed configuration protocol ([`5536e05`](https://github.com/xosnrdev/cargonode/commit/5536e057a0b9af299bd6a4914d08fbe4e9701b18))
+- Update changelog ([`552d83f`](https://github.com/xosnrdev/cargonode/commit/552d83f4cea96f721891c61533126beab4844fa5))
+- Improve installation instructions and formatting ([`58b2f1c`](https://github.com/xosnrdev/cargonode/commit/58b2f1c9879d9bea47dd6f174088314554b9e3d7))
+
+
+### Fixed
+
+- CI wasm32-wasip1 error ([#23](https://github.com/xosnrdev/cargonode/issues/23)) ([`782098c`](https://github.com/xosnrdev/cargonode/commit/782098cd0ab459ed5fe5f7b3689aff7df6cc82b8))
+- Message display abnormalities and formatting ([`9a8e2d3`](https://github.com/xosnrdev/cargonode/commit/9a8e2d3d94e84d75a307da1ca0773152b49af57b))
+- Make outputs optional and improve error handling ([#74](https://github.com/xosnrdev/cargonode/issues/74)) ([`829c415`](https://github.com/xosnrdev/cargonode/commit/829c4154611039f1f323fca50fa121df91ac1b02))
+
+
+### Miscellaneous Tasks
+
+- Resolves post release ([`32e0a5a`](https://github.com/xosnrdev/cargonode/commit/32e0a5ab2a640fc4a611ab3472ddaa5c497eafcd))
+- Bump the dev-deps group ([#22](https://github.com/xosnrdev/cargonode/issues/22)) ([`6382282`](https://github.com/xosnrdev/cargonode/commit/6382282b16a08ff38966f3ea3b1feb30c00afe1a))
+- Bump clap from 4.5.24 to 4.5.26 in the deps group ([#21](https://github.com/xosnrdev/cargonode/issues/21)) ([`4cd39c2`](https://github.com/xosnrdev/cargonode/commit/4cd39c2746da3031f3fab43bcc86fc55065bd3ac))
+- Bump the deps group with 3 updates ([#29](https://github.com/xosnrdev/cargonode/issues/29)) ([`588c98c`](https://github.com/xosnrdev/cargonode/commit/588c98c3a497bfb41eb02ea8e75b55bd861b4b61))
+- Bump the deps group across 1 directory with 2 updates ([#34](https://github.com/xosnrdev/cargonode/issues/34)) ([`86940b2`](https://github.com/xosnrdev/cargonode/commit/86940b2838d352945f495fffe1b11df8f0c9a6a3))
+- Bump serde_json from 1.0.137 to 1.0.138 in the deps group ([#40](https://github.com/xosnrdev/cargonode/issues/40)) ([`4181e08`](https://github.com/xosnrdev/cargonode/commit/4181e08340021d93e2c3f3ebc1011fa5293526cd))
+- Bump the dev-deps group ([#41](https://github.com/xosnrdev/cargonode/issues/41)) ([`ce728bc`](https://github.com/xosnrdev/cargonode/commit/ce728bcc045d86de82657b3d3c71357fd4c88fc7))
+- Bump tempfile from 3.15.0 to 3.16.0 in the deps group ([#44](https://github.com/xosnrdev/cargonode/issues/44)) ([`4021905`](https://github.com/xosnrdev/cargonode/commit/402190570d319e71d6d751b09845fe70011b9652))
+- Bump vitest from 2.1.8 to 3.0.4 in /assets/template ([#43](https://github.com/xosnrdev/cargonode/issues/43)) ([`fef584a`](https://github.com/xosnrdev/cargonode/commit/fef584a1aef4d0b9936e98bece70acd0c49abe67))
+- Bump @vitest/coverage-v8 in /assets/template ([#42](https://github.com/xosnrdev/cargonode/issues/42)) ([`03ed4a7`](https://github.com/xosnrdev/cargonode/commit/03ed4a798346405a1696f6f31911d63b4b6f7cd1))
+- Bump the dev-deps group ([#50](https://github.com/xosnrdev/cargonode/issues/50)) ([`cae1d74`](https://github.com/xosnrdev/cargonode/commit/cae1d74ed390c4a6d6e0459e405745e8fde87dd5))
+- Bump clap from 4.5.27 to 4.5.28 in the deps group ([#52](https://github.com/xosnrdev/cargonode/issues/52)) ([`16adb6f`](https://github.com/xosnrdev/cargonode/commit/16adb6f02c148ca40c0dd6cff50a00318b91572d))
+- Bump which from 7.0.1 to 7.0.2 in the deps group ([#53](https://github.com/xosnrdev/cargonode/issues/53)) ([`c0a88bc`](https://github.com/xosnrdev/cargonode/commit/c0a88bced41c8bcc80b8abbd141fbb4e7aa3ecd4))
+- Bump clap from 4.5.28 to 4.5.29 in the deps group ([#57](https://github.com/xosnrdev/cargonode/issues/57)) ([`27b8e09`](https://github.com/xosnrdev/cargonode/commit/27b8e091252618b373fd5bbe0df5b783ff65b758))
+- Prevent overwriting non-empty .gitignore and improve project structure creation ([#59](https://github.com/xosnrdev/cargonode/issues/59)) ([`6613c87`](https://github.com/xosnrdev/cargonode/commit/6613c8733a8ea53f37cc38cb384fc20b87a1ebc9))
+- Bump the deps group with 2 updates ([`6bef44b`](https://github.com/xosnrdev/cargonode/commit/6bef44b247a3eab37b366a2dbf814427ed13670c))
+- Bump the deps group with 2 updates ([#61](https://github.com/xosnrdev/cargonode/issues/61)) ([`9a836a6`](https://github.com/xosnrdev/cargonode/commit/9a836a602481a16a46747476299f093f1ee34b76))
+- Bump clap from 4.5.30 to 4.5.31 in the deps group ([`c552edc`](https://github.com/xosnrdev/cargonode/commit/c552edce02b3a3bf442214b46e223b64beb6899e))
+- Update git-cliff changelog template ([`1b2721f`](https://github.com/xosnrdev/cargonode/commit/1b2721f3bdeb6bb56bb9372313a2c1aa79105a57))
+- Bump version to 1.0.0 ([`62a7dc7`](https://github.com/xosnrdev/cargonode/commit/62a7dc7e5f11e5e876ccc2fb14dbd8eef981a2ce))
+
+
+### Refactor
+
+- Implement project handler and template embedding functionalities ([`71471af`](https://github.com/xosnrdev/cargonode/commit/71471afce570a0f7f2928803b3c1380944798ee3))
+- Cleanup redundant and obsolete implementations ([#38](https://github.com/xosnrdev/cargonode/issues/38)) ([`d45e58f`](https://github.com/xosnrdev/cargonode/commit/d45e58ffdc31a6cb08b6ac18760709b04133429a))
+- Extract dependency installation logic into separate function ([`6825937`](https://github.com/xosnrdev/cargonode/commit/68259379338d35285c47c3536c3330f6f2d34873))
+
+
+### Testing
+
+- Add comprehensive test suites and improve config handling ([#46](https://github.com/xosnrdev/cargonode/issues/46)) ([`686bcb9`](https://github.com/xosnrdev/cargonode/commit/686bcb9beaa20161533c8a96063fbecefc7be8bb))
+
+
+### Recfactor
+
+- Keep things in check ([#68](https://github.com/xosnrdev/cargonode/issues/68)) ([`a0156cb`](https://github.com/xosnrdev/cargonode/commit/a0156cb9b28a20292dd50f900c157f6d39a01cdf))
+
+## [0.1.3] - 2025-01-09
+
+
+### Added
+
+- Add Nix configuration for building cargonode ([`4c79687`](https://github.com/xosnrdev/cargonode/commit/4c79687b1d7faa757ccbdc896dc09bfece1517af))
+- 4c79687 follow up ([`26c74fd`](https://github.com/xosnrdev/cargonode/commit/26c74fd28fd71950d303fc52a4694d97a00ba712))
+- Add install script for cargonode with platform detection and installation process ([`4ab9bd3`](https://github.com/xosnrdev/cargonode/commit/4ab9bd303a8ff0c9d9ce1fb202217fbd9142de63))
+- Add GitHub Actions workflow for installation tests across multiple OS ([`b7ce3ec`](https://github.com/xosnrdev/cargonode/commit/b7ce3ecaa088518ef137dd243a0397bdc3c5d02b))
+- Enhance install_cargonode.sh with force option and checksum utility detection ([`86e585a`](https://github.com/xosnrdev/cargonode/commit/86e585a7922a13ff885a43431e7a6a19b08ce139))
+- Update README and assets for cargonode ([`1033869`](https://github.com/xosnrdev/cargonode/commit/1033869d0a97abe015f6f825a41e4a88af7c08ad))
+
+
+### Changed
+
+- Update changelog with patch information ([`735ef38`](https://github.com/xosnrdev/cargonode/commit/735ef3849da9dd0d0b0052d0ea8abf3d42070577))
+- Remove unused build and native build inputs ([`838751d`](https://github.com/xosnrdev/cargonode/commit/838751dd6f349871801d6d0b0107bc8f7c480888))
+- Use nixfmt ([`d9a91c2`](https://github.com/xosnrdev/cargonode/commit/d9a91c22d8ca3745db858ca7979ff8f301ffeb57))
+- Format with nixfmt-rfc-style ([`25f7014`](https://github.com/xosnrdev/cargonode/commit/25f7014b948e74fba1be6a05f09e6975a4d78bd1))
+- Streamline Nix configuration and add formatter ([`bbd2a5d`](https://github.com/xosnrdev/cargonode/commit/bbd2a5dc9b2dc98a93f5a8b4c15d59f8dc4fecdb))
+- Remove unnecessary documentation comments from source files ([`17261b1`](https://github.com/xosnrdev/cargonode/commit/17261b1bf98cdafb9d32b422e158dc53b5d0a227))
+- Drop once_cell's crate for std sync LazyLock ([`38e1c23`](https://github.com/xosnrdev/cargonode/commit/38e1c236942fc927b76ce3fc4c84c0f8befed91d))
+- Replace installation_tests.yml with test_install.yml for improved testing structure ([`9e59272`](https://github.com/xosnrdev/cargonode/commit/9e592721880a8b4ce8aa6e5dce1e98f04c81359c))
+- Enhance platform detection and mapping in install_cargonode.sh ([`3c58e0e`](https://github.com/xosnrdev/cargonode/commit/3c58e0efad7162f5c7ee1584aed0ad9823a87029))
+
+
+### Documentation
+
+- Add NixOS installation instructions for cargonode ([`24d3190`](https://github.com/xosnrdev/cargonode/commit/24d319087d81fbf86254096f858927154052b5e5))
+
+
+### Fixed
+
+- Update script path in installation tests to use relative path ([`3cfde37`](https://github.com/xosnrdev/cargonode/commit/3cfde37c2b139e4c6bed3d9aec4a18cc5426d00a))
+- Change shebang to bash and update BASE_URL construction in install_cargonode.sh ([`3cbc706`](https://github.com/xosnrdev/cargonode/commit/3cbc706361fece45f7f757391d24b8106f853adc))
+
+
+### Miscellaneous Tasks
+
+- Prepare for publish on nixpkgs ([`4cf2794`](https://github.com/xosnrdev/cargonode/commit/4cf279495175c762c1e68528301d239904d359d5))
+- Add package.nix ([`ce3b44a`](https://github.com/xosnrdev/cargonode/commit/ce3b44a2ad9e2c30b892efd8ff9eab246cadb0c7))
+- Remove unused build configuration from Cargo.toml ([`dceb58d`](https://github.com/xosnrdev/cargonode/commit/dceb58ded6ffaf0ea26ee0c47cd4e42f221b98ae))
+- Drop the shell script for nixfmt-rfc-style ([`9683192`](https://github.com/xosnrdev/cargonode/commit/968319250b69b0044e35e5b04c3d62538ff389a1))
+- Add FUNDING.yml to specify GitHub sponsorship details ([`a2b6919`](https://github.com/xosnrdev/cargonode/commit/a2b69192a3b5cef899ed3bdce6426c3c3b59f7be))
+- Add Dependabot configuration and security audit workflow ([`109d93e`](https://github.com/xosnrdev/cargonode/commit/109d93e32591ea347094b25db89aa4213cf1374a))
+- Add CODEOWNERS file to define repository ownership ([`e48f101`](https://github.com/xosnrdev/cargonode/commit/e48f101adf19f2d3fa3f8222411a3032beb2368a))
+- Add pull request template for improved contribution guidelines ([`ba8ba16`](https://github.com/xosnrdev/cargonode/commit/ba8ba162403315e3b38146c6e2bc5bfc18c33737))
+- Update CI and release workflow names with emojis for better visibility ([`c462643`](https://github.com/xosnrdev/cargonode/commit/c46264314af41bbdf5f0bc25f870858065bb60ec))
+- Update installation tests workflow triggers and add workflow dispatch ([`07a9e0b`](https://github.com/xosnrdev/cargonode/commit/07a9e0b0a5db47621d7b9daab409ea5d13048914))
+- Bump the deps group with 3 updates ([`eabc573`](https://github.com/xosnrdev/cargonode/commit/eabc5734ed793feee56c724b1804c49c3c9f5bf1))
+- Bump the dev-deps group ([`378fed3`](https://github.com/xosnrdev/cargonode/commit/378fed3adddf7b24dd909d02e8929b67c4078b73))
+- Bump serde from 1.0.216 to 1.0.217 in the deps group ([#15](https://github.com/xosnrdev/cargonode/issues/15)) ([`6bfeaac`](https://github.com/xosnrdev/cargonode/commit/6bfeaac924e794086077c57a577e5b356fcabeac))
+- Bump tempfile from 3.14.0 to 3.15.0 in the deps group ([#16](https://github.com/xosnrdev/cargonode/issues/16)) ([`6852a5e`](https://github.com/xosnrdev/cargonode/commit/6852a5e1517336b255470d37d04e0594d1acd9fb))
+- Bump release-it in /templates/node_typescript ([#17](https://github.com/xosnrdev/cargonode/issues/17)) ([`ea8eb47`](https://github.com/xosnrdev/cargonode/commit/ea8eb4787f630ee78e160e6eebbba8d290252e89))
+- Bump clap from 4.5.23 to 4.5.24 in the deps group ([#18](https://github.com/xosnrdev/cargonode/issues/18)) ([`bb76074`](https://github.com/xosnrdev/cargonode/commit/bb76074438c98542a6bf96462f0bb7e4d18a3e1e))
+- Bump version to 0.1.3 ([`0122f75`](https://github.com/xosnrdev/cargonode/commit/0122f752f65e369fd85dabf83f59ad58859679eb))
+
+## [0.1.2] - 2024-12-02
+
+
+### Changed
+
+- Update Rust version in CI workflow to stable ([`2dee9c3`](https://github.com/xosnrdev/cargonode/commit/2dee9c3d2fa495002da684484c17197615f05e43))
+- Update changelog format for version 0.1.1 ([`56b5c41`](https://github.com/xosnrdev/cargonode/commit/56b5c41761abae195f651124369ffab1757edc47))
+- Update how to install brew ([`eade76d`](https://github.com/xosnrdev/cargonode/commit/eade76db8a5e4839a485160fed85e489d199f213))
+
+
+### Fixed
+
+- Delegate help to external tools ([#2](https://github.com/xosnrdev/cargonode/issues/2)) ([`ddbd35a`](https://github.com/xosnrdev/cargonode/commit/ddbd35a402c3b906aea95c060ae37fcfffceb777))
+
+
+### Miscellaneous Tasks
+
+- Release cargonode version 0.1.2 ([`5392474`](https://github.com/xosnrdev/cargonode/commit/5392474ed3bbf323c1d2918c206b585cb812e3e0))
+
+## [0.1.1] - 2024-12-01
+
+
+### Changed
+
+- Update formula ([`ae1281b`](https://github.com/xosnrdev/cargonode/commit/ae1281bc217d9d266056d6fee8669887864fd031))
+- Update Cargonode formula ([`56f4eb3`](https://github.com/xosnrdev/cargonode/commit/56f4eb3e49f1e8eee883bdc005979df2231fb901))
+
+
+### Miscellaneous Tasks
+
+- Release cargonode version 0.1.1 ([`51f48f9`](https://github.com/xosnrdev/cargonode/commit/51f48f9330ed3cfec4c8f974b41934f66cda5d0e))
+
+## [0.1.0] - 2024-12-01
+
+
 ### Added
 
 - Add create new package command ([`18a2980`](https://github.com/xosnrdev/cargonode/commit/18a29801c417c13c6b965d70515090d5e9e63984))
@@ -26,17 +206,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Homebrew formula for Cargo Node binary ([`8499dac`](https://github.com/xosnrdev/cargonode/commit/8499dac0e6b150b604fc89167832ffb638f7ad3e))
 - Add project changelog ([`12430fc`](https://github.com/xosnrdev/cargonode/commit/12430fcf3303d241b8066c2246a6de4d87b735ea))
 - Add script to generate SHA256 hashes for releases ([`a235d3a`](https://github.com/xosnrdev/cargonode/commit/a235d3a49cee386c5e950b033571c5314e83fe07))
-- Add Nix configuration for building cargonode ([`4c79687`](https://github.com/xosnrdev/cargonode/commit/4c79687b1d7faa757ccbdc896dc09bfece1517af))
-- 4c79687 follow up ([`26c74fd`](https://github.com/xosnrdev/cargonode/commit/26c74fd28fd71950d303fc52a4694d97a00ba712))
-- Add install script for cargonode with platform detection and installation process ([`4ab9bd3`](https://github.com/xosnrdev/cargonode/commit/4ab9bd303a8ff0c9d9ce1fb202217fbd9142de63))
-- Add GitHub Actions workflow for installation tests across multiple OS ([`b7ce3ec`](https://github.com/xosnrdev/cargonode/commit/b7ce3ecaa088518ef137dd243a0397bdc3c5d02b))
-- Enhance install_cargonode.sh with force option and checksum utility detection ([`86e585a`](https://github.com/xosnrdev/cargonode/commit/86e585a7922a13ff885a43431e7a6a19b08ce139))
-- Update README and assets for cargonode ([`1033869`](https://github.com/xosnrdev/cargonode/commit/1033869d0a97abe015f6f825a41e4a88af7c08ad))
-- Add centralized error module with `anyhow` crate ([#27](https://github.com/xosnrdev/cargonode/issues/27)) ([`07af321`](https://github.com/xosnrdev/cargonode/commit/07af321cd476f5aae223302692675e4600ac124a))
-- Implement step execution with cycle detection ([`e4aa6c1`](https://github.com/xosnrdev/cargonode/commit/e4aa6c16184a89a5683087f53092ef85a2475cb4))
-- Add generic command execution and CLI support for run, check, build, and test commands ([#65](https://github.com/xosnrdev/cargonode/issues/65)) ([`c7df096`](https://github.com/xosnrdev/cargonode/commit/c7df096243ce78a5baefc9a4493e8cc011c436c4))
-- Add history and cache management commands ([`4780384`](https://github.com/xosnrdev/cargonode/commit/4780384057fd004e354bd47fb1ddff936da90d65))
-- Add output verification and error handling for command execution ([`74ba6e5`](https://github.com/xosnrdev/cargonode/commit/74ba6e520e2010aecea020eb754317d2b1cdd078))
 
 
 ### Changed
@@ -86,24 +255,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update CLI tool description and features ([`a339598`](https://github.com/xosnrdev/cargonode/commit/a339598a42bbd44ab160ead6076e8a78952c3998))
 - Update CLI tool description and features ([`62c413b`](https://github.com/xosnrdev/cargonode/commit/62c413b54cba2d89225a9a2c557bebeace2ff4e7))
 - Update keywords and description ([`ea2a624`](https://github.com/xosnrdev/cargonode/commit/ea2a624d7f5faeed259a6c0539a17967811b7825))
-- Update formula ([`ae1281b`](https://github.com/xosnrdev/cargonode/commit/ae1281bc217d9d266056d6fee8669887864fd031))
-- Update Cargonode formula ([`56f4eb3`](https://github.com/xosnrdev/cargonode/commit/56f4eb3e49f1e8eee883bdc005979df2231fb901))
-- Update Rust version in CI workflow to stable ([`2dee9c3`](https://github.com/xosnrdev/cargonode/commit/2dee9c3d2fa495002da684484c17197615f05e43))
-- Update changelog format for version 0.1.1 ([`56b5c41`](https://github.com/xosnrdev/cargonode/commit/56b5c41761abae195f651124369ffab1757edc47))
-- Update how to install brew ([`eade76d`](https://github.com/xosnrdev/cargonode/commit/eade76db8a5e4839a485160fed85e489d199f213))
-- Update changelog with patch information ([`735ef38`](https://github.com/xosnrdev/cargonode/commit/735ef3849da9dd0d0b0052d0ea8abf3d42070577))
-- Remove unused build and native build inputs ([`838751d`](https://github.com/xosnrdev/cargonode/commit/838751dd6f349871801d6d0b0107bc8f7c480888))
-- Use nixfmt ([`d9a91c2`](https://github.com/xosnrdev/cargonode/commit/d9a91c22d8ca3745db858ca7979ff8f301ffeb57))
-- Format with nixfmt-rfc-style ([`25f7014`](https://github.com/xosnrdev/cargonode/commit/25f7014b948e74fba1be6a05f09e6975a4d78bd1))
-- Streamline Nix configuration and add formatter ([`bbd2a5d`](https://github.com/xosnrdev/cargonode/commit/bbd2a5dc9b2dc98a93f5a8b4c15d59f8dc4fecdb))
-- Remove unnecessary documentation comments from source files ([`17261b1`](https://github.com/xosnrdev/cargonode/commit/17261b1bf98cdafb9d32b422e158dc53b5d0a227))
-- Drop once_cell's crate for std sync LazyLock ([`38e1c23`](https://github.com/xosnrdev/cargonode/commit/38e1c236942fc927b76ce3fc4c84c0f8befed91d))
-- Replace installation_tests.yml with test_install.yml for improved testing structure ([`9e59272`](https://github.com/xosnrdev/cargonode/commit/9e592721880a8b4ce8aa6e5dce1e98f04c81359c))
-- Enhance platform detection and mapping in install_cargonode.sh ([`3c58e0e`](https://github.com/xosnrdev/cargonode/commit/3c58e0efad7162f5c7ee1584aed0ad9823a87029))
-- Update README docs ([#35](https://github.com/xosnrdev/cargonode/issues/35)) ([`98a536e`](https://github.com/xosnrdev/cargonode/commit/98a536e4e1245607cc2506166840a94ad2836b44))
-- Simplify command and workflow execution handling ([#47](https://github.com/xosnrdev/cargonode/issues/47)) ([`73c4f05`](https://github.com/xosnrdev/cargonode/commit/73c4f05f105bcfe2c45d916ed8aa13f2f54c9977))
-- Simplify job and workflow execution by delegates argument passing directly ([`e6bda19`](https://github.com/xosnrdev/cargonode/commit/e6bda196a2c5adc2c7db440708ce91e6046dd6cb))
-- Make project functionality even better ([`0e942f2`](https://github.com/xosnrdev/cargonode/commit/0e942f223a949b5407e8265cb3626dcb6e73ebed))
 
 
 ### Documentation
@@ -111,15 +262,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add cargonode logo ([`23636c8`](https://github.com/xosnrdev/cargonode/commit/23636c8ff955e11c5592a1b076d6a59a6bdb6113))
 - Update README.md ([`af45de7`](https://github.com/xosnrdev/cargonode/commit/af45de722cfdbebac1d3fd1887adecbf765506d6))
 - Added rust doc ([`76c79e8`](https://github.com/xosnrdev/cargonode/commit/76c79e8796cd5ce48152b2a58db2e8023deeb101))
-- Add NixOS installation instructions for cargonode ([`24d3190`](https://github.com/xosnrdev/cargonode/commit/24d319087d81fbf86254096f858927154052b5e5))
-- Revamp README with comprehensive project overview and usage guide ([`899e41c`](https://github.com/xosnrdev/cargonode/commit/899e41c626eb76eabacf3d122981fac4d2a02ab6))
-- Update README with development status and build instructions ([`2f94aca`](https://github.com/xosnrdev/cargonode/commit/2f94acadd9da4c811020daf36cd58e9e0992d2b0))
-- Update README with development status and build instructions ([`c1ac927`](https://github.com/xosnrdev/cargonode/commit/c1ac9273a37a5d1ad77a36204fd73ff9365b9926))
-- Update changelog ([#71](https://github.com/xosnrdev/cargonode/issues/71)) ([`4bcd492`](https://github.com/xosnrdev/cargonode/commit/4bcd4926c903fd2331a10a67e343a78906de5dc1))
-- Update changelog ([`ff81d33`](https://github.com/xosnrdev/cargonode/commit/ff81d338575bda09b2cbd6a3faefac011c55fe7e))
-- Update with detailed configuration protocol ([`5536e05`](https://github.com/xosnrdev/cargonode/commit/5536e057a0b9af299bd6a4914d08fbe4e9701b18))
-- Update changelog ([`552d83f`](https://github.com/xosnrdev/cargonode/commit/552d83f4cea96f721891c61533126beab4844fa5))
-- Improve installation instructions and formatting ([`58b2f1c`](https://github.com/xosnrdev/cargonode/commit/58b2f1c9879d9bea47dd6f174088314554b9e3d7))
 
 
 ### Fixed
@@ -135,12 +277,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resolve "No such file or directory" error in GitHub Actions ([`7ddc7c6`](https://github.com/xosnrdev/cargonode/commit/7ddc7c65c889b30a995a194125d7898c736a7c88))
 - Moves the leading v from $VERSION if it exists ([`8c0b3dd`](https://github.com/xosnrdev/cargonode/commit/8c0b3ddfe6188ecbd894661b5bc2ccc35a27a4d5))
 - Bright as the sun ([`1633cce`](https://github.com/xosnrdev/cargonode/commit/1633cce25e75d8a72ffcba1e360a82ed826c05b6))
-- Delegate help to external tools ([#2](https://github.com/xosnrdev/cargonode/issues/2)) ([`ddbd35a`](https://github.com/xosnrdev/cargonode/commit/ddbd35a402c3b906aea95c060ae37fcfffceb777))
-- Update script path in installation tests to use relative path ([`3cfde37`](https://github.com/xosnrdev/cargonode/commit/3cfde37c2b139e4c6bed3d9aec4a18cc5426d00a))
-- Change shebang to bash and update BASE_URL construction in install_cargonode.sh ([`3cbc706`](https://github.com/xosnrdev/cargonode/commit/3cbc706361fece45f7f757391d24b8106f853adc))
-- CI wasm32-wasip1 error ([#23](https://github.com/xosnrdev/cargonode/issues/23)) ([`782098c`](https://github.com/xosnrdev/cargonode/commit/782098cd0ab459ed5fe5f7b3689aff7df6cc82b8))
-- Message display abnormalities and formatting ([`9a8e2d3`](https://github.com/xosnrdev/cargonode/commit/9a8e2d3d94e84d75a307da1ca0773152b49af57b))
-- Make outputs optional and improve error handling ([#74](https://github.com/xosnrdev/cargonode/issues/74)) ([`829c415`](https://github.com/xosnrdev/cargonode/commit/829c4154611039f1f323fca50fa121df91ac1b02))
 
 
 ### Miscellaneous Tasks
@@ -163,45 +299,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prepare homebrew tap ([`bcb2077`](https://github.com/xosnrdev/cargonode/commit/bcb2077fd4677e120ca595710b5ecf43ee7d92f0))
 - Symbolic link ([`e99ec3a`](https://github.com/xosnrdev/cargonode/commit/e99ec3ac1200717c83095f6c117a0f6bcc92c929))
 - Fix symbolic linking issue ([`cb02854`](https://github.com/xosnrdev/cargonode/commit/cb02854058c7b7c7a7937df44ba85215bcb7579c))
-- Release cargonode version 0.1.1 ([`51f48f9`](https://github.com/xosnrdev/cargonode/commit/51f48f9330ed3cfec4c8f974b41934f66cda5d0e))
-- Release cargonode version 0.1.2 ([`5392474`](https://github.com/xosnrdev/cargonode/commit/5392474ed3bbf323c1d2918c206b585cb812e3e0))
-- Prepare for publish on nixpkgs ([`4cf2794`](https://github.com/xosnrdev/cargonode/commit/4cf279495175c762c1e68528301d239904d359d5))
-- Add package.nix ([`ce3b44a`](https://github.com/xosnrdev/cargonode/commit/ce3b44a2ad9e2c30b892efd8ff9eab246cadb0c7))
-- Remove unused build configuration from Cargo.toml ([`dceb58d`](https://github.com/xosnrdev/cargonode/commit/dceb58ded6ffaf0ea26ee0c47cd4e42f221b98ae))
-- Drop the shell script for nixfmt-rfc-style ([`9683192`](https://github.com/xosnrdev/cargonode/commit/968319250b69b0044e35e5b04c3d62538ff389a1))
-- Add FUNDING.yml to specify GitHub sponsorship details ([`a2b6919`](https://github.com/xosnrdev/cargonode/commit/a2b69192a3b5cef899ed3bdce6426c3c3b59f7be))
-- Add Dependabot configuration and security audit workflow ([`109d93e`](https://github.com/xosnrdev/cargonode/commit/109d93e32591ea347094b25db89aa4213cf1374a))
-- Add CODEOWNERS file to define repository ownership ([`e48f101`](https://github.com/xosnrdev/cargonode/commit/e48f101adf19f2d3fa3f8222411a3032beb2368a))
-- Add pull request template for improved contribution guidelines ([`ba8ba16`](https://github.com/xosnrdev/cargonode/commit/ba8ba162403315e3b38146c6e2bc5bfc18c33737))
-- Update CI and release workflow names with emojis for better visibility ([`c462643`](https://github.com/xosnrdev/cargonode/commit/c46264314af41bbdf5f0bc25f870858065bb60ec))
-- Update installation tests workflow triggers and add workflow dispatch ([`07a9e0b`](https://github.com/xosnrdev/cargonode/commit/07a9e0b0a5db47621d7b9daab409ea5d13048914))
-- Bump the deps group with 3 updates ([`eabc573`](https://github.com/xosnrdev/cargonode/commit/eabc5734ed793feee56c724b1804c49c3c9f5bf1))
-- Bump the dev-deps group ([`378fed3`](https://github.com/xosnrdev/cargonode/commit/378fed3adddf7b24dd909d02e8929b67c4078b73))
-- Bump serde from 1.0.216 to 1.0.217 in the deps group ([#15](https://github.com/xosnrdev/cargonode/issues/15)) ([`6bfeaac`](https://github.com/xosnrdev/cargonode/commit/6bfeaac924e794086077c57a577e5b356fcabeac))
-- Bump tempfile from 3.14.0 to 3.15.0 in the deps group ([#16](https://github.com/xosnrdev/cargonode/issues/16)) ([`6852a5e`](https://github.com/xosnrdev/cargonode/commit/6852a5e1517336b255470d37d04e0594d1acd9fb))
-- Bump release-it in /templates/node_typescript ([#17](https://github.com/xosnrdev/cargonode/issues/17)) ([`ea8eb47`](https://github.com/xosnrdev/cargonode/commit/ea8eb4787f630ee78e160e6eebbba8d290252e89))
-- Bump clap from 4.5.23 to 4.5.24 in the deps group ([#18](https://github.com/xosnrdev/cargonode/issues/18)) ([`bb76074`](https://github.com/xosnrdev/cargonode/commit/bb76074438c98542a6bf96462f0bb7e4d18a3e1e))
-- Bump version to 0.1.3 ([`0122f75`](https://github.com/xosnrdev/cargonode/commit/0122f752f65e369fd85dabf83f59ad58859679eb))
-- Resolves post release ([`32e0a5a`](https://github.com/xosnrdev/cargonode/commit/32e0a5ab2a640fc4a611ab3472ddaa5c497eafcd))
-- Bump the dev-deps group ([#22](https://github.com/xosnrdev/cargonode/issues/22)) ([`6382282`](https://github.com/xosnrdev/cargonode/commit/6382282b16a08ff38966f3ea3b1feb30c00afe1a))
-- Bump clap from 4.5.24 to 4.5.26 in the deps group ([#21](https://github.com/xosnrdev/cargonode/issues/21)) ([`4cd39c2`](https://github.com/xosnrdev/cargonode/commit/4cd39c2746da3031f3fab43bcc86fc55065bd3ac))
-- Bump the deps group with 3 updates ([#29](https://github.com/xosnrdev/cargonode/issues/29)) ([`588c98c`](https://github.com/xosnrdev/cargonode/commit/588c98c3a497bfb41eb02ea8e75b55bd861b4b61))
-- Bump the deps group across 1 directory with 2 updates ([#34](https://github.com/xosnrdev/cargonode/issues/34)) ([`86940b2`](https://github.com/xosnrdev/cargonode/commit/86940b2838d352945f495fffe1b11df8f0c9a6a3))
-- Bump serde_json from 1.0.137 to 1.0.138 in the deps group ([#40](https://github.com/xosnrdev/cargonode/issues/40)) ([`4181e08`](https://github.com/xosnrdev/cargonode/commit/4181e08340021d93e2c3f3ebc1011fa5293526cd))
-- Bump the dev-deps group ([#41](https://github.com/xosnrdev/cargonode/issues/41)) ([`ce728bc`](https://github.com/xosnrdev/cargonode/commit/ce728bcc045d86de82657b3d3c71357fd4c88fc7))
-- Bump tempfile from 3.15.0 to 3.16.0 in the deps group ([#44](https://github.com/xosnrdev/cargonode/issues/44)) ([`4021905`](https://github.com/xosnrdev/cargonode/commit/402190570d319e71d6d751b09845fe70011b9652))
-- Bump vitest from 2.1.8 to 3.0.4 in /assets/template ([#43](https://github.com/xosnrdev/cargonode/issues/43)) ([`fef584a`](https://github.com/xosnrdev/cargonode/commit/fef584a1aef4d0b9936e98bece70acd0c49abe67))
-- Bump @vitest/coverage-v8 in /assets/template ([#42](https://github.com/xosnrdev/cargonode/issues/42)) ([`03ed4a7`](https://github.com/xosnrdev/cargonode/commit/03ed4a798346405a1696f6f31911d63b4b6f7cd1))
-- Bump the dev-deps group ([#50](https://github.com/xosnrdev/cargonode/issues/50)) ([`cae1d74`](https://github.com/xosnrdev/cargonode/commit/cae1d74ed390c4a6d6e0459e405745e8fde87dd5))
-- Bump clap from 4.5.27 to 4.5.28 in the deps group ([#52](https://github.com/xosnrdev/cargonode/issues/52)) ([`16adb6f`](https://github.com/xosnrdev/cargonode/commit/16adb6f02c148ca40c0dd6cff50a00318b91572d))
-- Bump which from 7.0.1 to 7.0.2 in the deps group ([#53](https://github.com/xosnrdev/cargonode/issues/53)) ([`c0a88bc`](https://github.com/xosnrdev/cargonode/commit/c0a88bced41c8bcc80b8abbd141fbb4e7aa3ecd4))
-- Bump clap from 4.5.28 to 4.5.29 in the deps group ([#57](https://github.com/xosnrdev/cargonode/issues/57)) ([`27b8e09`](https://github.com/xosnrdev/cargonode/commit/27b8e091252618b373fd5bbe0df5b783ff65b758))
-- Prevent overwriting non-empty .gitignore and improve project structure creation ([#59](https://github.com/xosnrdev/cargonode/issues/59)) ([`6613c87`](https://github.com/xosnrdev/cargonode/commit/6613c8733a8ea53f37cc38cb384fc20b87a1ebc9))
-- Bump the deps group with 2 updates ([`6bef44b`](https://github.com/xosnrdev/cargonode/commit/6bef44b247a3eab37b366a2dbf814427ed13670c))
-- Bump the deps group with 2 updates ([#61](https://github.com/xosnrdev/cargonode/issues/61)) ([`9a836a6`](https://github.com/xosnrdev/cargonode/commit/9a836a602481a16a46747476299f093f1ee34b76))
-- Bump clap from 4.5.30 to 4.5.31 in the deps group ([`c552edc`](https://github.com/xosnrdev/cargonode/commit/c552edce02b3a3bf442214b46e223b64beb6899e))
-- Update git-cliff changelog template ([`1b2721f`](https://github.com/xosnrdev/cargonode/commit/1b2721f3bdeb6bb56bb9372313a2c1aa79105a57))
-- Bump version to 1.0.0 ([`62a7dc7`](https://github.com/xosnrdev/cargonode/commit/62a7dc7e5f11e5e876ccc2fb14dbd8eef981a2ce))
 
 
 ### Refactor
@@ -217,22 +314,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use tokio::process::Command for async support ([`352ab14`](https://github.com/xosnrdev/cargonode/commit/352ab14192d0bc2e2dce3bf0f33e5c2159ce7f55))
 - Revamping modules ([`2f9f18f`](https://github.com/xosnrdev/cargonode/commit/2f9f18ff1b1f4cdc0e577cf9f9f3af1ce00bc733))
 - Should execute synchronously no async deadlocks ([`a0e2152`](https://github.com/xosnrdev/cargonode/commit/a0e2152fe65f3d83bfe32ea98f6bc6c62e533150))
-- Implement project handler and template embedding functionalities ([`71471af`](https://github.com/xosnrdev/cargonode/commit/71471afce570a0f7f2928803b3c1380944798ee3))
-- Cleanup redundant and obsolete implementations ([#38](https://github.com/xosnrdev/cargonode/issues/38)) ([`d45e58f`](https://github.com/xosnrdev/cargonode/commit/d45e58ffdc31a6cb08b6ac18760709b04133429a))
-- Extract dependency installation logic into separate function ([`6825937`](https://github.com/xosnrdev/cargonode/commit/68259379338d35285c47c3536c3330f6f2d34873))
-
-
-### Testing
-
-- Add comprehensive test suites and improve config handling ([#46](https://github.com/xosnrdev/cargonode/issues/46)) ([`686bcb9`](https://github.com/xosnrdev/cargonode/commit/686bcb9beaa20161533c8a96063fbecefc7be8bb))
 
 
 ### Ci
 
 - Add GitHub Actions CI workflow ([`3257dd6`](https://github.com/xosnrdev/cargonode/commit/3257dd6c23a8efb38ef47c672bb24379d22e6ecb))
-
-
-### Recfactor
-
-- Keep things in check ([#68](https://github.com/xosnrdev/cargonode/issues/68)) ([`a0156cb`](https://github.com/xosnrdev/cargonode/commit/a0156cb9b28a20292dd50f900c157f6d39a01cdf))
 
