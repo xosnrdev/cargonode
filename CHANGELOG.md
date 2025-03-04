@@ -116,6 +116,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update README with development status and build instructions ([`2f94aca`](https://github.com/xosnrdev/cargonode/commit/2f94acadd9da4c811020daf36cd58e9e0992d2b0))
 - Update README with development status and build instructions ([`c1ac927`](https://github.com/xosnrdev/cargonode/commit/c1ac9273a37a5d1ad77a36204fd73ff9365b9926))
 - Update changelog ([#71](https://github.com/xosnrdev/cargonode/issues/71)) ([`4bcd492`](https://github.com/xosnrdev/cargonode/commit/4bcd4926c903fd2331a10a67e343a78906de5dc1))
+- Update changelog ([`ff81d33`](https://github.com/xosnrdev/cargonode/commit/ff81d338575bda09b2cbd6a3faefac011c55fe7e))
+- Update with detailed configuration protocol ([`5536e05`](https://github.com/xosnrdev/cargonode/commit/5536e057a0b9af299bd6a4914d08fbe4e9701b18))
 
 
 ### Fixed
@@ -136,6 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change shebang to bash and update BASE_URL construction in install_cargonode.sh ([`3cbc706`](https://github.com/xosnrdev/cargonode/commit/3cbc706361fece45f7f757391d24b8106f853adc))
 - CI wasm32-wasip1 error ([#23](https://github.com/xosnrdev/cargonode/issues/23)) ([`782098c`](https://github.com/xosnrdev/cargonode/commit/782098cd0ab459ed5fe5f7b3689aff7df6cc82b8))
 - Message display abnormalities and formatting ([`9a8e2d3`](https://github.com/xosnrdev/cargonode/commit/9a8e2d3d94e84d75a307da1ca0773152b49af57b))
+- Make outputs optional and improve error handling ([#74](https://github.com/xosnrdev/cargonode/issues/74)) ([`829c415`](https://github.com/xosnrdev/cargonode/commit/829c4154611039f1f323fca50fa121df91ac1b02))
 
 
 ### Miscellaneous Tasks
