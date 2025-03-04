@@ -118,6 +118,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update changelog ([#71](https://github.com/xosnrdev/cargonode/issues/71)) ([`4bcd492`](https://github.com/xosnrdev/cargonode/commit/4bcd4926c903fd2331a10a67e343a78906de5dc1))
 - Update changelog ([`ff81d33`](https://github.com/xosnrdev/cargonode/commit/ff81d338575bda09b2cbd6a3faefac011c55fe7e))
 - Update with detailed configuration protocol ([`5536e05`](https://github.com/xosnrdev/cargonode/commit/5536e057a0b9af299bd6a4914d08fbe4e9701b18))
+- Update changelog ([`552d83f`](https://github.com/xosnrdev/cargonode/commit/552d83f4cea96f721891c61533126beab4844fa5))
+- Improve installation instructions and formatting ([`58b2f1c`](https://github.com/xosnrdev/cargonode/commit/58b2f1c9879d9bea47dd6f174088314554b9e3d7))
 
 
 ### Fixed
@@ -199,6 +201,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump the deps group with 2 updates ([#61](https://github.com/xosnrdev/cargonode/issues/61)) ([`9a836a6`](https://github.com/xosnrdev/cargonode/commit/9a836a602481a16a46747476299f093f1ee34b76))
 - Bump clap from 4.5.30 to 4.5.31 in the deps group ([`c552edc`](https://github.com/xosnrdev/cargonode/commit/c552edce02b3a3bf442214b46e223b64beb6899e))
 - Update git-cliff changelog template ([`1b2721f`](https://github.com/xosnrdev/cargonode/commit/1b2721f3bdeb6bb56bb9372313a2c1aa79105a57))
+- Bump version to 1.0.0 ([`62a7dc7`](https://github.com/xosnrdev/cargonode/commit/62a7dc7e5f11e5e876ccc2fb14dbd8eef981a2ce))
 
 
 ### Refactor
