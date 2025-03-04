@@ -80,17 +80,10 @@ pub struct ToolConfig {
     #[serde(default)]
     pub inputs: Vec<String>,
 
-    /// Output file patterns
+    /// Output file patterns (optional)
+    /// Only required for commands that generate files (e.g., build)
     #[serde(default)]
     pub outputs: Vec<String>,
-
-    /// Whether to cache the results
-    #[serde(default = "default_cache")]
-    pub cache: bool,
-}
-
-fn default_cache() -> bool {
-    true
 }
 
 /// Configuration for cargonode
@@ -186,13 +179,6 @@ pub fn validate_tool_config(tool_name: &str, config: &ToolConfig) -> Result<()> 
         });
     }
 
-    // Check if outputs is empty
-    if config.outputs.is_empty() {
-        return Err(Error::Config {
-            message: format!("Tool '{}' has no output patterns", tool_name),
-        });
-    }
-
     Ok(())
 }
 
@@ -227,8 +213,7 @@ mod tests {
                         "command": "npm",
                         "args": ["test"],
                         "inputs": ["src/**/*.js"],
-                        "outputs": ["coverage/**/*"],
-                        "cache": true
+                        "outputs": ["coverage/**/*"]
                     }
                 }
             }
@@ -249,7 +234,6 @@ mod tests {
         assert_eq!(test_tool.args, vec!["test"]);
         assert_eq!(test_tool.inputs, vec!["src/**/*.js"]);
         assert_eq!(test_tool.outputs, vec!["coverage/**/*"]);
-        assert!(test_tool.cache);
 
         Ok(())
     }
@@ -267,7 +251,6 @@ mod tests {
                 working_dir: None,
                 inputs: vec!["src/**/*.js".to_string()],
                 outputs: vec!["coverage/**/*".to_string()],
-                cache: true,
             },
         );
 
@@ -286,7 +269,7 @@ mod tests {
 
     #[test]
     fn test_validate_tool_config() -> Result<()> {
-        // Valid configuration
+        // Valid configuration with outputs
         let valid_config = ToolConfig {
             command: "npm".to_string(),
             args: vec!["test".to_string()],
@@ -294,10 +277,19 @@ mod tests {
             working_dir: None,
             inputs: vec!["src/**/*.js".to_string()],
             outputs: vec!["coverage/**/*".to_string()],
-            cache: true,
         };
-
         assert!(validate_tool_config("test", &valid_config).is_ok());
+
+        // Valid configuration without outputs
+        let valid_no_outputs = ToolConfig {
+            command: "npm".to_string(),
+            args: vec!["start".to_string()],
+            env: HashMap::new(),
+            working_dir: None,
+            inputs: vec!["src/**/*.js".to_string()],
+            outputs: vec![],
+        };
+        assert!(validate_tool_config("start", &valid_no_outputs).is_ok());
 
         // Invalid configuration - empty command
         let invalid_command = ToolConfig {
@@ -307,9 +299,7 @@ mod tests {
             working_dir: None,
             inputs: vec!["src/**/*.js".to_string()],
             outputs: vec!["coverage/**/*".to_string()],
-            cache: true,
         };
-
         assert!(validate_tool_config("test", &invalid_command).is_err());
 
         // Invalid configuration - empty inputs
@@ -320,23 +310,8 @@ mod tests {
             working_dir: None,
             inputs: vec![],
             outputs: vec!["coverage/**/*".to_string()],
-            cache: true,
         };
-
         assert!(validate_tool_config("test", &invalid_inputs).is_err());
-
-        // Invalid configuration - empty outputs
-        let invalid_outputs = ToolConfig {
-            command: "npm".to_string(),
-            args: vec!["test".to_string()],
-            env: HashMap::new(),
-            working_dir: None,
-            inputs: vec!["src/**/*.js".to_string()],
-            outputs: vec![],
-            cache: true,
-        };
-
-        assert!(validate_tool_config("test", &invalid_outputs).is_err());
 
         Ok(())
     }

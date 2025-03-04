@@ -44,6 +44,7 @@ pub fn run_tool(
         options.verbose,
     )?;
 
+    // Only verify outputs if the command succeeded and has output patterns defined
     if status.success() && !tool_config.outputs.is_empty() {
         if options.verbose {
             progress::write_message(&progress::format_note(&format!(
@@ -111,17 +112,63 @@ fn execute_command(
         command.env(key, value);
     }
 
+    // Format command for display
+    let command_str = format!("{} {}", config.command, config.args.join(" "));
+
     if verbose {
-        println!("Executing: {} {}", config.command, config.args.join(" "));
+        progress::write_message(&progress::format_status("Running", &command_str))?;
     }
+
     let output = command.output()?;
-    if verbose {
+
+    // Handle command output
+    if verbose || !output.status.success() {
         if !output.stdout.is_empty() {
-            println!("stdout:\n{}", String::from_utf8_lossy(&output.stdout));
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let formatted = if verbose {
+                format!("\n{}", stdout)
+            } else {
+                // When not verbose, only show last few lines
+                stdout
+                    .lines()
+                    .rev()
+                    .take(5)
+                    .collect::<Vec<_>>()
+                    .into_iter()
+                    .rev()
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            };
+            progress::write_message(&progress::format_note("Command output:"))?;
+            println!("{}", formatted);
         }
+
         if !output.stderr.is_empty() {
-            eprintln!("stderr:\n{}", String::from_utf8_lossy(&output.stderr));
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            let formatted = if verbose {
+                format!("\n{}", stderr)
+            } else {
+                // When not verbose, only show last few lines
+                stderr
+                    .lines()
+                    .rev()
+                    .take(5)
+                    .collect::<Vec<_>>()
+                    .into_iter()
+                    .rev()
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            };
+            progress::write_message(&progress::format_error("Command error output:"))?;
+            eprintln!("{}", formatted);
         }
+    }
+
+    if !output.status.success() {
+        return Err(Error::CommandFailed {
+            command: command_str,
+            status: output.status,
+        });
     }
 
     Ok(output.status)
@@ -161,7 +208,6 @@ mod tests {
             working_dir: None,
             inputs: vec!["*.txt".to_string()],
             outputs: vec!["*.out".to_string()],
-            cache: true,
         };
 
         // Create a test configuration
@@ -199,8 +245,7 @@ mod tests {
             env: HashMap::new(),
             working_dir: None,
             inputs: vec!["*.txt".to_string()],
-            outputs: vec!["test-output.txt".to_string()],
-            cache: true,
+            outputs: vec!["subdir/test-output.txt".to_string()],
         };
 
         // Create a test configuration
@@ -215,18 +260,12 @@ mod tests {
             verbose: false,
         };
 
-        // Run the tool (should fail due to missing output)
-        let result = run_tool("test-tool", &config, &options);
-        assert!(result.is_err());
-
-        // Create the expected output file
-        let output_file = dir_path.join("test-output.txt");
-        let mut file = File::create(&output_file)?;
-        file.write_all(b"test output")?;
-
-        // Run the tool again (should succeed)
+        // Run the tool (should succeed and create directory)
         let result = run_tool("test-tool", &config, &options)?;
         assert!(result.status.success());
+
+        // Verify directory was created
+        assert!(dir_path.join("subdir").exists());
 
         Ok(())
     }

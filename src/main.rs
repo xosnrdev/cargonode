@@ -84,23 +84,30 @@ enum Commands {
     },
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
     let cli = Cli::parse();
 
-    let result = match cli.command {
+    if let Err(err) = run(cli) {
+        progress::write_message(&progress::format_error(&err.to_string())).unwrap();
+        process::exit(1);
+    }
+}
+
+fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
+    match cli.command {
         Commands::New { path, lib, vcs } => {
             let config = utils::VcsConfig {
                 vcs,
                 ..Default::default()
             };
-            commands::create_new_project(&path, lib, Some(config))
+            commands::create_new_project(&path, lib, Some(config))?;
         }
         Commands::Init { lib, vcs } => {
             let config = utils::VcsConfig {
                 vcs,
                 ..Default::default()
             };
-            commands::init_project(lib, Some(config))
+            commands::init_project(lib, Some(config))?;
         }
         Commands::Run {
             tool,
@@ -123,8 +130,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     status: result.status,
                 }));
             }
-
-            Ok(())
         }
         Commands::Check {
             paths,
@@ -132,8 +137,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             verbose,
         } => {
             let current_dir = env::current_dir().map_err(cargonode::Error::Io)?;
-            commands::check(&paths, &current_dir, force, verbose)?;
-            Ok(())
+            let result = commands::check(&paths, &current_dir, force, verbose)?;
+            if !result.status.success() {
+                return Err(Box::new(cargonode::Error::CommandFailed {
+                    command: "check".to_string(),
+                    status: result.status,
+                }));
+            }
         }
         Commands::Build {
             release,
@@ -141,8 +151,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             verbose,
         } => {
             let current_dir = env::current_dir().map_err(cargonode::Error::Io)?;
-            commands::build(release, &current_dir, force, verbose)?;
-            Ok(())
+            let result = commands::build(release, &current_dir, force, verbose)?;
+            if !result.status.success() {
+                return Err(Box::new(cargonode::Error::CommandFailed {
+                    command: "build".to_string(),
+                    status: result.status,
+                }));
+            }
         }
         Commands::Test {
             pattern,
@@ -150,14 +165,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             verbose,
         } => {
             let current_dir = env::current_dir().map_err(cargonode::Error::Io)?;
-            commands::test(&pattern, &current_dir, force, verbose)?;
-            Ok(())
+            let result = commands::test(&pattern, &current_dir, force, verbose)?;
+            if !result.status.success() {
+                return Err(Box::new(cargonode::Error::CommandFailed {
+                    command: "test".to_string(),
+                    status: result.status,
+                }));
+            }
         }
-    };
-
-    if let Err(err) = result {
-        eprintln!("{}", progress::format_error(&err.to_string()));
-        process::exit(1);
     }
 
     Ok(())

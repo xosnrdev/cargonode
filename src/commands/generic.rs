@@ -37,7 +37,6 @@ pub fn run_generic_command(
             working_dir: None,
             inputs: vec!["*.txt".to_string()],
             outputs: vec!["*.out".to_string()],
-            cache: true,
         };
         config.tools.insert(command_type.to_string(), tool_config);
         config
