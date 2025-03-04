@@ -19,9 +19,10 @@ body = """
 
 ### {{ group | upper_first }}
 {% for commit in commits %}
-- {{ commit.message | upper_first }} by @{{ commit.author.name }}\
+- {{ commit.message | upper_first }}\
 {%- if commit.breaking %} [**breaking**]{% endif %}\
-{%- if commit.links %} in {% for link in commit.links %}[#{{ link.id }}]({{ link.url }}){% endfor %}{% endif %}
+{%- if commit.links %} {% for link in commit.links %}[#{{ link.id }}]({{ link.url }}){% endfor %}{% endif %}\
+{%- if commit.id %} ([`{{ commit.id | truncate(length=7, end="") }}`](https://github.com/xosnrdev/cargonode/commit/{{ commit.id }})){% endif %}
 {%- endfor %}
 {% endfor %}\n
 """
