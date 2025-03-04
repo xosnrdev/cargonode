@@ -13,11 +13,13 @@ brew install xosnrdev/cargonode/cargonode
 ### Linux
 
 ```bash
-curl -LsSf https://github.com/xosnrdev/cargonode/releases/download/0.1.3/cargonode-installer.sh | sh
+curl -LsSf https://github.com/xosnrdev/cargonode/releases/download/1.0.0/cargonode-installer.sh | sh
 ```
 
+### Windows
+
 ```bash
-iwr https://github.com/xosnrdev/cargonode/releases/download/0.1.3/cargonode-installer.ps1 | iex
+iwr https://github.com/xosnrdev/cargonode/releases/download/1.0.0/cargonode-installer.ps1 | iex
 ```
 
 ### Cargo

@@ -78,7 +78,7 @@ dependencies = [
 
 [[package]]
 name = "cargonode"
-version = "0.1.3"
+version = "1.0.0"
 dependencies = [
  "clap",
  "clap-cargo",
