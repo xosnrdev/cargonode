@@ -5,7 +5,7 @@ A simple build tool for Node.js projects.
 ## Install
 
 Get it from [releases page](https://github.com/xosnrdev/cargonode/releases):
-- Mac: `brew install cargonode`
+- Mac: `brew install xosnrdev/cargonode/cargonode`
 - Unix: Run our install script
 - Windows: Use the installer
 
