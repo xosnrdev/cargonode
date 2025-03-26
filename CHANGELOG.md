@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update changelog ([`41024c2`](https://github.com/xosnrdev/cargonode/commit/41024c2ed4007173d0cd0b1fd765c0245f4ec56f))
 - Update changelog ([`3ab85e0`](https://github.com/xosnrdev/cargonode/commit/3ab85e086568fe97ca28cb6ea4a7f54ce995d461))
+- Update changelog ([`0172948`](https://github.com/xosnrdev/cargonode/commit/017294801fb59a4a77dfc8b34073ec75829a607a))
 
 
 ### Fixed
@@ -24,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump tempfile from 3.17.1 to 3.18.0 in the deps group ([`74fa53c`](https://github.com/xosnrdev/cargonode/commit/74fa53ca50c30cc1fc1bb81ddad2167f3ae04cac))
 - Bump the deps group with 2 updates ([`76a11c6`](https://github.com/xosnrdev/cargonode/commit/76a11c6d5d84fac102fd0d3f3afbdf1c5ac28c0b))
 - Bump tempfile from 3.18.0 to 3.19.0 in the deps group ([`333e679`](https://github.com/xosnrdev/cargonode/commit/333e6798c75469390f02b0da76dd87b2ebc06525))
+- Bump the deps group across 1 directory with 2 updates ([`85d961a`](https://github.com/xosnrdev/cargonode/commit/85d961a51d094504770e83677b889bf67b1a0036))
 
 ## [1.0.0] - 2025-03-04
 
